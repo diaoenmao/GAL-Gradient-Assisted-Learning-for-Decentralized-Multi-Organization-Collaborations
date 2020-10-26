@@ -1,0 +1,29 @@
+How to access MIMIC3: 1. Following the link: https://mimic.physionet.org/gettingstarted/access/
+                      2. Download the dataset at https://mimic.physionet.org/gettingstarted/dbsetup/
+
+
+Structure of MIMIC3:
+
+MIMIC is a relational database containing tables of data relating to patients who stayed within the intensive care units at Beth Israel Deaconess Medical Center. A table is a data storage structure which is similar to a spreadsheet: each column contains consistent information (e.g., patient identifiers), and each row contains an instantiation of that information (e.g. a row could contain the integer 340 in the patient identifier column which would imply that the row’s patient identifier is 340). The tables are linked by identifiers which usually have the suffix “ID”. For example HADM_ID refers to a unique hospital admission and SUBJECT_ID refers to a unique patient. One exception is ROW_ID, which is simply a row identifier unique to that table.
+
+Tables pre-fixed with “D_” are dictionaries and provide definitions for identifiers. For example, every row of OUTPUTEVENTS is associated with a single ITEMID which represents the concept measured, but it does not contain the actual name of the drug. By joining OUTPUTEVENTS and D_ITEMS on ITEMID, it is possible to identify what concept a given ITEMID represents.
+
+There are 26 tables in the MIMIC-III (v1.4) relational database.Charted events such as laboratory tests, doctor notes and fluids into/out of patients are stored in a series of ’events’ tables. For example, inputevents (in-putevents_cv/inputevents_mv) contains intake for patients monitored using PhilipsCareVue system/iMDSoft MetaVision system, outputevents consists of output in-formation for patients while in the ICU, chartevents includes all charted observations for patients, labevents contains laboratory measurements for patients both within the hospital and in outpatient clinics, and prescriptions includes medications ordered, and not necessarily administered, for a given patient.
+
+See detailed information for each table at: https://mimic.physionet.org/mimictables/.
+
+
+Preparing data for practical machine learning tasks: 2 popular benchmark papers:  https://www.sciencedirect.com/science/article/pii/S1532046418300716, 
+https://arxiv.org/pdf/1703.07771.pdf . 
+
+
+
+How to prepare the MIMIC3 data used in the paper:
+
+1. Download the original dataset 
+2. Preprocessing the data following:  https://www.sciencedirect.com/science/article/pii/S1532046418300716, 
+https://arxiv.org/pdf/1703.07771.pdf
+
+Now, we have data for each single patient at each time stamp.
+
+3. Sample 5000 patients data points. Use the average value for the first 12 hours information as predictores.

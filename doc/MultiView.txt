@@ -1,0 +1,12 @@
+
+Collaborative topic in distributed multi-view (multi-modal) learning for real-time situational understanding at the edge.
+
+
+Competition multi-view data (with source codes) 
+https://www.aicitychallenge.org/2020-challenge-tracks/
+
+Drone related multi-view data (with source codes)
+https://github.com/layumi/University1652-Baseline
+
+List of multi view data
+Attached pdf ‘List-multiview’
