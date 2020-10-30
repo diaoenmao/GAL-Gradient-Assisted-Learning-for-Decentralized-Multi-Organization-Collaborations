@@ -1,0 +1,38 @@
+---
+# control
+# data
+data_name: Wine
+subset: label
+batch_size:
+  train: 128
+  test: 128
+shuffle:
+  train: True
+  test: False
+num_workers: 0
+model_name: linear
+# optimizer
+optimizer_name: SGD
+lr: 1.0e-1
+momentum: 0
+weight_decay: 0
+# scheduler
+scheduler_name: None
+step_size: 1
+milestones:
+  - 100
+  - 150
+patience: 10
+threshold: 1.0e-3
+factor: 0.1
+min_lr: 1.0e-5
+# experiment
+init_seed: 0
+num_experiments: 1
+num_epochs: 200
+log_interval: 0.25
+device: cuda
+world_size: 1
+resume_mode: 0
+# other
+save_format: png
