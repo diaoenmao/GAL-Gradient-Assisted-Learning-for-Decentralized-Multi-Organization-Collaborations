@@ -11,7 +11,7 @@ from utils import save, load, to_device, process_dataset, resume, collate, save_
 from logger import Logger
 
 if __name__ == "__main__":
-    data_name = 'Wine'
+    data_name = 'Blob'
     subset = 'label'
     dataset = fetch_dataset(data_name, subset)
     process_dataset(dataset)

@@ -10,9 +10,9 @@ def fetch_dataset(data_name, subset, verbose=True):
     if verbose:
         print('fetching data {}...'.format(data_name))
     root = './data/{}'.format(data_name)
-    if data_name in ['Wine']:
-        dataset['train'] = datasets.Wine(root=root, split='train', subset=subset)
-        dataset['test'] = datasets.Wine(root=root, split='test', subset=subset)
+    if data_name in ['Blob', 'QSAR', 'Wine']:
+        dataset['train'] = eval('datasets.{}(root=root, split=\'train\', subset=subset)'.format(data_name))
+        dataset['test'] = eval('datasets.{}(root=root, split=\'test\', subset=subset)'.format(data_name))
     else:
         raise ValueError('Not valid dataset name')
     if verbose:

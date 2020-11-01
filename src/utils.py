@@ -104,6 +104,10 @@ def process_dataset(dataset):
 
 
 def process_control():
+    if cfg['data_name'] in ['Blob']:
+        cfg['data_shape'] = [10]
+    if cfg['data_name'] in ['QSAR']:
+        cfg['data_shape'] = [41]
     if cfg['data_name'] in ['Wine']:
         cfg['data_shape'] = [11]
     cfg['mlp'] = {'hidden_size': [512]}

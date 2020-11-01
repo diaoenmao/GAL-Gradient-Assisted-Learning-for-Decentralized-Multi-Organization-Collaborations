@@ -8,7 +8,7 @@ if __name__ == "__main__":
     subset = 'label'
     dim = 1
     input_tag = 'feature'
-    data_names = ['Wine']
+    data_names = ['Blob', 'QSAR', 'Wine']
     cfg['batch_size'] = {'train': 128, 'test': 128}
     for data_name in data_names:
         dataset = fetch_dataset(data_name, subset)
