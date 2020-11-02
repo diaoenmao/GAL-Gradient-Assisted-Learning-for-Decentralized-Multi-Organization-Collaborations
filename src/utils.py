@@ -104,12 +104,17 @@ def process_dataset(dataset):
 
 
 def process_control():
+    cfg['num_users'] = int(cfg['control']['num_users'])
     if cfg['data_name'] in ['Blob']:
         cfg['data_shape'] = [10]
     if cfg['data_name'] in ['QSAR']:
         cfg['data_shape'] = [41]
     if cfg['data_name'] in ['Wine']:
         cfg['data_shape'] = [11]
+    if cfg['data_name'] in ['Blob', 'QSAR', 'Wine']:
+        cfg['data_tag'] = 'feature'
+    elif cfg['data_name'] in ['MNIST']:
+        cfg['data_tag'] = 'img'
     cfg['mlp'] = {'hidden_size': [512]}
     if cfg['model_name'] in ['linear', 'mlp']:
         cfg['batch_size'] = {'train': 128, 'valid': 128, 'test': 128}

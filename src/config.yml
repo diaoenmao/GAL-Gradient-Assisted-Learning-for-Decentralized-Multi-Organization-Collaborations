@@ -1,5 +1,6 @@
 ---
 # control
+num_users: 4
 # data
 data_name: Wine
 subset: label

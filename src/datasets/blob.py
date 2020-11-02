@@ -17,15 +17,16 @@ class Blob(Dataset):
         self.transform = transform
         if not check_exists(self.processed_folder):
             self.process()
-        self.feature, self.target = load(os.path.join(self.processed_folder, '{}.pt'.format(self.split)))
+        self.id, self.feature, self.target = load(os.path.join(self.processed_folder, '{}.pt'.format(self.split)))
         self.target = self.target[self.subset]
         self.classes_counts = make_classes_counts(self.target)
         self.classes_to_labels, self.classes_size = load(os.path.join(self.processed_folder, 'meta.pt'))
         self.classes_to_labels, self.classes_size = self.classes_to_labels[self.subset], self.classes_size[self.subset]
 
     def __getitem__(self, index):
-        feature, target = torch.tensor(self.feature[index]), torch.tensor(self.target[index])
-        input = {'feature': feature, self.subset: target}
+        id, feature, target = torch.tensor(self.id[index]), torch.tensor(self.feature[index]), torch.tensor(
+            self.target[index])
+        input = {'id': id, 'feature': feature, self.subset: target}
         if self.transform is not None:
             input = self.transform(input)
         return input
@@ -59,6 +60,8 @@ class Blob(Dataset):
         from sklearn.datasets import make_blobs
         X, y = make_blobs(n_samples=100, n_features=10, centers=10, random_state=0)
         split_idx = int(X.shape[0] * 0.8)
+        id = np.arange(X.shape[0])
+        train_id, test_id = id[:split_idx].astype(np.int64), id[split_idx:].astype(np.int64)
         train_feature, test_feature = X[:split_idx].astype(np.float32), X[split_idx:].astype(np.float32)
         train_label, test_label = y[:split_idx].astype(np.int64), y[split_idx:].astype(np.int64)
         train_target, test_target = {'label': train_label}, {'label': test_label}
@@ -67,4 +70,5 @@ class Blob(Dataset):
         for c in classes:
             make_tree(classes_to_labels['label'], [c])
         classes_size = {'label': make_flat_index(classes_to_labels['label'])}
-        return (train_feature, train_target), (test_feature, test_target), (classes_to_labels, classes_size)
+        return (train_id, train_feature, train_target), (test_id, test_feature, test_target), (
+        classes_to_labels, classes_size)

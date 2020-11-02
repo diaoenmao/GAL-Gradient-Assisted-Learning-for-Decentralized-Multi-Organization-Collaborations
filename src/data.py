@@ -1,7 +1,7 @@
 import torch
 import datasets
 from config import cfg
-from torch.utils.data import DataLoader
+from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.dataloader import default_collate
 
 
@@ -34,7 +34,15 @@ def input_collate(batch):
 def make_data_loader(dataset):
     data_loader = {}
     for k in dataset:
-        data_loader[k] = torch.utils.data.DataLoader(dataset=dataset[k], shuffle=cfg['shuffle'][k],
-                                                     batch_size=cfg['batch_size'][k], pin_memory=True,
-                                                     num_workers=cfg['num_workers'], collate_fn=input_collate)
+        data_loader[k] = DataLoader(dataset=dataset[k], shuffle=cfg['shuffle'][k], batch_size=cfg['batch_size'][k],
+                                    pin_memory=True, num_workers=cfg['num_workers'], collate_fn=input_collate)
     return data_loader
+
+
+def split_dataset(num_users):
+    if cfg['data_name'] in ['Blob', 'QSAR', 'Wine']:
+        num_features = cfg['data_shape'][0]
+        feature_split = torch.randperm(num_features).split(num_users)
+    else:
+        raise ValueError('Not valid data name')
+    return feature_split
