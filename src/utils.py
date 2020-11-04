@@ -105,6 +105,7 @@ def process_dataset(dataset):
 
 def process_control():
     cfg['num_users'] = int(cfg['control']['num_users'])
+    cfg['assist'] = cfg['control']['assist']
     if cfg['data_name'] in ['Blob']:
         cfg['data_shape'] = [10]
     if cfg['data_name'] in ['QSAR']:
@@ -122,7 +123,7 @@ def process_control():
         cfg['lr'] = 1e-1
         cfg['momentum'] = 0.9
         cfg['weight_decay'] = 5e-4
-        cfg['num_epochs'] = 200
+        cfg['num_epochs'] = {'global': 200, 'local': 10}
         cfg['scheduler_name'] = 'MultiStepLR'
         cfg['factor'] = 0.1
         cfg['milestones'] = [100, 150]

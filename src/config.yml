@@ -1,14 +1,16 @@
 ---
 # control
-num_users: 4
+control:
+  num_users: '5'
+  assist: 'kd'
 # data
-data_name: Wine
+data_name: Blob
 subset: label
 batch_size:
   train: 128
   test: 128
 shuffle:
-  train: True
+  train: False
   test: False
 num_workers: 0
 model_name: linear

@@ -24,7 +24,6 @@ if args['control_name']:
         if args['control_name'] != 'None' else {}
 cfg['control_name'] = '_'.join([cfg['control'][k] for k in cfg['control']]) if 'control' in cfg else ''
 cfg['metric_name'] = {'test': ['Loss', 'Accuracy']}
-cfg['aug'] = True
 
 
 def main():

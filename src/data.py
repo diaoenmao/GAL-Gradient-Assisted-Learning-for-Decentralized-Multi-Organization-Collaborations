@@ -42,7 +42,8 @@ def make_data_loader(dataset):
 def split_dataset(num_users):
     if cfg['data_name'] in ['Blob', 'QSAR', 'Wine']:
         num_features = cfg['data_shape'][0]
-        feature_split = torch.randperm(num_features).split(num_users)
+        feature_split = list(torch.randperm(num_features).split(num_features // num_users))
+        feature_split = feature_split[:num_users - 1] + [torch.cat(feature_split[num_users - 1:])]
     else:
         raise ValueError('Not valid data name')
     return feature_split

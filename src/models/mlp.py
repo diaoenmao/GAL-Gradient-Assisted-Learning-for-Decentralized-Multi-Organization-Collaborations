@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .utils import init_param, normalize
+from .utils import init_param, normalize, ce_loss, kd_loss
 from config import cfg
 
 
@@ -37,9 +37,18 @@ class MLP(nn.Module):
         output = {}
         x = input['feature']
         x = normalize(x)
+        if 'feature_split' in input:
+            mask = torch.ones(x.size(1), device=x.device)
+            mask[input['feature_split']] = 0
+            x = torch.masked_fill(x, mask == 1, 0)
         x = self.blocks(x)
         output['score'] = x
-        output['loss'] = F.cross_entropy(output['score'], input['label'])
+        if 'assist' in input and cfg['assist'] == 'kd':
+            output['loss'] = kd_loss(output['score'], input['label'], input['assist'])
+        elif 'assist' not in input or cfg['assist'] == 'none':
+            output['loss'] = ce_loss(output['score'], input['label'])
+        else:
+            raise ValueError('Not valid assist')
         return output
 
 

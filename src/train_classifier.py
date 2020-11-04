@@ -28,7 +28,6 @@ cfg['control_name'] = '_'.join([cfg['control'][k] for k in cfg['control']]) if '
 cfg['pivot_metric'] = 'Accuracy'
 cfg['pivot'] = -float('inf')
 cfg['metric_name'] = {'train': ['Loss', 'Accuracy'], 'test': ['Loss', 'Accuracy']}
-cfg['aug'] = True
 
 
 def main():
@@ -67,7 +66,7 @@ def runExperiment():
         logger = Logger(logger_path)
     if cfg['world_size'] > 1:
         model = torch.nn.DataParallel(model, device_ids=list(range(cfg['world_size'])))
-    for epoch in range(last_epoch, cfg['num_epochs'] + 1):
+    for epoch in range(last_epoch, cfg['num_epochs']['global'] + 1):
         logger.safe(True)
         train(data_loader['train'], model, optimizer, logger, epoch)
         test(data_loader['test'], model, logger, epoch)
@@ -112,7 +111,7 @@ def train(data_loader, model, optimizer, logger, epoch):
             lr = optimizer.param_groups[0]['lr']
             epoch_finished_time = datetime.timedelta(seconds=round(batch_time * (len(data_loader) - i - 1)))
             exp_finished_time = epoch_finished_time + datetime.timedelta(
-                seconds=round((cfg['num_epochs'] - epoch) * batch_time * len(data_loader)))
+                seconds=round((cfg['num_epochs']['global'] - epoch) * batch_time * len(data_loader)))
             info = {'info': ['Model: {}'.format(cfg['model_tag']),
                              'Train Epoch: {}({:.0f}%)'.format(epoch, 100. * i / len(data_loader)),
                              'Learning rate: {:.6f}'.format(lr), 'Epoch Finished Time: {}'.format(epoch_finished_time),
