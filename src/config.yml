@@ -2,9 +2,9 @@
 # control
 control:
   num_users: '5'
-  assist: 'kd'
+  assist: 'sum'
 # data
-data_name: Blob
+data_name: Wine
 subset: label
 batch_size:
   train: 128

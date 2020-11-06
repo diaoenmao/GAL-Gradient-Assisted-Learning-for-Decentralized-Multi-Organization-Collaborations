@@ -43,12 +43,7 @@ class MLP(nn.Module):
             x = torch.masked_fill(x, mask == 1, 0)
         x = self.blocks(x)
         output['score'] = x
-        if 'assist' in input and cfg['assist'] == 'kd':
-            output['loss'] = kd_loss(output['score'], input['label'], input['assist'])
-        elif 'assist' not in input or cfg['assist'] == 'none':
-            output['loss'] = ce_loss(output['score'], input['label'])
-        else:
-            raise ValueError('Not valid assist')
+        output['loss'] = ce_loss(output['score'], input['label'])
         return output
 
 

@@ -9,6 +9,7 @@ class Linear(nn.Module):
     def __init__(self, data_shape, classes_size):
         super().__init__()
         self.linear = nn.Linear(data_shape[0], classes_size)
+        self.assist = nn.Linear(classes_size, classes_size)
 
     def forward(self, input):
         output = {}
@@ -19,10 +20,15 @@ class Linear(nn.Module):
             mask[input['feature_split']] = 0
             x = torch.masked_fill(x, mask == 1, 0)
         output['score'] = self.linear(x)
-        if 'assist' in input and cfg['assist'] == 'kd' and self.training:
-            output['loss'] = kd_loss(output['score'], input['label'], input['assist'])
-        else:
-            output['loss'] = ce_loss(output['score'], input['label'])
+        if 'assist' in input and cfg['assist'] == 'sum':
+            assist = torch.zeros(input['assist'].size()[:2], device=input['assist'].device)
+            for i in range(input['assist'].size(-1)):
+                assist_i = input['assist'][:, :, i]
+                valid = assist_i.sum(dim=-1) != 0
+                assist[valid] += assist_i[valid]
+            assist = assist / input['assist'].size(-1)
+            output['score'] = 0.5 * output['score'] + 0.5 * self.assist(assist)
+        output['loss'] = ce_loss(output['score'], input['label'])
         return output
 
 
