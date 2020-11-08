@@ -60,8 +60,7 @@ class Wine(Dataset):
     def make_data(self):
         data = pd.read_csv(os.path.join(self.raw_folder, 'winequality-red.csv')).to_numpy()
         split_idx = int(data.shape[0] * 0.8)
-        id = np.arange(data.shape[0])
-        train_id, test_id = id[:split_idx].astype(np.int64), id[split_idx:].astype(np.int64)
+        train_id, test_id = np.arange(split_idx).astype(np.int64), np.arange(data.shape[0] - split_idx).astype(np.int64)
         train_feature, test_feature = data[:split_idx, :-1].astype(np.float32), data[split_idx:, :-1].astype(np.float32)
         train_label, test_label = data[:split_idx, -1], data[split_idx:, -1]
         min_label = np.min(train_label)
@@ -74,4 +73,4 @@ class Wine(Dataset):
             make_tree(classes_to_labels['label'], [c])
         classes_size = {'label': make_flat_index(classes_to_labels['label'])}
         return (train_id, train_feature, train_target), (test_id, test_feature, test_target), (
-        classes_to_labels, classes_size)
+            classes_to_labels, classes_size)

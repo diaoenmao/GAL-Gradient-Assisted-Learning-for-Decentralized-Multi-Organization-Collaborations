@@ -11,7 +11,7 @@ from utils import save, load, to_device, process_dataset, resume, collate, save_
 from logger import Logger
 
 # if __name__ == "__main__":
-#     data_name = 'Blob'
+#     data_name = 'Wine'
 #     subset = 'label'
 #     dataset = fetch_dataset(data_name, subset)
 #     process_dataset(dataset)
@@ -34,3 +34,15 @@ if __name__ == "__main__":
         print(loss)
         loss.backward()
         score = (score - score.grad).detach()
+#
+#
+# if __name__ == "__main__":
+#     # p = torch.tensor([0.1, 0.3, 0.2, 0.4]).view(1, -1)
+#     # p = torch.tensor([1e-10, 1e-10, 1, 1e-10]).view(1, -1)
+#     label = torch.tensor([0, 0, 1, 0])
+#     odds = label.float()
+#     odds[odds == 0] = 1e-10
+#     log_odds = torch.log(odds)
+#     sm = torch.softmax(log_odds, dim=-1)
+#     print(log_odds)
+#     print(sm)

@@ -1,8 +1,7 @@
 ---
 # control
 control:
-  num_users: '5'
-  assist: 'sum'
+  num_users: '2'
 # data
 data_name: Wine
 subset: label

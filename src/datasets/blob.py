@@ -60,8 +60,7 @@ class Blob(Dataset):
         from sklearn.datasets import make_blobs
         X, y = make_blobs(n_samples=100, n_features=10, centers=10, random_state=0)
         split_idx = int(X.shape[0] * 0.8)
-        id = np.arange(X.shape[0])
-        train_id, test_id = id[:split_idx].astype(np.int64), id[split_idx:].astype(np.int64)
+        train_id, test_id = np.arange(split_idx).astype(np.int64), np.arange(X.shape[0] - split_idx).astype(np.int64)
         train_feature, test_feature = X[:split_idx].astype(np.float32), X[split_idx:].astype(np.float32)
         train_label, test_label = y[:split_idx].astype(np.int64), y[split_idx:].astype(np.int64)
         train_target, test_target = {'label': train_label}, {'label': test_label}
@@ -71,4 +70,4 @@ class Blob(Dataset):
             make_tree(classes_to_labels['label'], [c])
         classes_size = {'label': make_flat_index(classes_to_labels['label'])}
         return (train_id, train_feature, train_target), (test_id, test_feature, test_target), (
-        classes_to_labels, classes_size)
+            classes_to_labels, classes_size)

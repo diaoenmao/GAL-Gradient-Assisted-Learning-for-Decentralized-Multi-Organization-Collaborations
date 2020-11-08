@@ -63,8 +63,7 @@ class QSAR(Dataset):
         data[data.columns[-1]] = data[data.columns[-1]].cat.codes
         data = data.to_numpy()
         split_idx = int(data.shape[0] * 0.8)
-        id = np.arange(data.shape[0])
-        train_id, test_id = id[:split_idx].astype(np.int64), id[split_idx:].astype(np.int64)
+        train_id, test_id = np.arange(split_idx).astype(np.int64), np.arange(data.shape[0] - split_idx).astype(np.int64)
         train_feature, test_feature = data[:split_idx, :-1].astype(np.float32), data[split_idx:, :-1].astype(np.float32)
         train_label, test_label = data[:split_idx, -1].astype(np.int64), data[split_idx:, -1].astype(np.int64)
         train_target, test_target = {'label': train_label}, {'label': test_label}

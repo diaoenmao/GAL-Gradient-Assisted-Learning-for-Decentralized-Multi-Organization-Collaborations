@@ -92,6 +92,8 @@ def recur(fn, input, *args):
         output = {}
         for key in input:
             output[key] = recur(fn, input[key], *args)
+    elif input is None:
+        output = None
     else:
         raise ValueError('Not valid input type')
     return output
@@ -99,13 +101,13 @@ def recur(fn, input, *args):
 
 def process_dataset(dataset):
     cfg['classes_size'] = dataset['train'].classes_size
-    cfg['data_size'] = len(dataset['train'])
+    cfg['data_size'] = {split: len(dataset[split]) for split in dataset}
     return
 
 
 def process_control():
     cfg['num_users'] = int(cfg['control']['num_users'])
-    cfg['assist'] = cfg['control']['assist']
+    cfg['assist_rate'] = 1
     if cfg['data_name'] in ['Blob']:
         cfg['data_shape'] = [10]
     if cfg['data_name'] in ['QSAR']:
@@ -119,11 +121,11 @@ def process_control():
     cfg['mlp'] = {'hidden_size': [512]}
     if cfg['model_name'] in ['linear', 'mlp']:
         cfg['batch_size'] = {'train': 128, 'valid': 128, 'test': 128}
-        cfg['optimizer_name'] = 'SGD'
-        cfg['lr'] = 1e-1
+        cfg['optimizer_name'] = 'Adam'
+        cfg['lr'] = 1e-3
         cfg['momentum'] = 0.9
         cfg['weight_decay'] = 5e-4
-        cfg['num_epochs'] = {'global': 200, 'local': 10}
+        cfg['num_epochs'] = {'global': 20, 'local': 20}
         cfg['scheduler_name'] = 'MultiStepLR'
         cfg['factor'] = 0.1
         cfg['milestones'] = [100, 150]
