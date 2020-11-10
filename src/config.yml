@@ -1,7 +1,9 @@
 ---
 # control
 control:
-  num_users: '2'
+  num_users: '5'
+  assist: 'none'
+  assist_rate: '1'
 # data
 data_name: Wine
 subset: label

@@ -24,17 +24,19 @@ class Linear(nn.Module):
             if self.training:
                 if input['assist'] is None:
                     target = F.one_hot(input['label'], cfg['classes_size']).float()
-                    target[target == 0] = 1e-10
+                    target[target == 0] = 1e-4
                     target = torch.log(target)
-                    output['loss'] = F.mse_loss(output['score'], target)
+                    output['loss_local'] = F.mse_loss(output['score'], target)
+                    output['loss'] = F.cross_entropy(output['score'], input['label'])
                 else:
                     input['assist'].requires_grad = True
                     loss = F.cross_entropy(input['assist'], input['label'], reduction='sum')
                     loss.backward()
                     target = copy.deepcopy(input['assist'].grad)
-                    output['loss'] = F.mse_loss(output['score'], target)
+                    output['loss_local'] = F.mse_loss(output['score'], target)
                     input['assist'] = input['assist'].detach()
                     output['score'] = input['assist'] - cfg['assist_rate'] * output['score']
+                    output['loss'] = F.cross_entropy(output['score'], input['label'])
             else:
                 output['score'] = input['assist']
                 output['loss'] = F.cross_entropy(output['score'], input['label'])

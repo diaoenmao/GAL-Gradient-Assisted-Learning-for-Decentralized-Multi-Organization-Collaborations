@@ -1,3 +1,4 @@
+import copy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -41,9 +42,29 @@ class MLP(nn.Module):
             mask = torch.ones(x.size(1), device=x.device)
             mask[input['feature_split']] = 0
             x = torch.masked_fill(x, mask == 1, 0)
-        x = self.blocks(x)
-        output['score'] = x
-        output['loss'] = ce_loss(output['score'], input['label'])
+        output['score'] = self.linear(x)
+        if 'assist' in input:
+            if self.training:
+                if input['assist'] is None:
+                    target = F.one_hot(input['label'], cfg['classes_size']).float()
+                    target[target == 0] = 1e-4
+                    target = torch.log(target)
+                    output['loss_local'] = F.mse_loss(output['score'], target)
+                    output['loss'] = F.cross_entropy(output['score'], input['label'])
+                else:
+                    input['assist'].requires_grad = True
+                    loss = F.cross_entropy(input['assist'], input['label'], reduction='sum')
+                    loss.backward()
+                    target = copy.deepcopy(input['assist'].grad)
+                    output['loss_local'] = F.mse_loss(output['score'], target)
+                    input['assist'] = input['assist'].detach()
+                    output['score'] = input['assist'] - cfg['assist_rate'] * output['score']
+                    output['loss'] = F.cross_entropy(output['score'], input['label'])
+            else:
+                output['score'] = input['assist']
+                output['loss'] = F.cross_entropy(output['score'], input['label'])
+        else:
+            output['loss'] = F.cross_entropy(output['score'], input['label'])
         return output
 
 

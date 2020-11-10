@@ -30,7 +30,7 @@ if args['control_name']:
 cfg['control_name'] = '_'.join([cfg['control'][k] for k in cfg['control']]) if 'control' in cfg else ''
 cfg['pivot_metric'] = 'Accuracy'
 cfg['pivot'] = -float('inf')
-cfg['metric_name'] = {'train': ['Loss', 'Accuracy'], 'test': ['Loss', 'Accuracy']}
+cfg['metric_name'] = {'train': ['Loss', 'Loss_Local','Accuracy'], 'test': ['Loss', 'Accuracy']}
 
 
 def main():
@@ -91,9 +91,8 @@ def runExperiment():
 def train(data_loader, assist, organization, logger, epoch):
     start_time = time.time()
     num_active_users = len(organization)
-    organization_scores = assist.organization_scores['train']
     for i in range(num_active_users):
-        organization[i].train(epoch - 1, data_loader[i]['train'], logger, organization_scores)
+        organization[i].train(epoch - 1, data_loader[i]['train'], logger, assist.organization_scores[i]['train'])
         if i % int((num_active_users * cfg['log_interval']) + 1) == 0:
             local_time = (time.time() - start_time) / (i + 1)
             epoch_finished_time = datetime.timedelta(seconds=local_time * (num_active_users - i - 1))
@@ -112,9 +111,8 @@ def train(data_loader, assist, organization, logger, epoch):
 def test(data_loader, assist, organization, logger, epoch):
     with torch.no_grad():
         num_active_users = len(organization)
-        organization_scores = assist.organization_scores['test']
         for i in range(num_active_users):
-            organization[i].test(epoch - 1, data_loader[i]['test'], logger, organization_scores)
+            organization[i].test(epoch - 1, data_loader[i]['test'], logger, assist.organization_scores[i]['test'])
         info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
         logger.append(info, 'test', mean=False)
         logger.write('test', cfg['metric_name']['test'])
@@ -164,7 +162,7 @@ class Organization:
                 input = to_device(input, cfg['device'])
                 optimizer.zero_grad()
                 output = model(input)
-                output['loss'].backward()
+                output['loss_local'].backward()
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1)
                 optimizer.step()
                 evaluation = metric.evaluate(cfg['metric_name']['train'], input, output)

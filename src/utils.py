@@ -106,8 +106,6 @@ def process_dataset(dataset):
 
 
 def process_control():
-    cfg['num_users'] = int(cfg['control']['num_users'])
-    cfg['assist_rate'] = 1
     if cfg['data_name'] in ['Blob']:
         cfg['data_shape'] = [10]
     if cfg['data_name'] in ['QSAR']:
@@ -119,18 +117,33 @@ def process_control():
     elif cfg['data_name'] in ['MNIST']:
         cfg['data_tag'] = 'img'
     cfg['mlp'] = {'hidden_size': [512]}
-    if cfg['model_name'] in ['linear', 'mlp']:
-        cfg['batch_size'] = {'train': 128, 'valid': 128, 'test': 128}
-        cfg['optimizer_name'] = 'Adam'
-        cfg['lr'] = 1e-3
-        cfg['momentum'] = 0.9
-        cfg['weight_decay'] = 5e-4
-        cfg['num_epochs'] = {'global': 20, 'local': 20}
-        cfg['scheduler_name'] = 'MultiStepLR'
-        cfg['factor'] = 0.1
-        cfg['milestones'] = [100, 150]
+    if 'assist' in cfg['control']:
+        cfg['assist'] = cfg['control']['assist']
+        cfg['num_users'] = int(cfg['control']['num_users'])
+        cfg['assist_rate'] = float(cfg['control']['assist_rate'])
+        if cfg['model_name'] in ['linear', 'mlp']:
+            cfg['batch_size'] = {'train': 128, 'valid': 128, 'test': 128}
+            cfg['optimizer_name'] = 'SGD'
+            cfg['lr'] = 1e-1
+            cfg['momentum'] = 0.9
+            cfg['weight_decay'] = 5e-4
+            cfg['num_epochs'] = {'global': 20, 'local': 100}
+            cfg['scheduler_name'] = 'MultiStepLR'
+            cfg['factor'] = 0.1
+            cfg['milestones'] = [25, 50]
+        else:
+            raise ValueError('Not valid model name')
     else:
-        raise ValueError('Not valid model name')
+        if cfg['model_name'] in ['linear', 'mlp']:
+            cfg['batch_size'] = {'train': 128, 'valid': 128, 'test': 128}
+            cfg['optimizer_name'] = 'SGD'
+            cfg['lr'] = 1e-1
+            cfg['momentum'] = 0.9
+            cfg['weight_decay'] = 5e-4
+            cfg['num_epochs'] = 100
+            cfg['scheduler_name'] = 'MultiStepLR'
+            cfg['factor'] = 0.1
+            cfg['milestones'] = [25, 50]
     cfg['stats'] = make_stats()
     return
 
@@ -204,7 +217,7 @@ def make_scheduler(optimizer):
                                                          eta_min=cfg['min_lr'])
     elif cfg['scheduler_name'] == 'ReduceLROnPlateau':
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=cfg['factor'],
-                                                         patience=cfg['patience'], verbose=True,
+                                                         patience=cfg['patience'], verbose=False,
                                                          threshold=cfg['threshold'], threshold_mode='rel',
                                                          min_lr=cfg['min_lr'])
     elif cfg['scheduler_name'] == 'CyclicLR':
