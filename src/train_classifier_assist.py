@@ -30,7 +30,7 @@ if args['control_name']:
 cfg['control_name'] = '_'.join([cfg['control'][k] for k in cfg['control']]) if 'control' in cfg else ''
 cfg['pivot_metric'] = 'Accuracy'
 cfg['pivot'] = -float('inf')
-cfg['metric_name'] = {'train': ['Loss', 'Loss_Local','Accuracy'], 'test': ['Loss', 'Accuracy']}
+cfg['metric_name'] = {'train': ['Loss', 'Loss_Local', 'Accuracy'], 'test': ['Loss', 'Accuracy']}
 
 
 def main():
@@ -69,11 +69,11 @@ def runExperiment():
     if organization is None:
         organization = make_organization(assist)
     data_loader = assist.make_data_loader(dataset)
-    for epoch in range(last_epoch, cfg['num_epochs']['global'] + 1):
+    for epoch in range(last_epoch, cfg[cfg['model_name']]['num_epochs']['global'] + 1):
         logger.safe(True)
         train(data_loader, assist, organization, logger, epoch)
         organization_scores = broadcast(data_loader, organization, epoch)
-        assist.update(data_loader, organization_scores)
+        assist.update(epoch - 1, data_loader, organization_scores)
         test(data_loader, assist, organization, logger, epoch)
         logger.safe(False)
         save_result = {
@@ -97,7 +97,7 @@ def train(data_loader, assist, organization, logger, epoch):
             local_time = (time.time() - start_time) / (i + 1)
             epoch_finished_time = datetime.timedelta(seconds=local_time * (num_active_users - i - 1))
             exp_finished_time = epoch_finished_time + datetime.timedelta(
-                seconds=round((cfg['num_epochs']['global'] - epoch) * local_time * num_active_users))
+                seconds=round((cfg[cfg['model_name']]['num_epochs']['global'] - epoch) * local_time * num_active_users))
             info = {'info': ['Model: {}'.format(cfg['model_tag']),
                              'Train Epoch: {}({:.0f}%)'.format(epoch, 100. * i / num_active_users),
                              'ID: {}/{}'.format(i + 1, num_active_users),
@@ -145,15 +145,15 @@ class Organization:
         self.organization_id = organization_id
         self.feature_split = feature_split
         self.model_name = model_name
-        self.model_parameters = [None for _ in range(cfg['num_epochs']['global'])]
+        self.model_parameters = [None for _ in range(cfg[self.model_name]['num_epochs']['global'])]
 
     def train(self, iter, data_loader, logger, organization_scores=None):
         metric = Metric()
         model = eval('models.{}().to(cfg["device"])'.format(self.model_name))
         model.train(True)
-        optimizer = make_optimizer(model)
-        scheduler = make_scheduler(optimizer)
-        for local_epoch in range(1, cfg['num_epochs']['local'] + 1):
+        optimizer = make_optimizer(model, self.model_name)
+        scheduler = make_scheduler(optimizer, self.model_name)
+        for local_epoch in range(1, cfg[self.model_name]['num_epochs']['local'] + 1):
             for i, input in enumerate(data_loader):
                 input = collate(input)
                 input_size = input[cfg['data_tag']].size(0)
@@ -167,7 +167,7 @@ class Organization:
                 optimizer.step()
                 evaluation = metric.evaluate(cfg['metric_name']['train'], input, output)
                 logger.append(evaluation, 'train', n=input_size)
-            if cfg['scheduler_name'] == 'ReduceLROnPlateau':
+            if cfg[self.model_name]['scheduler_name'] == 'ReduceLROnPlateau':
                 scheduler.step(metrics=logger.mean['train/{}'.format(cfg['pivot_metric'])])
             else:
                 scheduler.step()

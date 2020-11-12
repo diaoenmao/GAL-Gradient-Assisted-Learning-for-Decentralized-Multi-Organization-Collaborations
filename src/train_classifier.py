@@ -47,10 +47,10 @@ def runExperiment():
     torch.cuda.manual_seed(seed)
     dataset = fetch_dataset(cfg['data_name'], cfg['subset'])
     process_dataset(dataset)
-    data_loader = make_data_loader(dataset)
+    data_loader = make_data_loader(dataset, cfg['model_name'])
     model = eval('models.{}().to(cfg["device"])'.format(cfg['model_name']))
-    optimizer = make_optimizer(model)
-    scheduler = make_scheduler(optimizer)
+    optimizer = make_optimizer(model, cfg['model_name'])
+    scheduler = make_scheduler(optimizer, cfg['model_name'])
     if cfg['resume_mode'] == 1:
         last_epoch, model, optimizer, scheduler, logger = resume(model, cfg['model_tag'], optimizer, scheduler)
     elif cfg['resume_mode'] == 2:
@@ -66,11 +66,11 @@ def runExperiment():
         logger = Logger(logger_path)
     if cfg['world_size'] > 1:
         model = torch.nn.DataParallel(model, device_ids=list(range(cfg['world_size'])))
-    for epoch in range(last_epoch, cfg['num_epochs'] + 1):
+    for epoch in range(last_epoch, cfg[cfg['model_name']]['num_epochs']['global'] + 1):
         logger.safe(True)
         train(data_loader['train'], model, optimizer, logger, epoch)
         test(data_loader['test'], model, logger, epoch)
-        if cfg['scheduler_name'] == 'ReduceLROnPlateau':
+        if cfg[cfg['model_name']]['scheduler_name'] == 'ReduceLROnPlateau':
             scheduler.step(metrics=logger.mean['train/{}'.format(cfg['pivot_metric'])])
         else:
             scheduler.step()
@@ -111,7 +111,7 @@ def train(data_loader, model, optimizer, logger, epoch):
             lr = optimizer.param_groups[0]['lr']
             epoch_finished_time = datetime.timedelta(seconds=round(batch_time * (len(data_loader) - i - 1)))
             exp_finished_time = epoch_finished_time + datetime.timedelta(
-                seconds=round((cfg['num_epochs'] - epoch) * batch_time * len(data_loader)))
+                seconds=round((cfg[cfg['model_name']]['num_epochs']['global'] - epoch) * batch_time * len(data_loader)))
             info = {'info': ['Model: {}'.format(cfg['model_tag']),
                              'Train Epoch: {}({:.0f}%)'.format(epoch, 100. * i / len(data_loader)),
                              'Learning rate: {:.6f}'.format(lr), 'Epoch Finished Time: {}'.format(epoch_finished_time),

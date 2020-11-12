@@ -43,7 +43,7 @@ def runExperiment():
     torch.cuda.manual_seed(seed)
     dataset = fetch_dataset(cfg['data_name'], cfg['subset'])
     process_dataset(dataset)
-    data_loader = make_data_loader(dataset)
+    data_loader = make_data_loader(dataset, cfg['model_name'])
     model = eval('models.{}().to(cfg["device"])'.format(cfg['model_name']))
     last_epoch, model, _, _, _ = resume(model, cfg['model_tag'], load_tag='best')
     current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')

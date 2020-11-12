@@ -31,10 +31,11 @@ def input_collate(batch):
         return default_collate(batch)
 
 
-def make_data_loader(dataset):
+def make_data_loader(dataset, tag):
     data_loader = {}
     for k in dataset:
-        data_loader[k] = DataLoader(dataset=dataset[k], shuffle=cfg['shuffle'][k], batch_size=cfg['batch_size'][k],
+        data_loader[k] = DataLoader(dataset=dataset[k], shuffle=cfg[tag]['shuffle'][k],
+                                    batch_size=cfg[tag]['batch_size'][k],
                                     pin_memory=True, num_workers=cfg['num_workers'], collate_fn=input_collate)
     return data_loader
 
