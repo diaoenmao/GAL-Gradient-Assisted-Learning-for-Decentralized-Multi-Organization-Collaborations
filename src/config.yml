@@ -2,10 +2,10 @@
 # control
 control:
   num_users: '5'
-  assist_mode: 'stacking'
+  assist_mode: 'attention'
   assist_rate: '1'
 # data
-data_name: Wine
+data_name: Blob
 subset: label
 # model
 model_name: linear

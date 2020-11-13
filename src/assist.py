@@ -77,6 +77,8 @@ class Assist:
                 _data_loader = make_data_loader(_dataset[i], 'assist')
                 if 'train' in _data_loader:
                     model = models.stack().to(cfg['device'])
+                    if iter > 0:
+                        model.load_state_dict(self.assist_parameters[i][iter-1])
                     model.train(True)
                     optimizer = make_optimizer(model, 'assist')
                     scheduler = make_scheduler(optimizer, 'assist')
@@ -116,7 +118,67 @@ class Assist:
                                                                           - self.assist_rate * \
                                                                           organization_scores['score']
         elif cfg['assist_mode'] == 'attention':
-            pass
+            _dataset = [{split: None for split in cfg['data_size']} for _ in range(len(self.feature_split))]
+            for i in range(len(self.organization_scores)):
+                for split in data_loader[i]:
+                    assist = self.organization_scores[i][split]
+                    score = []
+                    for j in range(len(new_organization_scores)):
+                        score.append(new_organization_scores[j][split]['score'])
+                    score = torch.stack(score, dim=-1)
+                    if assist is None:
+                        _dataset[i][split] = torch.utils.data.TensorDataset(
+                            torch.tensor(data_loader[i][split].dataset.id), score,
+                            torch.tensor(data_loader[i][split].dataset.target))
+                    else:
+                        assist = assist['score']
+                        _dataset[i][split] = torch.utils.data.TensorDataset(
+                            torch.tensor(data_loader[i][split].dataset.id),
+                            assist, score, torch.tensor(data_loader[i][split].dataset.target))
+            for i in range(len(self.organization_scores)):
+                _data_loader = make_data_loader(_dataset[i], 'assist')
+                if 'train' in _data_loader:
+                    model = models.attention().to(cfg['device'])
+                    if iter > 0:
+                        model.load_state_dict(self.assist_parameters[i][iter-1])
+                    model.train(True)
+                    optimizer = make_optimizer(model, 'assist')
+                    scheduler = make_scheduler(optimizer, 'assist')
+                    for assist_epoch in range(1, cfg['assist']['num_epochs']['global'] + 1):
+                        for j, input in enumerate(_data_loader['train']):
+                            if len(input) == 3:
+                                input = {'id': input[0], 'assist': None, 'score': input[1], 'label': input[2]}
+                            else:
+                                input = {'id': input[0], 'assist': input[1], 'score': input[2], 'label': input[3]}
+                            input = to_device(input, cfg['device'])
+                            optimizer.zero_grad()
+                            output = model(input)
+                            output['loss'].backward()
+                            torch.nn.utils.clip_grad_norm_(model.parameters(), 1)
+                            optimizer.step()
+                        scheduler.step()
+                    self.assist_parameters[i][iter] = model.to('cpu').state_dict()
+                with torch.no_grad():
+                    for split in _data_loader:
+                        organization_scores = {'id': torch.arange(cfg['data_size'][split]),
+                                               'score': torch.zeros(cfg['data_size'][split], cfg['classes_size'])}
+                        model = models.attention().to(cfg['device'])
+                        model.load_state_dict(self.assist_parameters[i][iter])
+                        model.train(False)
+                        for j, input in enumerate(_data_loader[split]):
+                            if len(input) == 3:
+                                input = {'id': input[0], 'assist': None, 'score': input[1]}
+                            else:
+                                input = {'id': input[0], 'assist': input[1], 'score': input[2]}
+                            input = to_device(input, cfg['device'])
+                            output = model(input)
+                            organization_scores['score'][input['id']] = output['score'].cpu()
+                        if self.organization_scores[i][split] is None:
+                            self.organization_scores[i][split] = organization_scores
+                        else:
+                            self.organization_scores[i][split]['score'] = self.organization_scores[i][split]['score'] \
+                                                                          - self.assist_rate * \
+                                                                          organization_scores['score']
         else:
             raise ValueError('Not valid assist')
         return

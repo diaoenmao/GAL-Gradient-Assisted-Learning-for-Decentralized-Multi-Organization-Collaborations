@@ -141,7 +141,7 @@ def process_control():
         cfg['assist']['optimizer_name'] = 'Adam'
         cfg['assist']['lr'] = 1e-1
         cfg['assist']['weight_decay'] = 5e-4
-        cfg['assist']['num_epochs'] = {'global': 10}
+        cfg['assist']['num_epochs'] = {'global': 50}
         cfg['assist']['scheduler_name'] = 'None'
     else:
         if cfg['model_name'] in ['linear', 'mlp']:
