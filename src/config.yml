@@ -1,8 +1,9 @@
 ---
 # control
 control:
-  num_users: '5'
-  assist_mode: 'attention'
+  num_users: '4'
+  feature_split_mode: 'iid'
+  assist_mode: 'bagging'
   assist_rate: '1'
 # data
 data_name: Blob

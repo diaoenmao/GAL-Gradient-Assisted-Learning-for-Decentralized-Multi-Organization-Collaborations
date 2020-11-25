@@ -42,7 +42,7 @@ class MLP(nn.Module):
             mask = torch.ones(x.size(1), device=x.device)
             mask[input['feature_split']] = 0
             x = torch.masked_fill(x, mask == 1, 0)
-        output['score'] = self.linear(x)
+        output['score'] = self.blocks(x)
         if 'assist' in input:
             if self.training:
                 if input['assist'] is None:

@@ -3,28 +3,45 @@ import torch
 import models
 from config import cfg
 from data import make_data_loader
+from organization import Organization
 from utils import make_optimizer, make_scheduler, collate, to_device
 
 
 class Assist:
-    def __init__(self, feature_split):
+    def __init__(self, feature_split, assist_rate):
         self.feature_split = feature_split
+        self.assist_rate = assist_rate
+        self.model_name = self.make_model_name()
+        self.reset()
+
+    def reset(self):
         self.organization_scores = [{split: None for split in cfg['data_size']} for _ in range(len(self.feature_split))]
-        self.assist_rate = cfg['assist_rate']
-        self.assist_parameters = [[None for _ in range(cfg[cfg['model_name']]['num_epochs']['global'])] for _ in
+        self.assist_parameters = [[None for _ in range(cfg['global']['num_epochs'])] for _ in
                                   range(len(self.feature_split))]
+        return
 
     def make_model_name(self):
         model_name = cfg['model_name'].split('-')
-        model_idx = torch.randint(0, len(model_name), (len(self.feature_split),))
+        model_idx = torch.arange(len(model_name)).repeat(round(len(self.feature_split) / len(model_name)))
+        model_idx = model_idx.tolist()[:len(self.feature_split)]
         model_name = [model_name[i] for i in model_idx]
         return model_name
 
     def make_data_loader(self, dataset):
         data_loader = [None for _ in range(len(self.feature_split))]
         for i in range(len(self.feature_split)):
-            data_loader[i] = make_data_loader(dataset, cfg['model_name'])
+            data_loader[i] = make_data_loader(dataset, self.model_name[i])
         return data_loader
+
+    def make_organization(self):
+        feature_split = self.feature_split
+        model_name = self.model_name
+        organization = [None for _ in range(len(feature_split))]
+        for i in range(len(feature_split)):
+            model_name_i = model_name[i]
+            feature_split_i = feature_split[i]
+            organization[i] = Organization(i, feature_split_i, model_name_i)
+        return organization
 
     def update(self, iter, data_loader, new_organization_scores):
         if cfg['assist_mode'] == 'none':
@@ -78,7 +95,7 @@ class Assist:
                 if 'train' in _data_loader:
                     model = models.stack().to(cfg['device'])
                     if iter > 0:
-                        model.load_state_dict(self.assist_parameters[i][iter-1])
+                        model.load_state_dict(self.assist_parameters[i][iter - 1])
                     model.train(True)
                     optimizer = make_optimizer(model, 'assist')
                     scheduler = make_scheduler(optimizer, 'assist')
@@ -140,7 +157,7 @@ class Assist:
                 if 'train' in _data_loader:
                     model = models.attention().to(cfg['device'])
                     if iter > 0:
-                        model.load_state_dict(self.assist_parameters[i][iter-1])
+                        model.load_state_dict(self.assist_parameters[i][iter - 1])
                     model.train(True)
                     optimizer = make_optimizer(model, 'assist')
                     scheduler = make_scheduler(optimizer, 'assist')

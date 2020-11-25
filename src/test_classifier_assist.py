@@ -1,16 +1,15 @@
 import argparse
-import copy
 import datetime
-import models
 import os
-import shutil
-import time
 import torch
 import torch.backends.cudnn as cudnn
+import models
 from config import cfg
-from data import fetch_dataset, split_dataset
+from data import fetch_dataset, make_data_loader, split_dataset
+from metrics import Metric
 from assist import Assist
-from utils import save, load, process_control, process_dataset
+from organization import Organization
+from utils import save, load, to_device, process_control, process_dataset, resume, collate
 from logger import Logger
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -26,9 +25,7 @@ if args['control_name']:
     cfg['control'] = {k: v for k, v in zip(cfg['control'].keys(), args['control_name'].split('_'))} \
         if args['control_name'] != 'None' else {}
 cfg['control_name'] = '_'.join([cfg['control'][k] for k in cfg['control']]) if 'control' in cfg else ''
-cfg['pivot_metric'] = 'Accuracy'
-cfg['pivot'] = -float('inf')
-cfg['metric_name'] = {'train': ['Loss', 'Loss_Local', 'Accuracy'], 'test': ['Loss', 'Accuracy']}
+cfg['metric_name'] = {'test': ['Loss', 'Accuracy']}
 
 
 def main():
@@ -48,61 +45,22 @@ def runExperiment():
     torch.cuda.manual_seed(seed)
     dataset = fetch_dataset(cfg['data_name'], cfg['subset'])
     process_dataset(dataset)
-    if cfg['resume_mode'] == 1:
-        last_epoch, assist, organization, logger = resume(cfg['model_tag'])
-    elif cfg['resume_mode'] == 2:
-        last_epoch = 1
-        _, assist, organization, _ = resume(cfg['model_tag'])
-        current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')
-        logger_path = 'output/runs/{}_{}'.format(cfg['model_tag'], current_time)
-        logger = Logger(logger_path)
-    else:
-        last_epoch = 1
-        feature_split = split_dataset(cfg['num_users'], cfg['feature_split_mode'])
-        assist = Assist(feature_split, cfg['assist_rate'])
-        organization = assist.make_organization()
-        current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')
-        logger_path = 'output/runs/train_{}_{}'.format(cfg['model_tag'], current_time)
-        logger = Logger(logger_path)
-    if organization is None:
-        organization = assist.make_organization()
+    last_epoch, assist, organization, logger = resume(cfg['model_tag'], load_tag='best')
+    assist.reset()
     data_loader = assist.make_data_loader(dataset)
-    for epoch in range(last_epoch, cfg['global']['num_epochs'] + 1):
-        logger.safe(True)
-        train(data_loader, assist, organization, logger, epoch)
+    current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')
+    logger_path = 'output/runs/test_{}_{}'.format(cfg['model_tag'], current_time)
+    test_logger = Logger(logger_path)
+    for epoch in range(1, last_epoch):
+        test_logger.safe(True)
         organization_scores = broadcast(data_loader, organization, epoch)
         assist.update(epoch - 1, data_loader, organization_scores)
-        test(data_loader, assist, organization, logger, epoch)
-        logger.safe(False)
-        save_result = {
-            'cfg': cfg, 'epoch': epoch + 1, 'assist': assist, 'organization': organization, 'logger': logger}
-        save(save_result, './output/model/{}_checkpoint.pt'.format(cfg['model_tag']))
-        if cfg['pivot'] < logger.mean['test/{}'.format(cfg['pivot_metric'])]:
-            cfg['pivot'] = logger.mean['test/{}'.format(cfg['pivot_metric'])]
-            shutil.copy('./output/model/{}_checkpoint.pt'.format(cfg['model_tag']),
-                        './output/model/{}_best.pt'.format(cfg['model_tag']))
-        logger.reset()
-    logger.safe(False)
-    return
-
-
-def train(data_loader, assist, organization, logger, epoch):
-    start_time = time.time()
-    num_active_users = len(organization)
-    for i in range(num_active_users):
-        organization[i].train(epoch - 1, data_loader[i]['train'], logger, assist.organization_scores[i]['train'])
-        if i % int((num_active_users * cfg['log_interval']) + 1) == 0:
-            local_time = (time.time() - start_time) / (i + 1)
-            epoch_finished_time = datetime.timedelta(seconds=local_time * (num_active_users - i - 1))
-            exp_finished_time = epoch_finished_time + datetime.timedelta(
-                seconds=round((cfg['global']['num_epochs'] - epoch) * local_time * num_active_users))
-            info = {'info': ['Model: {}'.format(cfg['model_tag']),
-                             'Train Epoch: {}({:.0f}%)'.format(epoch, 100. * i / num_active_users),
-                             'ID: {}/{}'.format(i + 1, num_active_users),
-                             'Epoch Finished Time: {}'.format(epoch_finished_time),
-                             'Experiment Finished Time: {}'.format(exp_finished_time)]}
-            logger.append(info, 'train', mean=False)
-            logger.write('train', cfg['metric_name']['train'])
+        test(data_loader, assist, organization, test_logger, epoch)
+        test_logger.reset()
+    test_logger.safe(False)
+    _, _, _, train_logger = resume(cfg['model_tag'], load_tag='checkpoint')
+    save_result = {'cfg': cfg, 'epoch': last_epoch, 'logger': {'train': train_logger, 'test': test_logger}}
+    save(save_result, './output/result/{}.pt'.format(cfg['model_tag']))
     return
 
 

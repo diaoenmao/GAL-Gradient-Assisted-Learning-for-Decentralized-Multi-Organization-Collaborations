@@ -119,40 +119,45 @@ def process_control():
     cfg['linear'] = {}
     cfg['mlp'] = {'hidden_size': [512]}
     if 'assist_mode' in cfg['control']:
-        cfg['assist'] = {}
         cfg['num_users'] = int(cfg['control']['num_users'])
+        cfg['feature_split_mode'] = str(cfg['control']['feature_split_mode'])
         cfg['assist_mode'] = cfg['control']['assist_mode']
         cfg['assist_rate'] = float(cfg['control']['assist_rate'])
-        if cfg['model_name'] in ['linear', 'mlp']:
-            cfg[cfg['model_name']]['batch_size'] = {'train': 128, 'valid': 128, 'test': 128}
-            cfg[cfg['model_name']]['shuffle'] = {'train': True, 'valid': False, 'test': False}
-            cfg[cfg['model_name']]['optimizer_name'] = 'SGD'
-            cfg[cfg['model_name']]['lr'] = 1e-1
-            cfg[cfg['model_name']]['momentum'] = 0.9
-            cfg[cfg['model_name']]['weight_decay'] = 5e-4
-            cfg[cfg['model_name']]['num_epochs'] = {'global': 20, 'local': 100}
-            cfg[cfg['model_name']]['scheduler_name'] = 'MultiStepLR'
-            cfg[cfg['model_name']]['factor'] = 0.1
-            cfg[cfg['model_name']]['milestones'] = [25, 50]
+        cfg['global'] = {}
+        cfg['global']['num_epochs'] = 5
+        model_name = set(cfg['model_name'].split('-'))
+        if len(model_name.intersection({'linear', 'mlp'})) > 0:
+            for model_name in ['linear', 'mlp']:
+                cfg[model_name]['batch_size'] = {'train': 128, 'valid': 128, 'test': 128}
+                cfg[model_name]['shuffle'] = {'train': True, 'valid': False, 'test': False}
+                cfg[model_name]['optimizer_name'] = 'SGD'
+                cfg[model_name]['lr'] = 1e-1
+                cfg[model_name]['momentum'] = 0.9
+                cfg[model_name]['weight_decay'] = 5e-4
+                cfg[model_name]['num_epochs'] = 100
+                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
+                cfg[model_name]['factor'] = 0.1
+                cfg[model_name]['milestones'] = [25, 50]
         else:
             raise ValueError('Not valid model name')
+        cfg['assist'] = {}
         cfg['assist']['batch_size'] = {'train': 128, 'test': 128}
         cfg['assist']['shuffle'] = {'train': True, 'test': False}
-        cfg['assist']['optimizer_name'] = 'Adam'
+        cfg['assist']['optimizer_name'] = 'SGD'
         cfg['assist']['lr'] = 1e-1
         cfg['assist']['weight_decay'] = 5e-4
-        cfg['assist']['num_epochs'] = {'global': 50}
-        cfg['assist']['scheduler_name'] = 'None'
+        cfg['assist']['num_epochs'] = 50
+        cfg['assist']['scheduler_name'] = 'MultiStepLR'
     else:
         if cfg['model_name'] in ['linear', 'mlp']:
             cfg[cfg['model_name']]['batch_size'] = {'train': 128, 'valid': 128, 'test': 128}
             cfg[cfg['model_name']]['shuffle'] = {'train': True, 'valid': False, 'test': False}
-            cfg[cfg['model_name']]['optimizer_name'] = 'SGD'
+            cfg[cfg['model_name']]['optimizer_name'] = 'Adam'
             cfg[cfg['model_name']]['lr'] = 1e-1
             cfg[cfg['model_name']]['momentum'] = 0.9
             cfg[cfg['model_name']]['weight_decay'] = 5e-4
-            cfg[cfg['model_name']]['num_epochs'] = {'global': 100}
-            cfg[cfg['model_name']]['scheduler_name'] = 'MultiStepLR'
+            cfg[cfg['model_name']]['num_epochs'] = 100
+            cfg[cfg['model_name']]['scheduler_name'] = 'None'
             cfg[cfg['model_name']]['factor'] = 0.1
             cfg[cfg['model_name']]['milestones'] = [25, 50]
     cfg['stats'] = make_stats()
