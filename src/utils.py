@@ -112,34 +112,42 @@ def process_control():
         cfg['data_shape'] = [41]
     if cfg['data_name'] in ['Wine']:
         cfg['data_shape'] = [11]
+    if cfg['data_name'] in ['MNIST']:
+        cfg['data_shape'] = [1, 32, 32]
+    if cfg['data_name'] in ['CIFAR10']:
+        cfg['data_shape'] = [3, 32, 32]
     if cfg['data_name'] in ['Blob', 'QSAR', 'Wine']:
         cfg['data_tag'] = 'feature'
-    elif cfg['data_name'] in ['MNIST']:
+    elif cfg['data_name'] in ['MNIST', 'CIFAR10']:
         cfg['data_tag'] = 'img'
     cfg['linear'] = {}
     cfg['mlp'] = {'hidden_size': [512]}
+    cfg['conv'] = {'hidden_size': [64, 128, 256, 512]}
+    cfg['resnet'] = {'hidden_size': [64, 128, 256, 512]}
     if 'assist_mode' in cfg['control']:
+        for model_name in ['linear', 'mlp', 'conv', 'resnet']:
+            cfg[model_name]['batch_size'] = {'train': 128, 'valid': 128, 'test': 128}
+            cfg[model_name]['shuffle'] = {'train': True, 'valid': False, 'test': False}
+            cfg[model_name]['optimizer_name'] = 'SGD'
+            cfg[model_name]['lr'] = 1e-1
+            cfg[model_name]['momentum'] = 0.9
+            cfg[model_name]['weight_decay'] = 5e-4
+            if model_name in ['linear', 'mlp']:
+                cfg[model_name]['num_epochs'] = 100
+                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
+                cfg[model_name]['factor'] = 0.1
+                cfg[model_name]['milestones'] = [25, 50]
+            else:
+                cfg[model_name]['num_epochs'] = 200
+                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
+                cfg[model_name]['factor'] = 0.1
+                cfg[model_name]['milestones'] = [50, 100]
         cfg['num_users'] = int(cfg['control']['num_users'])
         cfg['feature_split_mode'] = str(cfg['control']['feature_split_mode'])
         cfg['assist_mode'] = cfg['control']['assist_mode']
         cfg['assist_rate'] = float(cfg['control']['assist_rate'])
         cfg['global'] = {}
         cfg['global']['num_epochs'] = 5
-        model_name = set(cfg['model_name'].split('-'))
-        if len(model_name.intersection({'linear', 'mlp'})) > 0:
-            for model_name in ['linear', 'mlp']:
-                cfg[model_name]['batch_size'] = {'train': 128, 'valid': 128, 'test': 128}
-                cfg[model_name]['shuffle'] = {'train': True, 'valid': False, 'test': False}
-                cfg[model_name]['optimizer_name'] = 'SGD'
-                cfg[model_name]['lr'] = 1e-1
-                cfg[model_name]['momentum'] = 0.9
-                cfg[model_name]['weight_decay'] = 5e-4
-                cfg[model_name]['num_epochs'] = 100
-                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
-                cfg[model_name]['factor'] = 0.1
-                cfg[model_name]['milestones'] = [25, 50]
-        else:
-            raise ValueError('Not valid model name')
         cfg['assist'] = {}
         cfg['assist']['batch_size'] = {'train': 128, 'test': 128}
         cfg['assist']['shuffle'] = {'train': True, 'test': False}
@@ -149,17 +157,23 @@ def process_control():
         cfg['assist']['num_epochs'] = 50
         cfg['assist']['scheduler_name'] = 'MultiStepLR'
     else:
-        if cfg['model_name'] in ['linear', 'mlp']:
-            cfg[cfg['model_name']]['batch_size'] = {'train': 128, 'valid': 128, 'test': 128}
-            cfg[cfg['model_name']]['shuffle'] = {'train': True, 'valid': False, 'test': False}
-            cfg[cfg['model_name']]['optimizer_name'] = 'Adam'
-            cfg[cfg['model_name']]['lr'] = 1e-1
-            cfg[cfg['model_name']]['momentum'] = 0.9
-            cfg[cfg['model_name']]['weight_decay'] = 5e-4
-            cfg[cfg['model_name']]['num_epochs'] = 100
-            cfg[cfg['model_name']]['scheduler_name'] = 'None'
-            cfg[cfg['model_name']]['factor'] = 0.1
-            cfg[cfg['model_name']]['milestones'] = [25, 50]
+        for model_name in ['linear', 'mlp', 'conv', 'resnet']:
+            cfg[model_name]['batch_size'] = {'train': 128, 'valid': 128, 'test': 128}
+            cfg[model_name]['shuffle'] = {'train': True, 'valid': False, 'test': False}
+            cfg[model_name]['optimizer_name'] = 'SGD'
+            cfg[model_name]['lr'] = 1e-1
+            cfg[model_name]['momentum'] = 0.9
+            cfg[model_name]['weight_decay'] = 5e-4
+            if model_name in ['linear', 'mlp']:
+                cfg[model_name]['num_epochs'] = 100
+                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
+                cfg[model_name]['factor'] = 0.1
+                cfg[model_name]['milestones'] = [25, 50]
+            else:
+                cfg[model_name]['num_epochs'] = 200
+                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
+                cfg[model_name]['factor'] = 0.1
+                cfg[model_name]['milestones'] = [50, 100]
     cfg['stats'] = make_stats()
     return
 

@@ -2,7 +2,7 @@ import copy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .utils import init_param, normalize, ce_loss, kd_loss
+from .utils import init_param, normalize, feature_split
 from config import cfg
 
 
@@ -36,12 +36,11 @@ class MLP(nn.Module):
 
     def forward(self, input):
         output = {}
-        x = input['feature']
+        x = input[cfg['data_tag']]
         x = normalize(x)
         if 'feature_split' in input:
-            mask = torch.ones(x.size(1), device=x.device)
-            mask[input['feature_split']] = 0
-            x = torch.masked_fill(x, mask == 1, 0)
+            x = feature_split(x, input['feature_split'])
+        x = x.view(x.size(0), -1)
         output['score'] = self.blocks(x)
         if 'assist' in input:
             if self.training:

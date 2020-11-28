@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
 import math
 import models
+import numpy as np
 from data import fetch_dataset, make_data_loader
 from metrics import Metric
 from utils import save, load, to_device, process_dataset, resume, collate, save_img
@@ -49,3 +50,20 @@ from logger import Logger
 #     print(log_odds)
 #     print(sm)
 #     print(loss)
+
+import math
+
+# if __name__ == "__main__":
+#     h, w = 4, 4
+#     n = 2
+#     power = np.log2(n)
+#     n_h = int(2 ** (power // 2))
+#     n_w = int(2 ** (power - power // 2))
+#     print(n_h, n_w)
+#     a = torch.arange(h * w).view(h, w)
+#     print(a)
+#     print(a.view(n_h, h // n_h, n_w, w // n_w).size())
+#     b = a.view(n_h, h // n_h, n_w, w // n_w).transpose(1, 2).reshape(-1, h // n_h, w // n_w)
+#     print(b)
+#     print(list(b))
+#     print(len(b))

@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 from config import cfg
 
 
@@ -31,21 +32,17 @@ def denormalize(input):
     return input
 
 
-def ce_loss(score, label):
-    ce = F.cross_entropy(score, label)
-    return ce
-
-
-def kd_loss(score, label, assist):
-    ce = F.cross_entropy(score, label)
-    kld = nn.KLDivLoss(reduction='batchmean')
-    log_p = F.log_softmax(score, dim=-1)
-    kd = 0
-    for i in range(assist.size(-1)):
-        assist_i = assist[:, :, i]
-        valid = assist_i.sum(dim=-1) != 0
-        kd += kld(log_p[valid], F.softmax(assist_i[valid], dim=-1))
-    kd = kd / assist.size(-1)
-    alpha = 0.5
-    kd = alpha * kd + (1 - alpha) * ce
-    return kd
+def feature_split(input, feature_split):
+    if cfg['data_name'] in ['Blob', 'QSAR', 'Wine']:
+        mask = torch.zeros(input.size(1), device=input.device)
+        mask[feature_split] = 1
+        output = torch.masked_fill(input, mask == 0, 0)
+    elif cfg['data_name'] in ['MNIST', 'CIFAR10']:
+        num_features = np.prod(cfg['data_shape'][1:]).item()
+        mask = torch.zeros(num_features, device=input.device)
+        mask[feature_split] = 1
+        mask = mask.view(input.size()[2:])
+        output = torch.masked_fill(input, mask == 0, 0)
+    else:
+        raise ValueError('Not valid data name')
+    return output

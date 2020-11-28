@@ -1,5 +1,6 @@
 import torch
 import datasets
+import numpy as np
 from config import cfg
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.dataloader import default_collate
@@ -13,6 +14,11 @@ def fetch_dataset(data_name, subset, verbose=True):
     if data_name in ['Blob', 'QSAR', 'Wine']:
         dataset['train'] = eval('datasets.{}(root=root, split=\'train\', subset=subset)'.format(data_name))
         dataset['test'] = eval('datasets.{}(root=root, split=\'test\', subset=subset)'.format(data_name))
+    elif data_name in ['MNIST', 'CIFAR10']:
+        dataset['train'] = eval('datasets.{}(root=root, split=\'train\', subset=subset, '
+                                'transform=datasets.Compose([transforms.ToTensor()]))'.format(data_name))
+        dataset['test'] = eval('datasets.{}(root=root, split=\'test\', subset=subset, '
+                               'transform=datasets.Compose([transforms.ToTensor()]))'.format(data_name))
     else:
         raise ValueError('Not valid dataset name')
     if verbose:
@@ -46,6 +52,20 @@ def split_dataset(num_users, feature_split_mode):
             num_features = cfg['data_shape'][0]
             feature_split = list(torch.randperm(num_features).split(num_features // num_users))
             feature_split = feature_split[:num_users - 1] + [torch.cat(feature_split[num_users - 1:])]
+        else:
+            raise ValueError('Not valid feature split mode')
+    elif cfg['data_name'] in ['MNIST', 'CIFAR10']:
+        num_features = np.prod(cfg['data_shape'][1:]).item()
+        if feature_split_mode == 'iid':
+            feature_split = list(torch.randperm(num_features).split(num_features // num_users))
+            feature_split = feature_split[:num_users - 1] + [torch.cat(feature_split[num_users - 1:])]
+        elif feature_split_mode == 'non-iid':
+            idx = torch.arange(num_features).view(*cfg['data_shape'][1:])
+            power = np.log2(num_users)
+            n_h, n_w = int(2 ** (power // 2)), int(2 ** (power - power // 2))
+            feature_split = idx.view(n_h, cfg['data_shape'][1] // n_h, n_w, cfg['data_shape'][2] // n_w) \
+                .transpose(1, 2).reshape(-1, cfg['data_shape'][1] // n_h, cfg['data_shape'][2] // n_w).tolist()
+            feature_split = list(feature_split)
         else:
             raise ValueError('Not valid feature split mode')
     else:
