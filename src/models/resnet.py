@@ -116,7 +116,7 @@ class ResNet(nn.Module):
 def resnet18():
     data_shape = cfg['data_shape']
     classes_size = cfg['classes_size']
-    hidden_size = cfg['resnet']['hidden_size']
+    hidden_size = cfg['resnet18']['hidden_size']
     model = ResNet(data_shape, hidden_size, Block, [1, 1, 1, 2], classes_size)
     model.apply(init_param)
     return model
@@ -125,7 +125,7 @@ def resnet18():
 def resnet34():
     data_shape = cfg['data_shape']
     classes_size = cfg['classes_size']
-    hidden_size = cfg['resnet']['hidden_size']
+    hidden_size = cfg['resnet34']['hidden_size']
     model = ResNet(data_shape, hidden_size, Block, [3, 4, 6, 3], classes_size)
     model.apply(init_param)
     return model
@@ -134,7 +134,7 @@ def resnet34():
 def resnet50():
     data_shape = cfg['data_shape']
     classes_size = cfg['classes_size']
-    hidden_size = cfg['resnet']['hidden_size']
+    hidden_size = cfg['resnet50']['hidden_size']
     model = ResNet(data_shape, hidden_size, Bottleneck, [3, 4, 6, 3], classes_size)
     model.apply(init_param)
     return model
@@ -143,7 +143,7 @@ def resnet50():
 def resnet101():
     data_shape = cfg['data_shape']
     classes_size = cfg['classes_size']
-    hidden_size = cfg['resnet']['hidden_size']
+    hidden_size = cfg['resnet101']['hidden_size']
     model = ResNet(data_shape, hidden_size, Bottleneck, [3, 4, 23, 3], classes_size)
     model.apply(init_param)
     return model
@@ -152,7 +152,7 @@ def resnet101():
 def resnet152():
     data_shape = cfg['data_shape']
     classes_size = cfg['classes_size']
-    hidden_size = cfg['resnet']['hidden_size']
+    hidden_size = cfg['resnet152']['hidden_size']
     model = ResNet(data_shape, hidden_size, Bottleneck, [3, 8, 36, 3], classes_size)
     model.apply(init_param)
     return model

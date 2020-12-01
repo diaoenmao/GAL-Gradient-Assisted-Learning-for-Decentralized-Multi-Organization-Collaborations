@@ -77,11 +77,10 @@ class Logger():
         info = self.tracker[info_name]
         info[2:2] = evaluation_info
         info = '  '.join(info)
-        print(info)
         if self.writer is not None:
             self.iterator[info_name] += 1
             self.writer.add_text(info_name, info, self.iterator[info_name])
-        return
+        return info
 
     def flush(self):
         self.writer.flush()

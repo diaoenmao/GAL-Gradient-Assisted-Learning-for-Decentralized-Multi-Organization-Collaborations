@@ -71,7 +71,7 @@ def test(data_loader, assist, organization, logger, epoch):
             organization[i].test(epoch - 1, data_loader[i]['test'], logger, assist.organization_scores[i]['test'])
         info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
         logger.append(info, 'test', mean=False)
-        logger.write('test', cfg['metric_name']['test'])
+        print(logger.write('test', cfg['metric_name']['test']))
     return
 
 

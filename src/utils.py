@@ -123,9 +123,9 @@ def process_control():
     cfg['linear'] = {}
     cfg['mlp'] = {'hidden_size': [512]}
     cfg['conv'] = {'hidden_size': [64, 128, 256, 512]}
-    cfg['resnet'] = {'hidden_size': [64, 128, 256, 512]}
+    cfg['resnet18'] = {'hidden_size': [64, 128, 256, 512]}
     if 'assist_mode' in cfg['control']:
-        for model_name in ['linear', 'mlp', 'conv', 'resnet']:
+        for model_name in ['linear', 'mlp', 'conv', 'resnet18']:
             cfg[model_name]['batch_size'] = {'train': 128, 'valid': 128, 'test': 128}
             cfg[model_name]['shuffle'] = {'train': True, 'valid': False, 'test': False}
             cfg[model_name]['optimizer_name'] = 'SGD'
@@ -147,17 +147,17 @@ def process_control():
         cfg['assist_mode'] = cfg['control']['assist_mode']
         cfg['assist_rate'] = float(cfg['control']['assist_rate'])
         cfg['global'] = {}
-        cfg['global']['num_epochs'] = 5
+        cfg['global']['num_epochs'] = 10
         cfg['assist'] = {}
         cfg['assist']['batch_size'] = {'train': 128, 'test': 128}
         cfg['assist']['shuffle'] = {'train': True, 'test': False}
         cfg['assist']['optimizer_name'] = 'SGD'
         cfg['assist']['lr'] = 1e-1
         cfg['assist']['weight_decay'] = 5e-4
-        cfg['assist']['num_epochs'] = 50
+        cfg['assist']['num_epochs'] = 20
         cfg['assist']['scheduler_name'] = 'MultiStepLR'
     else:
-        for model_name in ['linear', 'mlp', 'conv', 'resnet']:
+        for model_name in ['linear', 'mlp', 'conv', 'resnet18']:
             cfg[model_name]['batch_size'] = {'train': 128, 'valid': 128, 'test': 128}
             cfg[model_name]['shuffle'] = {'train': True, 'valid': False, 'test': False}
             cfg[model_name]['optimizer_name'] = 'SGD'

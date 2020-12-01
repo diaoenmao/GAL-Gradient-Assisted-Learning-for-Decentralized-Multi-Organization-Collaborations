@@ -3,6 +3,7 @@ import copy
 import datetime
 import models
 import os
+import sys
 import shutil
 import time
 import torch
@@ -91,6 +92,7 @@ def train(data_loader, assist, organization, logger, epoch):
     num_active_users = len(organization)
     for i in range(num_active_users):
         organization[i].train(epoch - 1, data_loader[i]['train'], logger, assist.organization_scores[i]['train'])
+        sys.stdout.write('\x1b[2K')
         if i % int((num_active_users * cfg['log_interval']) + 1) == 0:
             local_time = (time.time() - start_time) / (i + 1)
             epoch_finished_time = datetime.timedelta(seconds=local_time * (num_active_users - i - 1))
@@ -102,7 +104,7 @@ def train(data_loader, assist, organization, logger, epoch):
                              'Epoch Finished Time: {}'.format(epoch_finished_time),
                              'Experiment Finished Time: {}'.format(exp_finished_time)]}
             logger.append(info, 'train', mean=False)
-            logger.write('train', cfg['metric_name']['train'])
+            print(logger.write('train', cfg['metric_name']['train']))
     return
 
 
@@ -113,7 +115,7 @@ def test(data_loader, assist, organization, logger, epoch):
             organization[i].test(epoch - 1, data_loader[i]['test'], logger, assist.organization_scores[i]['test'])
         info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
         logger.append(info, 'test', mean=False)
-        logger.write('test', cfg['metric_name']['test'])
+        print(logger.write('test', cfg['metric_name']['test']))
     return
 
 

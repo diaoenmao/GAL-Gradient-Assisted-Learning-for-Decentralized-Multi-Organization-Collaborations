@@ -6,7 +6,7 @@ control:
   assist_mode: 'bagging'
   assist_rate: '1'
 # data
-data_name: Blob
+data_name: MNIST
 subset: label
 # model
 model_name: linear

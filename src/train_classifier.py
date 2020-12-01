@@ -117,7 +117,7 @@ def train(data_loader, model, optimizer, logger, epoch):
                              'Learning rate: {:.6f}'.format(lr), 'Epoch Finished Time: {}'.format(epoch_finished_time),
                              'Experiment Finished Time: {}'.format(exp_finished_time)]}
             logger.append(info, 'train', mean=False)
-            logger.write('train', cfg['metric_name']['train'])
+            print(logger.write('train', cfg['metric_name']['train']))
     return
 
 
@@ -135,7 +135,7 @@ def test(data_loader, model, logger, epoch):
             logger.append(evaluation, 'test', input_size)
         info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
         logger.append(info, 'test', mean=False)
-        logger.write('test', cfg['metric_name']['test'])
+        print(logger.write('test', cfg['metric_name']['test']))
     return
 
 

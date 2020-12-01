@@ -37,6 +37,12 @@ class Organization:
                 scheduler.step(metrics=logger.mean['train/{}'.format(cfg['pivot_metric'])])
             else:
                 scheduler.step()
+            info = {'info': ['Model: {}'.format(cfg['model_tag']),
+                             'Train Local Epoch: {}({:.0f}%)'.format(local_epoch, 100. * local_epoch /
+                                                                     cfg[self.model_name]['num_epochs']),
+                             'ID: {}'.format(self.organization_id)]}
+            logger.append(info, 'train', mean=False)
+            print(logger.write('train', cfg['metric_name']['train']), end='\r', flush=True)
         self.model_parameters[iter] = model.to('cpu').state_dict()
         return
 
@@ -44,7 +50,6 @@ class Organization:
         with torch.no_grad():
             metric = Metric()
             model = eval('models.{}().to(cfg["device"])'.format(self.model_name))
-            # print(self.model_parameters)
             model.load_state_dict(self.model_parameters[iter])
             model.train(False)
             for i, input in enumerate(data_loader):

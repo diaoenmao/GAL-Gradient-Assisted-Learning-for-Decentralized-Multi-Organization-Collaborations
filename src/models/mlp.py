@@ -2,6 +2,7 @@ import copy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 from .utils import init_param, normalize, feature_split
 from config import cfg
 
@@ -21,18 +22,15 @@ class MLPBlock(nn.Module):
 class MLP(nn.Module):
     def __init__(self, data_shape, hidden_size, classes_size):
         super().__init__()
-        if len(hidden_size) == 0:
-            self.blocks = nn.Linear(data_shape[0], classes_size)
-        else:
-            blocks = [nn.Linear(data_shape[0], hidden_size[0])]
-            for i in range(len(hidden_size) - 1):
-                blocks.append(MLPBlock(hidden_size[i], hidden_size[i + 1]))
-            blocks.extend([
-                nn.BatchNorm1d(hidden_size[-1]),
-                nn.ReLU(),
-                nn.Linear(hidden_size[-1], classes_size),
-            ])
-            self.blocks = nn.Sequential(*blocks)
+        blocks = [nn.Linear(np.prod(data_shape).item(), hidden_size[0])]
+        for i in range(len(hidden_size) - 1):
+            blocks.append(MLPBlock(hidden_size[i], hidden_size[i + 1]))
+        blocks.extend([
+            nn.BatchNorm1d(hidden_size[-1]),
+            nn.ReLU(),
+            nn.Linear(hidden_size[-1], classes_size),
+        ])
+        self.blocks = nn.Sequential(*blocks)
 
     def forward(self, input):
         output = {}
