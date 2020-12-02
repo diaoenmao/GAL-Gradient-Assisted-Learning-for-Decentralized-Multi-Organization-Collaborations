@@ -74,7 +74,7 @@ class ResNet(nn.Module):
 
     def forward(self, input):
         output = {}
-        x = input[cfg['data_tag']]
+        x = input['data']
         x = normalize(x)
         if 'feature_split' in input:
             x = feature_split(x, input['feature_split'])
@@ -91,25 +91,25 @@ class ResNet(nn.Module):
         if 'assist' in input:
             if self.training:
                 if input['assist'] is None:
-                    target = F.one_hot(input['label'], cfg['target_size']).float()
+                    target = F.one_hot(input['target'], cfg['target_size']).float()
                     target[target == 0] = 1e-4
                     target = torch.log(target)
                     output['loss_local'] = F.mse_loss(output['score'], target)
-                    output['loss'] = F.cross_entropy(output['score'], input['label'])
+                    output['loss'] = F.cross_entropy(output['score'], input['target'])
                 else:
                     input['assist'].requires_grad = True
-                    loss = F.cross_entropy(input['assist'], input['label'], reduction='sum')
+                    loss = F.cross_entropy(input['assist'], input['target'], reduction='sum')
                     loss.backward()
                     target = copy.deepcopy(input['assist'].grad)
                     output['loss_local'] = F.mse_loss(output['score'], target)
                     input['assist'] = input['assist'].detach()
                     output['score'] = input['assist'] - cfg['assist_rate'] * output['score']
-                    output['loss'] = F.cross_entropy(output['score'], input['label'])
+                    output['loss'] = F.cross_entropy(output['score'], input['target'])
             else:
                 output['score'] = input['assist']
-                output['loss'] = F.cross_entropy(output['score'], input['label'])
+                output['loss'] = F.cross_entropy(output['score'], input['target'])
         else:
-            output['loss'] = F.cross_entropy(output['score'], input['label'])
+            output['loss'] = F.cross_entropy(output['score'], input['target'])
         return output
 
 

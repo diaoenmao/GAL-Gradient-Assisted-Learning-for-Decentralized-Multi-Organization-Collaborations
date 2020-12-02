@@ -107,30 +107,36 @@ def process_dataset(dataset):
 
 def process_control():
     data_shape = {'Blob': [10], 'Iris': [4], 'Diabets': [10], 'BostonHousing': [13], 'Wine': [13],
-                  'BreastCancer': [30], 'QSAR': [41], 'MNIST': [1, 32, 32], 'CIFAR10': [3, 32, 32]}
+                  'BreastCancer': [30], 'QSAR': [41], 'MNIST': [1, 28, 28], 'CIFAR10': [3, 32, 32]}
     cfg['data_shape'] = data_shape[cfg['data_name']]
     cfg['linear'] = {}
     cfg['mlp'] = {'hidden_size': [128, 256]}
     cfg['conv'] = {'hidden_size': [64, 128, 256, 512]}
     cfg['resnet18'] = {'hidden_size': [64, 128, 256, 512]}
-    if 'assist_mode' in cfg['control']:
-        for model_name in ['linear', 'mlp', 'conv', 'resnet18']:
-            cfg[model_name]['batch_size'] = {'train': 128, 'valid': 128, 'test': 128}
-            cfg[model_name]['shuffle'] = {'train': True, 'valid': False, 'test': False}
-            cfg[model_name]['optimizer_name'] = 'SGD'
+    for model_name in ['linear', 'mlp', 'conv', 'resnet18']:
+        cfg[model_name]['batch_size'] = {'train': 128, 'valid': 128, 'test': 128}
+        cfg[model_name]['shuffle'] = {'train': True, 'valid': False, 'test': False}
+        cfg[model_name]['optimizer_name'] = 'SGD'
+        cfg[model_name]['momentum'] = 0.9
+        cfg[model_name]['weight_decay'] = 5e-4
+        cfg[model_name]['num_epochs'] = 100
+        cfg[model_name]['scheduler_name'] = 'MultiStepLR'
+        cfg[model_name]['factor'] = 0.1
+        if model_name in ['linear', 'mlp']:
+            cfg[model_name]['lr'] = 1e-2
+            cfg[model_name]['num_epochs'] = 100
+            cfg[model_name]['milestones'] = [50]
+        elif model_name in ['conv']:
+            cfg[model_name]['lr'] = 1e-2
+            cfg[model_name]['num_epochs'] = 200
+            cfg[model_name]['milestones'] = [100]
+        elif model_name in ['resnet18']:
             cfg[model_name]['lr'] = 1e-1
-            cfg[model_name]['momentum'] = 0.9
-            cfg[model_name]['weight_decay'] = 5e-4
-            if model_name in ['linear', 'mlp']:
-                cfg[model_name]['num_epochs'] = 100
-                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
-                cfg[model_name]['factor'] = 0.1
-                cfg[model_name]['milestones'] = [25, 50]
-            else:
-                cfg[model_name]['num_epochs'] = 200
-                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
-                cfg[model_name]['factor'] = 0.1
-                cfg[model_name]['milestones'] = [50, 100]
+            cfg[model_name]['num_epochs'] = 400
+            cfg[model_name]['milestones'] = [150, 250]
+        else:
+            raise ValueError('Not valid model name')
+    if 'assist_mode' in cfg['control']:
         cfg['num_users'] = int(cfg['control']['num_users'])
         cfg['feature_split_mode'] = str(cfg['control']['feature_split_mode'])
         cfg['assist_mode'] = cfg['control']['assist_mode']
@@ -145,24 +151,6 @@ def process_control():
         cfg['assist']['weight_decay'] = 5e-4
         cfg['assist']['num_epochs'] = 20
         cfg['assist']['scheduler_name'] = 'MultiStepLR'
-    else:
-        for model_name in ['linear', 'mlp', 'conv', 'resnet18']:
-            cfg[model_name]['batch_size'] = {'train': 128, 'valid': 128, 'test': 128}
-            cfg[model_name]['shuffle'] = {'train': True, 'valid': False, 'test': False}
-            cfg[model_name]['optimizer_name'] = 'SGD'
-            cfg[model_name]['lr'] = 1e-1
-            cfg[model_name]['momentum'] = 0.9
-            cfg[model_name]['weight_decay'] = 5e-4
-            if model_name in ['linear', 'mlp']:
-                cfg[model_name]['num_epochs'] = 100
-                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
-                cfg[model_name]['factor'] = 0.1
-                cfg[model_name]['milestones'] = [25, 50]
-            else:
-                cfg[model_name]['num_epochs'] = 200
-                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
-                cfg[model_name]['factor'] = 0.1
-                cfg[model_name]['milestones'] = [50, 100]
     cfg['stats'] = make_stats()
     return
 
@@ -170,6 +158,7 @@ def process_control():
 def make_stats():
     stats = {}
     stats_path = './res/stats'
+    makedir_exist_ok(stats_path)
     filenames = os.listdir(stats_path)
     for filename in filenames:
         stats_name = os.path.splitext(filename)[0]

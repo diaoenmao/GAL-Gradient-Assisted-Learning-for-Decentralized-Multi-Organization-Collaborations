@@ -20,12 +20,6 @@ def fetch_dataset(data_name, verbose=True):
                                 'transform=datasets.Compose([transforms.ToTensor()]))'.format(data_name))
         dataset['test'] = eval('datasets.{}(root=root, split=\'test\', '
                                'transform=datasets.Compose([transforms.ToTensor()]))'.format(data_name))
-        cfg['transform'] = {
-            'train': datasets.Compose([transforms.Resize((32, 32)), transforms.ToTensor()]),
-            'test': datasets.Compose([transforms.Resize((32, 32)), transforms.ToTensor()])
-        }
-        dataset['train'].transform = cfg['transform']['train']
-        dataset['test'].transform = cfg['transform']['test']
     else:
         raise ValueError('Not valid dataset name')
     if verbose:
