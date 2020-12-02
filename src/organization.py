@@ -22,7 +22,7 @@ class Organization:
         for local_epoch in range(1, cfg[self.model_name]['num_epochs'] + 1):
             for i, input in enumerate(data_loader):
                 input = collate(input)
-                input_size = input[cfg['data_tag']].size(0)
+                input_size = input['data'].size(0)
                 input['feature_split'] = self.feature_split
                 input['assist'] = None if organization_scores is None else self.align(input['id'], organization_scores)
                 input = to_device(input, cfg['device'])
@@ -54,7 +54,7 @@ class Organization:
             model.train(False)
             for i, input in enumerate(data_loader):
                 input = collate(input)
-                input_size = input[cfg['data_tag']].size(0)
+                input_size = input['data'].size(0)
                 input['feature_split'] = self.feature_split
                 input['assist'] = None if organization_scores is None else self.align(input['id'], organization_scores)
                 input = to_device(input, cfg['device'])

@@ -33,7 +33,7 @@ def denormalize(input):
 
 
 def feature_split(input, feature_split):
-    if cfg['data_name'] in ['Blob', 'QSAR', 'Wine']:
+    if cfg['data_name'] in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']:
         mask = torch.zeros(input.size(1), device=input.device)
         mask[feature_split] = 1
         output = torch.masked_fill(input, mask == 0, 0)

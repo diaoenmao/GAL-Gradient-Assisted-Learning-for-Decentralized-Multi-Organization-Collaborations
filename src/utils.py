@@ -100,28 +100,17 @@ def recur(fn, input, *args):
 
 
 def process_dataset(dataset):
-    cfg['classes_size'] = dataset['train'].classes_size
+    cfg['target_size'] = dataset['train'].target_size
     cfg['data_size'] = {split: len(dataset[split]) for split in dataset}
     return
 
 
 def process_control():
-    if cfg['data_name'] in ['Blob']:
-        cfg['data_shape'] = [10]
-    if cfg['data_name'] in ['QSAR']:
-        cfg['data_shape'] = [41]
-    if cfg['data_name'] in ['Wine']:
-        cfg['data_shape'] = [11]
-    if cfg['data_name'] in ['MNIST']:
-        cfg['data_shape'] = [1, 32, 32]
-    if cfg['data_name'] in ['CIFAR10']:
-        cfg['data_shape'] = [3, 32, 32]
-    if cfg['data_name'] in ['Blob', 'QSAR', 'Wine']:
-        cfg['data_tag'] = 'feature'
-    elif cfg['data_name'] in ['MNIST', 'CIFAR10']:
-        cfg['data_tag'] = 'img'
+    data_shape = {'Blob': [10], 'Iris': [4], 'Diabets': [10], 'BostonHousing': [13], 'Wine': [13],
+                  'BreastCancer': [30], 'QSAR': [41], 'MNIST': [1, 32, 32], 'CIFAR10': [3, 32, 32]}
+    cfg['data_shape'] = data_shape[cfg['data_name']]
     cfg['linear'] = {}
-    cfg['mlp'] = {'hidden_size': [512]}
+    cfg['mlp'] = {'hidden_size': [128, 256]}
     cfg['conv'] = {'hidden_size': [64, 128, 256, 512]}
     cfg['resnet18'] = {'hidden_size': [64, 128, 256, 512]}
     if 'assist_mode' in cfg['control']:

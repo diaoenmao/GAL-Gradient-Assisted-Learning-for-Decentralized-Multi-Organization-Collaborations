@@ -7,7 +7,7 @@ from .utils import init_param, normalize, feature_split
 
 
 class Conv(nn.Module):
-    def __init__(self, data_shape, hidden_size, classes_size):
+    def __init__(self, data_shape, hidden_size, target_size):
         super().__init__()
         blocks = [nn.Conv2d(data_shape[0], hidden_size[0], 3, 1, 1),
                   nn.BatchNorm2d(hidden_size[0]),
@@ -21,7 +21,7 @@ class Conv(nn.Module):
         blocks = blocks[:-1]
         blocks.extend([nn.AdaptiveAvgPool2d(1),
                        nn.Flatten(),
-                       nn.Linear(hidden_size[-1], classes_size)])
+                       nn.Linear(hidden_size[-1], target_size)])
         self.blocks = nn.Sequential(*blocks)
 
     def forward(self, input):
@@ -60,7 +60,7 @@ class Conv(nn.Module):
 def conv():
     data_shape = cfg['data_shape']
     hidden_size = cfg['conv']['hidden_size']
-    classes_size = cfg['classes_size']
-    model = Conv(data_shape, hidden_size, classes_size)
+    target_size = cfg['target_size']
+    model = Conv(data_shape, hidden_size, target_size)
     model.apply(init_param)
     return model

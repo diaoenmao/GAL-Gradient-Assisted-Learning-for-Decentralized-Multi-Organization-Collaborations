@@ -53,7 +53,7 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, data_shape, hidden_size, block, num_blocks, num_classes):
+    def __init__(self, data_shape, hidden_size, block, num_blocks, target_size):
         super(ResNet, self).__init__()
         self.in_planes = hidden_size[0]
         self.conv1 = nn.Conv2d(data_shape[0], hidden_size[0], kernel_size=3, stride=1, padding=1, bias=False)
@@ -62,7 +62,7 @@ class ResNet(nn.Module):
         self.layer3 = self._make_layer(block, hidden_size[2], num_blocks[2], stride=2)
         self.layer4 = self._make_layer(block, hidden_size[3], num_blocks[3], stride=2)
         self.n4 = nn.BatchNorm2d(hidden_size[3] * block.expansion)
-        self.linear = nn.Linear(hidden_size[3] * block.expansion, num_classes)
+        self.linear = nn.Linear(hidden_size[3] * block.expansion, target_size)
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
@@ -91,7 +91,7 @@ class ResNet(nn.Module):
         if 'assist' in input:
             if self.training:
                 if input['assist'] is None:
-                    target = F.one_hot(input['label'], cfg['classes_size']).float()
+                    target = F.one_hot(input['label'], cfg['target_size']).float()
                     target[target == 0] = 1e-4
                     target = torch.log(target)
                     output['loss_local'] = F.mse_loss(output['score'], target)
@@ -115,44 +115,44 @@ class ResNet(nn.Module):
 
 def resnet18():
     data_shape = cfg['data_shape']
-    classes_size = cfg['classes_size']
+    target_size = cfg['target_size']
     hidden_size = cfg['resnet18']['hidden_size']
-    model = ResNet(data_shape, hidden_size, Block, [1, 1, 1, 2], classes_size)
+    model = ResNet(data_shape, hidden_size, Block, [1, 1, 1, 2], target_size)
     model.apply(init_param)
     return model
 
 
 def resnet34():
     data_shape = cfg['data_shape']
-    classes_size = cfg['classes_size']
+    target_size = cfg['target_size']
     hidden_size = cfg['resnet34']['hidden_size']
-    model = ResNet(data_shape, hidden_size, Block, [3, 4, 6, 3], classes_size)
+    model = ResNet(data_shape, hidden_size, Block, [3, 4, 6, 3], target_size)
     model.apply(init_param)
     return model
 
 
 def resnet50():
     data_shape = cfg['data_shape']
-    classes_size = cfg['classes_size']
+    target_size = cfg['target_size']
     hidden_size = cfg['resnet50']['hidden_size']
-    model = ResNet(data_shape, hidden_size, Bottleneck, [3, 4, 6, 3], classes_size)
+    model = ResNet(data_shape, hidden_size, Bottleneck, [3, 4, 6, 3], target_size)
     model.apply(init_param)
     return model
 
 
 def resnet101():
     data_shape = cfg['data_shape']
-    classes_size = cfg['classes_size']
+    target_size = cfg['target_size']
     hidden_size = cfg['resnet101']['hidden_size']
-    model = ResNet(data_shape, hidden_size, Bottleneck, [3, 4, 23, 3], classes_size)
+    model = ResNet(data_shape, hidden_size, Bottleneck, [3, 4, 23, 3], target_size)
     model.apply(init_param)
     return model
 
 
 def resnet152():
     data_shape = cfg['data_shape']
-    classes_size = cfg['classes_size']
+    target_size = cfg['target_size']
     hidden_size = cfg['resnet152']['hidden_size']
-    model = ResNet(data_shape, hidden_size, Bottleneck, [3, 8, 36, 3], classes_size)
+    model = ResNet(data_shape, hidden_size, Bottleneck, [3, 8, 36, 3], target_size)
     model.apply(init_param)
     return model

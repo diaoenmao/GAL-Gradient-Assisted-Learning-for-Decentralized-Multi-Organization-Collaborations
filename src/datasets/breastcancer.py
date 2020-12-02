@@ -7,8 +7,8 @@ from utils import check_exists, save, load
 from .utils import make_classes_counts, make_tree, make_flat_index
 
 
-class Wine(Dataset):
-    data_name = 'Wine'
+class BreastCancer(Dataset):
+    data_name = 'BreastCancer'
 
     def __init__(self, root, split):
         self.root = os.path.expanduser(root)
@@ -51,8 +51,8 @@ class Wine(Dataset):
         return fmt_str
 
     def make_data(self):
-        from sklearn.datasets import load_wine
-        X, y = load_wine(return_X_y=True)
+        from sklearn.datasets import load_breast_cancer
+        X, y = load_breast_cancer(return_X_y=True)
         perm = np.random.permutation(len(X))
         X, y = X[perm], y[perm]
         split_idx = int(X.shape[0] * 0.8)

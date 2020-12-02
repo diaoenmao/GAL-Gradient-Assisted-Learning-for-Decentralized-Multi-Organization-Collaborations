@@ -7,18 +7,18 @@ from torch.utils.data import DataLoader
 from torch.utils.data.dataloader import default_collate
 
 
-def fetch_dataset(data_name, subset, verbose=True):
+def fetch_dataset(data_name, verbose=True):
     dataset = {}
     if verbose:
         print('fetching data {}...'.format(data_name))
     root = './data/{}'.format(data_name)
-    if data_name in ['Blob', 'QSAR', 'Wine']:
-        dataset['train'] = eval('datasets.{}(root=root, split=\'train\', subset=subset)'.format(data_name))
-        dataset['test'] = eval('datasets.{}(root=root, split=\'test\', subset=subset)'.format(data_name))
+    if data_name in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']:
+        dataset['train'] = eval('datasets.{}(root=root, split=\'train\')'.format(data_name))
+        dataset['test'] = eval('datasets.{}(root=root, split=\'test\')'.format(data_name))
     elif data_name in ['MNIST', 'CIFAR10']:
-        dataset['train'] = eval('datasets.{}(root=root, split=\'train\', subset=subset, '
+        dataset['train'] = eval('datasets.{}(root=root, split=\'train\', '
                                 'transform=datasets.Compose([transforms.ToTensor()]))'.format(data_name))
-        dataset['test'] = eval('datasets.{}(root=root, split=\'test\', subset=subset, '
+        dataset['test'] = eval('datasets.{}(root=root, split=\'test\', '
                                'transform=datasets.Compose([transforms.ToTensor()]))'.format(data_name))
         cfg['transform'] = {
             'train': datasets.Compose([transforms.Resize((32, 32)), transforms.ToTensor()]),
@@ -54,7 +54,7 @@ def make_data_loader(dataset, tag):
 
 
 def split_dataset(num_users, feature_split_mode):
-    if cfg['data_name'] in ['Blob', 'QSAR', 'Wine']:
+    if cfg['data_name'] in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']:
         if feature_split_mode == 'iid':
             num_features = cfg['data_shape'][0]
             feature_split = list(torch.randperm(num_features).split(num_features // num_users))

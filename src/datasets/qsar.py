@@ -11,29 +11,23 @@ from .utils import make_classes_counts, make_tree, make_flat_index
 class QSAR(Dataset):
     data_name = 'QSAR'
 
-    def __init__(self, root, split, subset, transform=None):
+    def __init__(self, root, split):
         self.root = os.path.expanduser(root)
         self.split = split
-        self.subset = subset
-        self.transform = transform
         if not check_exists(self.processed_folder):
             self.process()
-        self.id, self.feature, self.target = load(os.path.join(self.processed_folder, '{}.pt'.format(self.split)))
-        self.target = self.target[self.subset]
+        self.id, self.data, self.target = load(os.path.join(self.processed_folder, '{}.pt'.format(self.split)))
         self.classes_counts = make_classes_counts(self.target)
-        self.classes_to_labels, self.classes_size = load(os.path.join(self.processed_folder, 'meta.pt'))
-        self.classes_to_labels, self.classes_size = self.classes_to_labels[self.subset], self.classes_size[self.subset]
+        self.classes_to_labels, self.target_size = load(os.path.join(self.processed_folder, 'meta.pt'))
 
     def __getitem__(self, index):
-        id, feature, target = torch.tensor(self.id[index]), torch.tensor(self.feature[index]), torch.tensor(
+        id, data, target = torch.tensor(self.id[index]), torch.tensor(self.data[index]), torch.tensor(
             self.target[index])
-        input = {'id': id, 'feature': feature, self.subset: target}
-        if self.transform is not None:
-            input = self.transform(input)
+        input = {'id': id, 'data': data, 'target': target}
         return input
 
     def __len__(self):
-        return len(self.feature)
+        return len(self.data)
 
     @property
     def processed_folder(self):
@@ -53,8 +47,8 @@ class QSAR(Dataset):
         return
 
     def __repr__(self):
-        fmt_str = 'Dataset {}\nSize: {}\nRoot: {}\nSplit: {}\nSubset: {}\nTransforms: {}'.format(
-            self.__class__.__name__, self.__len__(), self.root, self.split, self.subset, self.transform.__repr__())
+        fmt_str = 'Dataset {}\nSize: {}\nRoot: {}\nSplit: {}'.format(self.__class__.__name__, self.__len__(), self.root,
+                                                                     self.split)
         return fmt_str
 
     def make_data(self):
@@ -63,14 +57,13 @@ class QSAR(Dataset):
         data[data.columns[-1]] = data[data.columns[-1]].cat.codes
         data = data.to_numpy()
         split_idx = int(data.shape[0] * 0.8)
-        train_id, test_id = np.arange(split_idx).astype(np.int64), np.arange(data.shape[0] - split_idx).astype(np.int64)
-        train_feature, test_feature = data[:split_idx, :-1].astype(np.float32), data[split_idx:, :-1].astype(np.float32)
-        train_label, test_label = data[:split_idx, -1].astype(np.int64), data[split_idx:, -1].astype(np.int64)
-        train_target, test_target = {'label': train_label}, {'label': test_label}
-        classes_to_labels = {'label': anytree.Node('U', index=[])}
-        classes = list(map(str, list(range(max(train_label) + 1))))
+        train_data, test_data = data[:split_idx, :-1].astype(np.float32), data[split_idx:, :-1].astype(np.float32)
+        train_target, test_target = data[:split_idx, -1].astype(np.int64), data[split_idx:, -1].astype(np.int64)
+        train_id, test_id = np.arange(len(train_data)).astype(np.int64), np.arange(len(test_data)).astype(np.int64)
+        classes_to_labels = anytree.Node('U', index=[])
+        classes = list(map(str, list(range(max(train_target) + 1))))
         for c in classes:
-            make_tree(classes_to_labels['label'], [c])
-        classes_size = {'label': make_flat_index(classes_to_labels['label'])}
-        return (train_id, train_feature, train_target), (test_id, test_feature, test_target), (
-        classes_to_labels, classes_size)
+            make_tree(classes_to_labels, [c])
+        target_size = make_flat_index(classes_to_labels)
+        return (train_id, train_data, train_target), (test_id, test_data, test_target), (
+            classes_to_labels, target_size)

@@ -34,9 +34,9 @@ def main():
 
 
 def runExperiment():
-    dataset = fetch_dataset(cfg['data_name'], cfg['subset'])
+    dataset = fetch_dataset(cfg['data_name'])
     process_dataset(dataset)
-    data_loader = make_data_loader(dataset)
+    data_loader = make_data_loader(dataset, cfg['model_name'])
     model = eval('models.{}(model_rate=cfg["global_model_rate"]).to(cfg["device"])'.format(cfg['model_name']))
     summary = summarize(data_loader['train'], model)
     content, total = parse_summary(summary)

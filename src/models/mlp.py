@@ -20,7 +20,7 @@ class MLPBlock(nn.Module):
 
 
 class MLP(nn.Module):
-    def __init__(self, data_shape, hidden_size, classes_size):
+    def __init__(self, data_shape, hidden_size, target_size):
         super().__init__()
         blocks = [nn.Linear(np.prod(data_shape).item(), hidden_size[0])]
         for i in range(len(hidden_size) - 1):
@@ -28,7 +28,7 @@ class MLP(nn.Module):
         blocks.extend([
             nn.BatchNorm1d(hidden_size[-1]),
             nn.ReLU(),
-            nn.Linear(hidden_size[-1], classes_size),
+            nn.Linear(hidden_size[-1], target_size),
         ])
         self.blocks = nn.Sequential(*blocks)
 
@@ -67,8 +67,8 @@ class MLP(nn.Module):
 
 def mlp():
     data_shape = cfg['data_shape']
-    classes_size = cfg['classes_size']
+    target_size = cfg['target_size']
     hidden_size = cfg['mlp']['hidden_size']
-    model = MLP(data_shape, hidden_size, classes_size)
+    model = MLP(data_shape, hidden_size, target_size)
     model.apply(init_param)
     return model

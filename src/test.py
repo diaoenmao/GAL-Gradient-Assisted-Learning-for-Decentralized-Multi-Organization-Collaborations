@@ -1,14 +1,15 @@
+import argparse
 import datetime
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.backends.cudnn as cudnn
-import math
 import models
-import numpy as np
+import os
+import shutil
+import time
+import torch
+import torch.backends.cudnn as cudnn
+from config import cfg
 from data import fetch_dataset, make_data_loader
 from metrics import Metric
-from utils import save, load, to_device, process_dataset, resume, collate, save_img
+from utils import save, to_device, process_control, process_dataset, make_optimizer, make_scheduler, resume, collate
 from logger import Logger
 
 # if __name__ == "__main__":
@@ -67,3 +68,16 @@ import math
 #     print(b)
 #     print(list(b))
 #     print(len(b))
+
+if __name__ == "__main__":
+    process_control()
+    cfg['data_name'] = 'QSAR'
+    dataset = fetch_dataset(cfg['data_name'])
+    process_dataset(dataset)
+    data_loader = make_data_loader(dataset, cfg['model_name'])
+    for i, input in enumerate(data_loader['train']):
+        input = collate(input)
+        print(input['data'].size())
+        print(input['target'].size())
+        break
+    exit()

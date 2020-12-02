@@ -11,7 +11,6 @@ from PIL import Image
 from tqdm import tqdm
 from collections import Counter
 from utils import makedir_exist_ok
-from .transforms import *
 
 IMG_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif']
 
@@ -228,10 +227,7 @@ class Compose(object):
 
     def __call__(self, input):
         for t in self.transforms:
-            if isinstance(t, CustomTransform):
-                input['img'] = t(input)
-            else:
-                input['img'] = t(input['img'])
+            input['data'] = t(input['data'])
         return input
 
     def __repr__(self):

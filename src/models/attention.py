@@ -54,15 +54,12 @@ class Attention(nn.Module):
         q = self._reshape_from_batches(q)
         q = self.map_o(q).squeeze(-1)
         output['score'] = q
-        # t = F.softmax(self.map_t(x), dim=-1)
-        # output['score'] = (x * t).sum(dim=-1)
         if self.training:
             if input['assist'] is None:
                 target = F.one_hot(input['label'], cfg['classes_size']).float()
                 target[target == 0] = 1e-4
                 target = torch.log(target)
                 output['loss'] = F.mse_loss(output['score'], target)
-                # output['loss'] = F.cross_entropy(output['score'], input['label'])
             else:
                 input['assist'].requires_grad = True
                 loss = F.cross_entropy(input['assist'], input['label'], reduction='sum')
@@ -70,7 +67,6 @@ class Attention(nn.Module):
                 target = copy.deepcopy(input['assist'].grad)
                 output['loss'] = F.mse_loss(output['score'], target)
                 input['assist'] = input['assist'].detach()
-                # output['loss'] = F.cross_entropy(input['assist'] - cfg['assist_rate'] * output['score'], input['label'])
         return output
 
 

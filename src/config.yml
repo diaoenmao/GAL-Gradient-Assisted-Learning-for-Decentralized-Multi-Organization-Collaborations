@@ -7,7 +7,6 @@ control:
   assist_rate: '1'
 # data
 data_name: MNIST
-subset: label
 # model
 model_name: linear
 # experiment

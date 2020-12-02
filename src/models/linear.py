@@ -8,9 +8,9 @@ from .utils import init_param, normalize, feature_split
 
 
 class Linear(nn.Module):
-    def __init__(self, data_shape, classes_size):
+    def __init__(self, data_shape, target_size):
         super().__init__()
-        self.linear = nn.Linear(np.prod(data_shape).item(), classes_size)
+        self.linear = nn.Linear(np.prod(data_shape).item(), target_size)
 
     def forward(self, input):
         output = {}
@@ -47,7 +47,7 @@ class Linear(nn.Module):
 
 def linear():
     data_shape = cfg['data_shape']
-    classes_size = cfg['classes_size']
-    model = Linear(data_shape, classes_size)
+    target_size = cfg['target_size']
+    model = Linear(data_shape, target_size)
     model.apply(init_param)
     return model

@@ -41,7 +41,7 @@ def runExperiment():
     seed = int(cfg['model_tag'].split('_')[0])
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
-    dataset = fetch_dataset(cfg['data_name'], cfg['subset'])
+    dataset = fetch_dataset(cfg['data_name'])
     process_dataset(dataset)
     data_loader = make_data_loader(dataset, cfg['model_name'])
     model = eval('models.{}().to(cfg["device"])'.format(cfg['model_name']))
@@ -64,7 +64,7 @@ def test(data_loader, model, logger, epoch):
         model.train(False)
         for i, input in enumerate(data_loader):
             input = collate(input)
-            input_size = input[cfg['data_tag']].size(0)
+            input_size = input['data'].size(0)
             input = to_device(input, cfg['device'])
             output = model(input)
             output['loss'] = output['loss'].mean() if cfg['world_size'] > 1 else output['loss']

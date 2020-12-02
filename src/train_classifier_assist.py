@@ -47,7 +47,7 @@ def runExperiment():
     seed = int(cfg['model_tag'].split('_')[0])
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
-    dataset = fetch_dataset(cfg['data_name'], cfg['subset'])
+    dataset = fetch_dataset(cfg['data_name'])
     process_dataset(dataset)
     if cfg['resume_mode'] == 1:
         last_epoch, assist, organization, logger = resume(cfg['model_tag'])

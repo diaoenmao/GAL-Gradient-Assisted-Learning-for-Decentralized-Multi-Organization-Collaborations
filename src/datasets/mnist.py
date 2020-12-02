@@ -16,28 +16,26 @@ class MNIST(Dataset):
             ('http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz', 'd53e105ee54ea40749a09fcbcd1e9432'),
             ('http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz', 'ec29112dd5afa0611ce80d1b7f02629c')]
 
-    def __init__(self, root, split, subset, transform=None):
+    def __init__(self, root, split, transform=None):
         self.root = os.path.expanduser(root)
         self.split = split
-        self.subset = subset
         self.transform = transform
         if not check_exists(self.processed_folder):
             self.process()
-        self.img, self.target = load(os.path.join(self.processed_folder, '{}.pt'.format(self.split)))
-        self.target = self.target[self.subset]
+        self.id, self.data, self.target = load(os.path.join(self.processed_folder, '{}.pt'.format(self.split)))
         self.classes_counts = make_classes_counts(self.target)
-        self.classes_to_labels, self.classes_size = load(os.path.join(self.processed_folder, 'meta.pt'))
-        self.classes_to_labels, self.classes_size = self.classes_to_labels[self.subset], self.classes_size[self.subset]
+        self.classes_to_labels, self.target_size = load(os.path.join(self.processed_folder, 'meta.pt'))
 
     def __getitem__(self, index):
-        img, target = Image.fromarray(self.img[index], mode='L'), torch.tensor(self.target[index])
-        input = {'img': img, self.subset: target}
+        id, data, target = torch.tensor(self.id[index]), Image.fromarray(self.data[index], mode='L'), torch.tensor(
+            self.target[index])
+        input = {'id': id, 'data': data, 'target': target}
         if self.transform is not None:
             input = self.transform(input)
         return input
 
     def __len__(self):
-        return len(self.img)
+        return len(self.data)
 
     @property
     def processed_folder(self):
@@ -65,68 +63,22 @@ class MNIST(Dataset):
         return
 
     def __repr__(self):
-        fmt_str = 'Dataset {}\nSize: {}\nRoot: {}\nSplit: {}\nSubset: {}\nTransforms: {}'.format(
-            self.__class__.__name__, self.__len__(), self.root, self.split, self.subset, self.transform.__repr__())
+        fmt_str = 'Dataset {}\nSize: {}\nRoot: {}\nSplit: {}\nTransforms: {}'.format(
+            self.__class__.__name__, self.__len__(), self.root, self.split, self.transform.__repr__())
         return fmt_str
 
     def make_data(self):
-        train_img = read_image_file(os.path.join(self.raw_folder, 'train-images-idx3-ubyte'))
-        test_img = read_image_file(os.path.join(self.raw_folder, 't10k-images-idx3-ubyte'))
-        train_label = read_label_file(os.path.join(self.raw_folder, 'train-labels-idx1-ubyte'))
-        test_label = read_label_file(os.path.join(self.raw_folder, 't10k-labels-idx1-ubyte'))
-        train_target, test_target = {'label': train_label}, {'label': test_label}
-        classes_to_labels = {'label': anytree.Node('U', index=[])}
+        train_data = read_image_file(os.path.join(self.raw_folder, 'train-images-idx3-ubyte'))
+        test_data = read_image_file(os.path.join(self.raw_folder, 't10k-images-idx3-ubyte'))
+        train_target = read_label_file(os.path.join(self.raw_folder, 'train-labels-idx1-ubyte'))
+        test_target = read_label_file(os.path.join(self.raw_folder, 't10k-labels-idx1-ubyte'))
+        train_id, test_id = np.arange(len(train_data)).astype(np.int64), np.arange(len(test_data)).astype(np.int64)
+        classes_to_labels = anytree.Node('U', index=[])
         classes = list(map(str, list(range(10))))
         for c in classes:
-            make_tree(classes_to_labels['label'], [c])
-        classes_size = {'label': make_flat_index(classes_to_labels['label'])}
-        return (train_img, train_target), (test_img, test_target), (classes_to_labels, classes_size)
-
-
-class EMNIST(MNIST):
-    data_name = 'EMNIST'
-    file = [('http://www.itl.nist.gov/iaui/vip/cs_links/EMNIST/gzip.zip', '58c8d27c78d21e728a6bc7b3cc06412e')]
-
-    def __init__(self, root, split, subset, transform=None):
-        super().__init__(root, split, subset, transform)
-        self.img = self.img[self.subset]
-
-    def make_data(self):
-        gzip_folder = os.path.join(self.raw_folder, 'gzip')
-        for gzip_file in os.listdir(gzip_folder):
-            if gzip_file.endswith('.gz'):
-                extract_file(os.path.join(gzip_folder, gzip_file))
-        subsets = ['byclass', 'bymerge', 'balanced', 'letters', 'digits', 'mnist']
-        train_img, test_img, train_target, test_target = {}, {}, {}, {}
-        digits_classes = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-        upper_letters_classes = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q',
-                                 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-        lower_letters_classes = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
-                                 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
-        merged_classes = ['c', 'i', 'j', 'k', 'l', 'm', 'o', 'p', 's', 'u', 'v', 'w', 'x', 'y', 'z']
-        unmerged_classes = list(set(lower_letters_classes) - set(merged_classes))
-        classes = {'byclass': digits_classes + upper_letters_classes + lower_letters_classes,
-                   'bymerge': digits_classes + upper_letters_classes + unmerged_classes,
-                   'balanced': digits_classes + upper_letters_classes + unmerged_classes,
-                   'letters': upper_letters_classes + unmerged_classes, 'digits': digits_classes,
-                   'mnist': digits_classes}
-        classes_to_labels = {s: anytree.Node('U', index=[]) for s in subsets}
-        classes_size = {}
-        for subset in subsets:
-            train_img[subset] = read_image_file(
-                os.path.join(gzip_folder, 'emnist-{}-train-images-idx3-ubyte'.format(subset)))
-            train_img[subset] = np.transpose(train_img[subset], [0, 2, 1])
-            test_img[subset] = read_image_file(
-                os.path.join(gzip_folder, 'emnist-{}-test-images-idx3-ubyte'.format(subset)))
-            test_img[subset] = np.transpose(test_img[subset], [0, 2, 1])
-            train_target[subset] = read_label_file(
-                os.path.join(gzip_folder, 'emnist-{}-train-labels-idx1-ubyte'.format(subset)))
-            test_target[subset] = read_label_file(
-                os.path.join(gzip_folder, 'emnist-{}-test-labels-idx1-ubyte'.format(subset)))
-            for c in classes[subset]:
-                make_tree(classes_to_labels[subset], c)
-            classes_size[subset] = make_flat_index(classes_to_labels[subset])
-        return (train_img, train_target), (test_img, test_target), (classes_to_labels, classes_size)
+            make_tree(classes_to_labels, [c])
+        target_size = make_flat_index(classes_to_labels)
+        return (train_id, train_data, train_target), (test_id, test_data, test_target), (classes_to_labels, target_size)
 
 
 class FashionMNIST(MNIST):
@@ -141,19 +93,18 @@ class FashionMNIST(MNIST):
              'bb300cfdad3c16e7a12a480ee83cd310')]
 
     def make_data(self):
-        train_img = read_image_file(os.path.join(self.raw_folder, 'train-images-idx3-ubyte'))
-        test_img = read_image_file(os.path.join(self.raw_folder, 't10k-images-idx3-ubyte'))
-        train_label = read_label_file(os.path.join(self.raw_folder, 'train-labels-idx1-ubyte'))
-        test_label = read_label_file(os.path.join(self.raw_folder, 't10k-labels-idx1-ubyte'))
-        train_target = {'label': train_label}
-        test_target = {'label': test_label}
-        classes_to_labels = {'label': anytree.Node('U', index=[])}
+        train_data = read_image_file(os.path.join(self.raw_folder, 'train-images-idx3-ubyte'))
+        test_data = read_image_file(os.path.join(self.raw_folder, 't10k-images-idx3-ubyte'))
+        train_target = read_label_file(os.path.join(self.raw_folder, 'train-labels-idx1-ubyte'))
+        test_target = read_label_file(os.path.join(self.raw_folder, 't10k-labels-idx1-ubyte'))
+        train_id, test_id = np.arange(len(train_data)).astype(np.int64), np.arange(len(test_data)).astype(np.int64)
+        classes_to_labels = anytree.Node('U', index=[])
         classes = ['T-shirt_top', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal', 'Shirt', 'Sneaker', 'Bag',
                    'Ankle boot']
         for c in classes:
-            make_tree(classes_to_labels['label'], c)
-        classes_size = {'label': make_flat_index(classes_to_labels['label'])}
-        return (train_img, train_target), (test_img, test_target), (classes_to_labels, classes_size)
+            make_tree(classes_to_labels, c)
+        target_size = make_flat_index(classes_to_labels)
+        return (train_id, train_data, train_target), (test_id, test_data, test_target), (classes_to_labels, target_size)
 
 
 def get_int(b):
