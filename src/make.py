@@ -3,8 +3,7 @@ import itertools
 
 parser = argparse.ArgumentParser(description='Config')
 parser.add_argument('--run', default='train', type=str)
-parser.add_argument('--model', default=None, type=str)
-parser.add_argument('--fed', default=1, type=int)
+parser.add_argument('--model_name', default=None, type=str)
 parser.add_argument('--num_gpu', default=4, type=int)
 parser.add_argument('--world_size', default=1, type=int)
 parser.add_argument('--init_seed', default=0, type=int)
@@ -12,77 +11,12 @@ parser.add_argument('--round', default=4, type=int)
 parser.add_argument('--experiment_step', default=1, type=int)
 parser.add_argument('--num_experiments', default=1, type=int)
 parser.add_argument('--resume_mode', default=0, type=int)
-parser.add_argument('--data_split_mode', default='iid', type=str)
+parser.add_argument('--file', default=None, type=str)
 args = vars(parser.parse_args())
 
 
-def main():
-    run = args['run']
-    model = args['model']
-    fed = args['fed']
-    num_gpu = args['num_gpu']
-    world_size = args['world_size']
-    round = args['round']
-    experiment_step = args['experiment_step']
-    init_seed = args['init_seed']
-    num_experiments = args['num_experiments']
-    resume_mode = args['resume_mode']
-    data_split_mode = args['data_split_mode'] if fed != 0 else 'none'
-    gpu_ids = [','.join(str(i) for i in list(range(x, x + world_size))) for x in list(range(0, num_gpu, world_size))]
-    filename = '{}_{}_{}'.format(run, model, data_split_mode)
-    if model in ['conv']:
-        data_names = [['MNIST']]
-        file = 'classifier'
-    elif model in ['resnet18']:
-        data_names = [['CIFAR10']]
-        file = 'classifier'
-    elif model in ['transformer']:
-        data_names = [['WikiText2']]
-        file = 'transformer'
-    else:
-        raise ValueError('Not valid model')
-    if fed == 0:
-        script_name = [['{}_{}.py'.format(run, file)]]
-    elif fed == 1:
-        script_name = [['{}_{}_fed.py'.format(run, file)]]
-    elif fed == 2:
-        script_name = [['{}_{}_local.py'.format(run, file)]]
-    else:
-        raise ValueError('Not valid fed')
-    model_names = [[model]]
-    init_seeds = [list(range(init_seed, init_seed + num_experiments, experiment_step))]
-    world_size = [[world_size]]
-    num_experiments = [[experiment_step]]
-    resume_mode = [[resume_mode]]
-    model_split_mode = ['a', 'b', 'c', 'd', 'e']
-    combination_mode = [x + '1' for x in model_split_mode]
-    combination = []
-    for i in range(1, len(combination_mode) + 1):
-        combination_mode_i = ['-'.join(list(x)) for x in itertools.combinations(combination_mode, i)]
-        combination.extend(combination_mode_i)
-    combination = combination[5:]
-    interp = []
-    for i in range(1, 10):
-        for j in range(len(model_split_mode)):
-            for k in range(j + 1, len(model_split_mode)):
-                interp += ['{}{}-'.format(model_split_mode[j], i) + '{}{}'.format(model_split_mode[k], 10 - i)]
-    if fed == 0:
-        control_name = [
-            [['0'], ['1'], ['1'], [data_split_mode], ['fix'], ['a1', 'b1', 'c1', 'd1', 'e1'], ['bn'], ['1'], ['1']]]
-    elif fed == 1:
-        control_name_single = [['1'], ['100'], ['0.1'], [data_split_mode], ['fix'], ['a1', 'b1', 'c1', 'd1', 'e1'],
-                               ['bn'], ['1'], ['1']]
-        control_name_combination = [['1'], ['100'], ['0.1'], [data_split_mode], ['dynamic'], combination, ['bn'], ['1'],
-                                    ['1']]
-        control_name_interp = [['1'], ['100'], ['0.1'], [data_split_mode], ['fix'], interp, ['bn'], ['1'], ['1']]
-        control_name = [control_name_single, control_name_combination, control_name_interp]
-    elif fed == 2:
-        control_name_single = [['2'], ['100'], ['0.1'], [data_split_mode], ['fix'], ['a1', 'b1', 'c1', 'd1', 'e1'],
-                               ['bn'], ['1'], ['1']]
-        control_name_interp = [['2'], ['100'], ['0.1'], [data_split_mode], ['fix'], interp, ['bn'], ['1'], ['1']]
-        control_name = [control_name_single, control_name_interp]
-    else:
-        raise ValueError('Not valid fed')
+def make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments, resume_mode,
+                  control_name):
     control_names = []
     for i in range(len(control_name)):
         control_names.extend(list('_'.join(x) for x in itertools.product(*control_name[i])))
@@ -90,6 +24,40 @@ def main():
     controls = script_name + data_names + model_names + init_seeds + world_size + num_experiments + resume_mode + \
                control_names
     controls = list(itertools.product(*controls))
+    return controls
+
+
+def main():
+    run = args['run']
+    model_name = args['model_name']
+    num_gpu = args['num_gpu']
+    world_size = args['world_size']
+    round = args['round']
+    experiment_step = args['experiment_step']
+    init_seed = args['init_seed']
+    num_experiments = args['num_experiments']
+    resume_mode = args['resume_mode']
+    file = args['file']
+    gpu_ids = [','.join(str(i) for i in list(range(x, x + world_size))) for x in list(range(0, num_gpu, world_size))]
+    script_name = [['{}_{}.py'.format(run, file)]]
+    init_seeds = [list(range(init_seed, init_seed + num_experiments, experiment_step))]
+    world_size = [[world_size]]
+    num_experiments = [[experiment_step]]
+    resume_mode = [[resume_mode]]
+    if file == 'classifier':
+        filename = '{}_{}'.format(run, file)
+        model_names = [['linear', 'mlp']]
+        data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
+        control_name = [[['None']]]
+        toy_controls = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                     resume_mode, control_name)
+        model_names = [['linear', 'mlp', 'conv', 'resnet18']]
+        data_names = [['MNIST', 'CIFAR10']]
+        img_controls = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                     resume_mode, control_name)
+        controls = toy_controls + img_controls
+    else:
+        raise ValueError('Not valid model')
     s = '#!/bin/bash\n'
     k = 0
     for i in range(len(controls)):

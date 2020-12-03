@@ -13,20 +13,20 @@ class Stack(nn.Module):
 
     def forward(self, input):
         output = {}
-        x = input['score']
-        output['score'] = self.stack(x).squeeze(-1)
+        x = input['target']
+        output['target'] = self.stack(x).squeeze(-1)
         if self.training:
             if input['assist'] is None:
-                target = F.one_hot(input['target'], cfg['classes_size']).float()
+                target = F.one_hot(input['target'], cfg['target_size']).float()
                 target[target == 0] = 1e-4
                 target = torch.log(target)
-                output['loss'] = F.mse_loss(output['score'], target)
+                output['loss'] = F.mse_loss(output['target'], target)
             else:
                 input['assist'].requires_grad = True
                 loss = F.cross_entropy(input['assist'], input['target'], reduction='sum')
                 loss.backward()
                 target = copy.deepcopy(input['assist'].grad)
-                output['loss'] = F.mse_loss(output['score'], target)
+                output['loss'] = F.mse_loss(output['target'], target)
                 input['assist'] = input['assist'].detach()
         return output
 

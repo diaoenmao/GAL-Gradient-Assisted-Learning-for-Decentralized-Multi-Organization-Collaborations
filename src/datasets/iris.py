@@ -3,7 +3,7 @@ import numpy as np
 import os
 import torch
 from torch.utils.data import Dataset
-from utils import check_exists, save, load
+from utils import check_exists, makedir_exist_ok, save, load
 from .utils import make_classes_counts, make_tree, make_flat_index
 
 
@@ -38,11 +38,15 @@ class Iris(Dataset):
 
     def process(self):
         if not check_exists(self.raw_folder):
-            raise ValueError('Not valid dataset')
+            self.download()
         train_set, test_set, meta = self.make_data()
         save(train_set, os.path.join(self.processed_folder, 'train.pt'))
         save(test_set, os.path.join(self.processed_folder, 'test.pt'))
         save(meta, os.path.join(self.processed_folder, 'meta.pt'))
+        return
+
+    def download(self):
+        makedir_exist_ok(self.raw_folder)
         return
 
     def __repr__(self):

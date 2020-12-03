@@ -10,6 +10,7 @@ import torch
 import torch.backends.cudnn as cudnn
 from config import cfg
 from data import fetch_dataset, split_dataset
+from metrics import Metric
 from assist import Assist
 from utils import save, load, process_control, process_dataset
 from logger import Logger
@@ -27,9 +28,6 @@ if args['control_name']:
     cfg['control'] = {k: v for k, v in zip(cfg['control'].keys(), args['control_name'].split('_'))} \
         if args['control_name'] != 'None' else {}
 cfg['control_name'] = '_'.join([cfg['control'][k] for k in cfg['control']]) if 'control' in cfg else ''
-cfg['pivot_metric'] = 'Accuracy'
-cfg['pivot'] = -float('inf')
-cfg['metric_name'] = {'train': ['Loss', 'Loss_Local', 'Accuracy'], 'test': ['Loss', 'Accuracy']}
 
 
 def main():
@@ -68,18 +66,19 @@ def runExperiment():
     if organization is None:
         organization = assist.make_organization()
     data_loader = assist.make_data_loader(dataset)
+    metric = Metric({'train': ['Loss', 'Loss_Local'], 'test': ['Loss']})
     for epoch in range(last_epoch, cfg['global']['num_epochs'] + 1):
         logger.safe(True)
-        train(data_loader, assist, organization, logger, epoch)
-        organization_scores = broadcast(data_loader, organization, epoch)
-        assist.update(epoch - 1, data_loader, organization_scores)
-        test(data_loader, assist, organization, logger, epoch)
+        train(data_loader, assist, organization, metric, logger, epoch)
+        organization_outputs = broadcast(data_loader, organization, epoch)
+        assist.update(epoch - 1, data_loader, organization_outputs)
+        test(data_loader, assist, organization, metric, logger, epoch)
         logger.safe(False)
         save_result = {
             'cfg': cfg, 'epoch': epoch + 1, 'assist': assist, 'organization': organization, 'logger': logger}
         save(save_result, './output/model/{}_checkpoint.pt'.format(cfg['model_tag']))
-        if cfg['pivot'] < logger.mean['test/{}'.format(cfg['pivot_metric'])]:
-            cfg['pivot'] = logger.mean['test/{}'.format(cfg['pivot_metric'])]
+        if metric.compare(logger.mean['test/{}'.format(metric.pivot_name)]):
+            metric.update(logger.mean['test/{}'.format(metric.pivot_name)])
             shutil.copy('./output/model/{}_checkpoint.pt'.format(cfg['model_tag']),
                         './output/model/{}_best.pt'.format(cfg['model_tag']))
         logger.reset()
@@ -87,11 +86,12 @@ def runExperiment():
     return
 
 
-def train(data_loader, assist, organization, logger, epoch):
+def train(data_loader, assist, organization, metric, logger, epoch):
     start_time = time.time()
     num_active_users = len(organization)
     for i in range(num_active_users):
-        organization[i].train(epoch - 1, data_loader[i]['train'], logger, assist.organization_scores[i]['train'])
+        organization[i].train(epoch - 1, data_loader[i]['train'], metric, logger,
+                              assist.organization_outputs[i]['train'])
         sys.stdout.write('\x1b[2K')
         if i % int((num_active_users * cfg['log_interval']) + 1) == 0:
             local_time = (time.time() - start_time) / (i + 1)
@@ -104,29 +104,30 @@ def train(data_loader, assist, organization, logger, epoch):
                              'Epoch Finished Time: {}'.format(epoch_finished_time),
                              'Experiment Finished Time: {}'.format(exp_finished_time)]}
             logger.append(info, 'train', mean=False)
-            print(logger.write('train', cfg['metric_name']['train']))
+            print(logger.write('train', metric.metric_name['train']))
     return
 
 
-def test(data_loader, assist, organization, logger, epoch):
+def test(data_loader, assist, organization, metric, logger, epoch):
     with torch.no_grad():
         num_active_users = len(organization)
         for i in range(num_active_users):
-            organization[i].test(epoch - 1, data_loader[i]['test'], logger, assist.organization_scores[i]['test'])
+            organization[i].test(epoch - 1, data_loader[i]['test'], metric, logger,
+                                 assist.organization_outputs[i]['test'])
         info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
         logger.append(info, 'test', mean=False)
-        print(logger.write('test', cfg['metric_name']['test']))
+        print(logger.write('test', metric.metric_name['test']))
     return
 
 
 def broadcast(data_loader, organization, epoch):
     with torch.no_grad():
         num_active_users = len(organization)
-        organization_scores = [{split: None for split in cfg['data_size']} for _ in range(num_active_users)]
+        organization_outputs = [{split: None for split in cfg['data_size']} for _ in range(num_active_users)]
         for i in range(num_active_users):
-            for split in organization_scores[i]:
-                organization_scores[i][split] = organization[i].broadcast(epoch - 1, data_loader[i][split])
-    return organization_scores
+            for split in organization_outputs[i]:
+                organization_outputs[i][split] = organization[i].broadcast(epoch - 1, data_loader[i][split])
+    return organization_outputs
 
 
 def resume(model_tag, load_tag='checkpoint', verbose=True):

@@ -2,7 +2,7 @@ import numpy as np
 import os
 import torch
 from torch.utils.data import Dataset
-from utils import check_exists, save, load
+from utils import check_exists, makedir_exist_ok, save, load
 
 
 class BostonHousing(Dataset):
@@ -35,11 +35,15 @@ class BostonHousing(Dataset):
 
     def process(self):
         if not check_exists(self.raw_folder):
-            raise ValueError('Not valid dataset')
+            self.download()
         train_set, test_set, meta = self.make_data()
         save(train_set, os.path.join(self.processed_folder, 'train.pt'))
         save(test_set, os.path.join(self.processed_folder, 'test.pt'))
         save(meta, os.path.join(self.processed_folder, 'meta.pt'))
+        return
+
+    def download(self):
+        makedir_exist_ok(self.raw_folder)
         return
 
     def __repr__(self):
@@ -51,10 +55,10 @@ class BostonHousing(Dataset):
         from sklearn.datasets import load_boston
         X, y = load_boston(return_X_y=True)
         perm = np.random.permutation(len(X))
-        X, y = X[perm], y[perm]
+        X, y = X[perm], y[perm].reshape(-1, 1)
         split_idx = int(X.shape[0] * 0.8)
         train_data, test_data = X[:split_idx].astype(np.float32), X[split_idx:].astype(np.float32)
-        train_target, test_target = y[:split_idx].astype(np.int64), y[split_idx:].astype(np.int64)
+        train_target, test_target = y[:split_idx].astype(np.float32), y[split_idx:].astype(np.float32)
         train_id, test_id = np.arange(len(train_data)).astype(np.int64), np.arange(len(test_data)).astype(np.int64)
         target_size = 1
         return (train_id, train_data, train_target), (test_id, test_data, test_target), target_size

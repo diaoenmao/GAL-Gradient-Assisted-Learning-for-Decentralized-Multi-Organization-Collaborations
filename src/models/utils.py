@@ -46,3 +46,11 @@ def feature_split(input, feature_split):
     else:
         raise ValueError('Not valid data name')
     return output
+
+
+def loss_fn(output, target, reduction='mean'):
+    if cfg['target_size'] == 1:
+        loss = F.mse_loss(output, target, reduction=reduction)
+    else:
+        loss = F.cross_entropy(output, target, reduction=reduction)
+    return loss

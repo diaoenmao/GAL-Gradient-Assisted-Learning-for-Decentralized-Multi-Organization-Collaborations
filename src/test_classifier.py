@@ -23,7 +23,6 @@ if args['control_name']:
     cfg['control'] = {k: v for k, v in zip(cfg['control'].keys(), args['control_name'].split('_'))} \
         if args['control_name'] != 'None' else {}
 cfg['control_name'] = '_'.join([cfg['control'][k] for k in cfg['control']]) if 'control' in cfg else ''
-cfg['metric_name'] = {'test': ['Loss', 'Accuracy']}
 
 
 def main():
@@ -45,12 +44,13 @@ def runExperiment():
     process_dataset(dataset)
     data_loader = make_data_loader(dataset, cfg['model_name'])
     model = eval('models.{}().to(cfg["device"])'.format(cfg['model_name']))
+    metric = Metric({'test': ['Loss']})
     last_epoch, model, _, _, _ = resume(model, cfg['model_tag'], load_tag='best')
     current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')
     logger_path = 'output/runs/test_{}_{}'.format(cfg['model_tag'], current_time)
     test_logger = Logger(logger_path)
     test_logger.safe(True)
-    test(data_loader['test'], model, test_logger, last_epoch)
+    test(data_loader['test'], model, metric, test_logger, last_epoch)
     test_logger.safe(False)
     _, _, _, _, train_logger = resume(model, cfg['model_tag'], load_tag='checkpoint')
     save_result = {'cfg': cfg, 'epoch': last_epoch, 'logger': {'train': train_logger, 'test': test_logger}}
@@ -58,9 +58,8 @@ def runExperiment():
     return
 
 
-def test(data_loader, model, logger, epoch):
+def test(data_loader, model, metric, logger, epoch):
     with torch.no_grad():
-        metric = Metric()
         model.train(False)
         for i, input in enumerate(data_loader):
             input = collate(input)
@@ -68,11 +67,11 @@ def test(data_loader, model, logger, epoch):
             input = to_device(input, cfg['device'])
             output = model(input)
             output['loss'] = output['loss'].mean() if cfg['world_size'] > 1 else output['loss']
-            evaluation = metric.evaluate(cfg['metric_name']['test'], input, output)
+            evaluation = metric.evaluate(metric.metric_name['test'], input, output)
             logger.append(evaluation, 'test', input_size)
         info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
         logger.append(info, 'test', mean=False)
-        print(logger.write('test', cfg['metric_name']['test']))
+        print(logger.write('test', metric.metric_name['test']))
     return
 
 

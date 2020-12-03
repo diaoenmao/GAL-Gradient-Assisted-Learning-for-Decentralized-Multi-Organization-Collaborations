@@ -2,7 +2,7 @@ import copy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .utils import init_param, normalize, feature_split
+from .utils import init_param, normalize, loss_fn, feature_split
 from config import cfg
 
 
@@ -87,29 +87,29 @@ class ResNet(nn.Module):
         out = F.adaptive_avg_pool2d(out, 1)
         out = out.view(out.size(0), -1)
         out = self.linear(out)
-        output['score'] = out
+        output['target'] = out
         if 'assist' in input:
             if self.training:
                 if input['assist'] is None:
                     target = F.one_hot(input['target'], cfg['target_size']).float()
                     target[target == 0] = 1e-4
                     target = torch.log(target)
-                    output['loss_local'] = F.mse_loss(output['score'], target)
-                    output['loss'] = F.cross_entropy(output['score'], input['target'])
+                    output['loss_local'] = F.mse_loss(output['target'], target)
+                    output['loss'] = loss_fn(output['target'], input['target'])
                 else:
                     input['assist'].requires_grad = True
-                    loss = F.cross_entropy(input['assist'], input['target'], reduction='sum')
+                    loss = loss_fn(input['assist'], input['target'], reduction='sum')
                     loss.backward()
                     target = copy.deepcopy(input['assist'].grad)
-                    output['loss_local'] = F.mse_loss(output['score'], target)
+                    output['loss_local'] = F.mse_loss(output['target'], target)
                     input['assist'] = input['assist'].detach()
-                    output['score'] = input['assist'] - cfg['assist_rate'] * output['score']
-                    output['loss'] = F.cross_entropy(output['score'], input['target'])
+                    output['target'] = input['assist'] - cfg['assist_rate'] * output['target']
+                    output['loss'] = loss_fn(output['target'], input['target'])
             else:
-                output['score'] = input['assist']
-                output['loss'] = F.cross_entropy(output['score'], input['target'])
+                output['target'] = input['assist']
+                output['loss'] = loss_fn(output['target'], input['target'])
         else:
-            output['loss'] = F.cross_entropy(output['score'], input['target'])
+            output['loss'] = loss_fn(output['target'], input['target'])
         return output
 
 

@@ -106,7 +106,7 @@ def process_dataset(dataset):
 
 
 def process_control():
-    data_shape = {'Blob': [10], 'Iris': [4], 'Diabets': [10], 'BostonHousing': [13], 'Wine': [13],
+    data_shape = {'Blob': [10], 'Iris': [4], 'Diabetes': [10], 'BostonHousing': [13], 'Wine': [13],
                   'BreastCancer': [30], 'QSAR': [41], 'MNIST': [1, 28, 28], 'CIFAR10': [3, 32, 32]}
     cfg['data_shape'] = data_shape[cfg['data_name']]
     cfg['linear'] = {}
@@ -119,17 +119,12 @@ def process_control():
         cfg[model_name]['optimizer_name'] = 'SGD'
         cfg[model_name]['momentum'] = 0.9
         cfg[model_name]['weight_decay'] = 5e-4
-        cfg[model_name]['num_epochs'] = 100
         cfg[model_name]['scheduler_name'] = 'MultiStepLR'
         cfg[model_name]['factor'] = 0.1
-        if model_name in ['linear', 'mlp']:
-            cfg[model_name]['lr'] = 1e-2
-            cfg[model_name]['num_epochs'] = 100
-            cfg[model_name]['milestones'] = [50]
-        elif model_name in ['conv']:
-            cfg[model_name]['lr'] = 1e-2
+        if model_name in ['linear', 'mlp', 'conv']:
+            cfg[model_name]['lr'] = 1e-1
             cfg[model_name]['num_epochs'] = 200
-            cfg[model_name]['milestones'] = [100]
+            cfg[model_name]['milestones'] = [50, 100]
         elif model_name in ['resnet18']:
             cfg[model_name]['lr'] = 1e-1
             cfg[model_name]['num_epochs'] = 400
@@ -147,10 +142,11 @@ def process_control():
         cfg['assist']['batch_size'] = {'train': 128, 'test': 128}
         cfg['assist']['shuffle'] = {'train': True, 'test': False}
         cfg['assist']['optimizer_name'] = 'SGD'
-        cfg['assist']['lr'] = 1e-1
+        cfg['assist']['momentum'] = 0.9
         cfg['assist']['weight_decay'] = 5e-4
+        cfg['assist']['scheduler_name'] = 'None'
+        cfg['assist']['lr'] = 1e-1
         cfg['assist']['num_epochs'] = 20
-        cfg['assist']['scheduler_name'] = 'MultiStepLR'
     cfg['stats'] = make_stats()
     return
 

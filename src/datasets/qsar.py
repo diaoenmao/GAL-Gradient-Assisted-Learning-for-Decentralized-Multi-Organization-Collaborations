@@ -4,12 +4,13 @@ import os
 import torch
 import pandas as pd
 from torch.utils.data import Dataset
-from utils import check_exists, save, load
-from .utils import make_classes_counts, make_tree, make_flat_index
+from utils import check_exists, makedir_exist_ok, save, load
+from .utils import download_url, make_classes_counts, make_tree, make_flat_index
 
 
 class QSAR(Dataset):
     data_name = 'QSAR'
+    file = [('https://archive.ics.uci.edu/ml/machine-learning-databases/00254/biodeg.csv', None)]
 
     def __init__(self, root, split):
         self.root = os.path.expanduser(root)
@@ -39,11 +40,18 @@ class QSAR(Dataset):
 
     def process(self):
         if not check_exists(self.raw_folder):
-            raise ValueError('Not valid dataset')
+            self.download()
         train_set, test_set, meta = self.make_data()
         save(train_set, os.path.join(self.processed_folder, 'train.pt'))
         save(test_set, os.path.join(self.processed_folder, 'test.pt'))
         save(meta, os.path.join(self.processed_folder, 'meta.pt'))
+        return
+
+    def download(self):
+        makedir_exist_ok(self.raw_folder)
+        for (url, md5) in self.file:
+            filename = os.path.basename(url)
+            download_url(url, self.raw_folder, filename, md5)
         return
 
     def __repr__(self):

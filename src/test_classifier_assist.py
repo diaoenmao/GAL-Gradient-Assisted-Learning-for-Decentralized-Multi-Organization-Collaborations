@@ -5,11 +5,10 @@ import torch
 import torch.backends.cudnn as cudnn
 import models
 from config import cfg
-from data import fetch_dataset, make_data_loader, split_dataset
+from data import fetch_dataset, split_dataset
 from metrics import Metric
 from assist import Assist
-from organization import Organization
-from utils import save, load, to_device, process_control, process_dataset, resume, collate
+from utils import save, load, process_control, process_dataset, resume
 from logger import Logger
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -25,7 +24,6 @@ if args['control_name']:
     cfg['control'] = {k: v for k, v in zip(cfg['control'].keys(), args['control_name'].split('_'))} \
         if args['control_name'] != 'None' else {}
 cfg['control_name'] = '_'.join([cfg['control'][k] for k in cfg['control']]) if 'control' in cfg else ''
-cfg['metric_name'] = {'test': ['Loss', 'Accuracy']}
 
 
 def main():
@@ -48,14 +46,15 @@ def runExperiment():
     last_epoch, assist, organization, logger = resume(cfg['model_tag'], load_tag='best')
     assist.reset()
     data_loader = assist.make_data_loader(dataset)
+    metric = Metric({'test': ['Loss']})
     current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')
     logger_path = 'output/runs/test_{}_{}'.format(cfg['model_tag'], current_time)
     test_logger = Logger(logger_path)
     for epoch in range(1, last_epoch):
         test_logger.safe(True)
-        organization_scores = broadcast(data_loader, organization, epoch)
-        assist.update(epoch - 1, data_loader, organization_scores)
-        test(data_loader, assist, organization, test_logger, epoch)
+        organization_outputs = broadcast(data_loader, organization, epoch)
+        assist.update(epoch - 1, data_loader, organization_outputs)
+        test(data_loader, assist, organization, metric, test_logger, epoch)
         test_logger.reset()
     test_logger.safe(False)
     _, _, _, train_logger = resume(cfg['model_tag'], load_tag='checkpoint')
@@ -64,25 +63,25 @@ def runExperiment():
     return
 
 
-def test(data_loader, assist, organization, logger, epoch):
+def test(data_loader, assist, organization, metric, logger, epoch):
     with torch.no_grad():
         num_active_users = len(organization)
         for i in range(num_active_users):
-            organization[i].test(epoch - 1, data_loader[i]['test'], logger, assist.organization_scores[i]['test'])
+            organization[i].test(epoch - 1, data_loader[i]['test'], logger, assist.organization_outputs[i]['test'])
         info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
         logger.append(info, 'test', mean=False)
-        print(logger.write('test', cfg['metric_name']['test']))
+        print(logger.write('test', metric.metric_name['test']))
     return
 
 
 def broadcast(data_loader, organization, epoch):
     with torch.no_grad():
         num_active_users = len(organization)
-        organization_scores = [{split: None for split in cfg['data_size']} for _ in range(num_active_users)]
+        organization_outputs = [{split: None for split in cfg['data_size']} for _ in range(num_active_users)]
         for i in range(num_active_users):
-            for split in organization_scores[i]:
-                organization_scores[i][split] = organization[i].broadcast(epoch - 1, data_loader[i][split])
-    return organization_scores
+            for split in organization_outputs[i]:
+                organization_outputs[i][split] = organization[i].broadcast(epoch - 1, data_loader[i][split])
+    return organization_outputs
 
 
 def resume(model_tag, load_tag='checkpoint', verbose=True):
