@@ -1,4 +1,6 @@
 import numpy as np
+import sys
+
 import torch
 import models
 from config import cfg
@@ -42,6 +44,7 @@ class Organization:
                              'ID: {}'.format(self.organization_id)]}
             logger.append(info, 'train', mean=False)
             print(logger.write('train', metric.metric_name['train']), end='\r', flush=True)
+        sys.stdout.write('\x1b[2K')
         self.model_parameters[iter] = model.to('cpu').state_dict()
         return
 

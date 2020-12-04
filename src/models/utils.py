@@ -1,3 +1,4 @@
+import copy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -49,8 +50,34 @@ def feature_split(input, feature_split):
 
 
 def loss_fn(output, target, reduction='mean'):
-    if cfg['target_size'] == 1:
-        loss = F.mse_loss(output, target, reduction=reduction)
-    else:
+    if cfg['target_size'] > 1:
         loss = F.cross_entropy(output, target, reduction=reduction)
+    else:
+        loss = F.mse_loss(output, target, reduction=reduction)
     return loss
+
+
+def assist_loss_fn(input, output, run):
+    if run:
+        if input['assist'] is None:
+            if cfg['target_size'] > 1:
+                target = F.one_hot(input['target'], cfg['target_size']).float()
+                target[target == 0] = 1e-3
+                target = torch.log(target)
+            else:
+                target = input['target']
+            output['loss_local'] = F.mse_loss(output['target'], target)
+            output['loss'] = loss_fn(output['target'], input['target'])
+        else:
+            input['assist'].requires_grad = True
+            loss = loss_fn(input['assist'], input['target'], reduction='sum')
+            loss.backward()
+            target = copy.deepcopy(input['assist'].grad)
+            output['loss_local'] = F.mse_loss(output['target'], target)
+            input['assist'] = input['assist'].detach()
+            output['target'] = input['assist'] - cfg['assist_rate'] * output['target']
+            output['loss'] = loss_fn(output['target'], input['target'])
+    else:
+        output['target'] = input['assist']
+        output['loss'] = loss_fn(output['target'], input['target'])
+    return output

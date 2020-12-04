@@ -3,7 +3,6 @@ import copy
 import datetime
 import models
 import os
-import sys
 import shutil
 import time
 import torch
@@ -92,7 +91,6 @@ def train(data_loader, assist, organization, metric, logger, epoch):
     for i in range(num_active_users):
         organization[i].train(epoch - 1, data_loader[i]['train'], metric, logger,
                               assist.organization_outputs[i]['train'])
-        sys.stdout.write('\x1b[2K')
         if i % int((num_active_users * cfg['log_interval']) + 1) == 0:
             local_time = (time.time() - start_time) / (i + 1)
             epoch_finished_time = datetime.timedelta(seconds=local_time * (num_active_users - i - 1))

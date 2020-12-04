@@ -1,9 +1,7 @@
-import copy
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from config import cfg
-from .utils import init_param, normalize, loss_fn, feature_split
+from .utils import init_param, normalize, loss_fn, assist_loss_fn, feature_split
 
 
 class Conv(nn.Module):
@@ -33,25 +31,7 @@ class Conv(nn.Module):
         out = self.blocks(x)
         output['target'] = out
         if 'assist' in input:
-            if self.training:
-                if input['assist'] is None:
-                    target = F.one_hot(input['target'], cfg['target_size']).float()
-                    target[target == 0] = 1e-4
-                    target = torch.log(target)
-                    output['loss_local'] = F.mse_loss(output['target'], target)
-                    output['loss'] = loss_fn(output['target'], input['target'])
-                else:
-                    input['assist'].requires_grad = True
-                    loss = loss_fn(input['assist'], input['target'], reduction='sum')
-                    loss.backward()
-                    target = copy.deepcopy(input['assist'].grad)
-                    output['loss_local'] = F.mse_loss(output['target'], target)
-                    input['assist'] = input['assist'].detach()
-                    output['target'] = input['assist'] - cfg['assist_rate'] * output['target']
-                    output['loss'] = loss_fn(output['target'], input['target'])
-            else:
-                output['target'] = input['assist']
-                output['loss'] = loss_fn(output['target'], input['target'])
+            output = assist_loss_fn(input, output, self.training)
         else:
             output['loss'] = loss_fn(output['target'], input['target'])
         return output

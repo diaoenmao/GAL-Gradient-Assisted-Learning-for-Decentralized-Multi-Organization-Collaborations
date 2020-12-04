@@ -123,12 +123,22 @@ def process_control():
         cfg[model_name]['factor'] = 0.1
         if model_name in ['linear', 'mlp', 'conv']:
             cfg[model_name]['lr'] = 1e-1
+            cfg[model_name]['num_epochs'] = 50
+            cfg[model_name]['milestones'] = [50, 100]
+            cfg['global'] = {}
+            cfg['global']['num_epochs'] = 50
+        elif model_name in ['mlp', 'conv']:
+            cfg[model_name]['lr'] = 1e-1
             cfg[model_name]['num_epochs'] = 200
             cfg[model_name]['milestones'] = [50, 100]
+            cfg['global'] = {}
+            cfg['global']['num_epochs'] = 50
         elif model_name in ['resnet18']:
             cfg[model_name]['lr'] = 1e-1
             cfg[model_name]['num_epochs'] = 400
             cfg[model_name]['milestones'] = [150, 250]
+            cfg['global'] = {}
+            cfg['global']['num_epochs'] = 50
         else:
             raise ValueError('Not valid model name')
     if 'assist_mode' in cfg['control']:
@@ -136,17 +146,15 @@ def process_control():
         cfg['feature_split_mode'] = str(cfg['control']['feature_split_mode'])
         cfg['assist_mode'] = cfg['control']['assist_mode']
         cfg['assist_rate'] = float(cfg['control']['assist_rate'])
-        cfg['global'] = {}
-        cfg['global']['num_epochs'] = 10
         cfg['assist'] = {}
         cfg['assist']['batch_size'] = {'train': 128, 'test': 128}
         cfg['assist']['shuffle'] = {'train': True, 'test': False}
-        cfg['assist']['optimizer_name'] = 'SGD'
+        cfg['assist']['optimizer_name'] = 'Adam'
         cfg['assist']['momentum'] = 0.9
         cfg['assist']['weight_decay'] = 5e-4
         cfg['assist']['scheduler_name'] = 'None'
-        cfg['assist']['lr'] = 1e-1
-        cfg['assist']['num_epochs'] = 20
+        cfg['assist']['lr'] = 1e-3
+        cfg['assist']['num_epochs'] = 50
     cfg['stats'] = make_stats()
     return
 

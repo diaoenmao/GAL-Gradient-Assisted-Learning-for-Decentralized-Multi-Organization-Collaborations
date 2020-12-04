@@ -51,9 +51,8 @@ class Assist:
                     if self.organization_outputs[i][split] is None:
                         self.organization_outputs[i][split] = new_organization_outputs[i][split]
                     else:
-                        self.organization_outputs[i][split]['target'] = self.organization_outputs[i][split]['target']\
-                                                                        - \
-                                                                        self.assist_rate * \
+                        self.organization_outputs[i][split]['target'] = self.organization_outputs[i][split]['target'] \
+                                                                        - self.assist_rate * \
                                                                         new_organization_outputs[i][split]['target']
         elif cfg['assist_mode'] == 'bagging':
             organization_outputs = {split: {'id': torch.arange(cfg['data_size'][split]),
@@ -71,28 +70,27 @@ class Assist:
                     if self.organization_outputs[i][split] is None:
                         self.organization_outputs[i][split] = organization_outputs[split]
                     else:
-                        self.organization_outputs[i][split]['target'] = self.organization_outputs[i][split]['target']\
-                                                                        - \
-                                                                        self.assist_rate * \
+                        self.organization_outputs[i][split]['target'] = self.organization_outputs[i][split]['target'] \
+                                                                        - self.assist_rate * \
                                                                         organization_outputs[split]['target']
         elif cfg['assist_mode'] == 'stacking':
             _dataset = [{split: None for split in cfg['data_size']} for _ in range(len(self.feature_split))]
             for i in range(len(self.organization_outputs)):
                 for split in data_loader[i]:
                     assist = self.organization_outputs[i][split]
-                    target = []
+                    output = []
                     for j in range(len(new_organization_outputs)):
-                        target.append(new_organization_outputs[j][split]['target'])
-                    target = torch.stack(target, dim=-1)
+                        output.append(new_organization_outputs[j][split]['target'])
+                    output = torch.stack(output, dim=-1)
                     if assist is None:
                         _dataset[i][split] = torch.utils.data.TensorDataset(
-                            torch.tensor(data_loader[i][split].dataset.id), target,
+                            torch.tensor(data_loader[i][split].dataset.id), output,
                             torch.tensor(data_loader[i][split].dataset.target))
                     else:
                         assist = assist['target']
                         _dataset[i][split] = torch.utils.data.TensorDataset(
                             torch.tensor(data_loader[i][split].dataset.id),
-                            assist, target, torch.tensor(data_loader[i][split].dataset.target))
+                            assist, output, torch.tensor(data_loader[i][split].dataset.target))
             for i in range(len(self.organization_outputs)):
                 _data_loader = make_data_loader(_dataset[i], 'assist')
                 if 'train' in _data_loader:
@@ -105,9 +103,9 @@ class Assist:
                     for assist_epoch in range(1, cfg['assist']['num_epochs'] + 1):
                         for j, input in enumerate(_data_loader['train']):
                             if len(input) == 3:
-                                input = {'id': input[0], 'assist': None, 'target': input[1], 'label': input[2]}
+                                input = {'id': input[0], 'assist': None, 'output': input[1], 'target': input[2]}
                             else:
-                                input = {'id': input[0], 'assist': input[1], 'target': input[2], 'label': input[3]}
+                                input = {'id': input[0], 'assist': input[1], 'output': input[2], 'target': input[3]}
                             input = to_device(input, cfg['device'])
                             optimizer.zero_grad()
                             output = model(input)
@@ -125,9 +123,9 @@ class Assist:
                         model.train(False)
                         for j, input in enumerate(_data_loader[split]):
                             if len(input) == 3:
-                                input = {'id': input[0], 'assist': None, 'target': input[1]}
+                                input = {'id': input[0], 'assist': None, 'output': input[1]}
                             else:
-                                input = {'id': input[0], 'assist': input[1], 'target': input[2]}
+                                input = {'id': input[0], 'assist': input[1], 'output': input[2]}
                             input = to_device(input, cfg['device'])
                             output = model(input)
                             organization_outputs['target'][input['id']] = output['target'].cpu()
