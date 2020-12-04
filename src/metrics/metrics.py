@@ -59,9 +59,9 @@ class Metric(object):
 
     def compare(self, val):
         if self.pivot_direction == 'down':
-            compared = self.pivot < val
-        elif self.pivot_direction == 'up':
             compared = self.pivot > val
+        elif self.pivot_direction == 'up':
+            compared = self.pivot < val
         else:
             raise ValueError('Not valid pivot direction')
         return compared
