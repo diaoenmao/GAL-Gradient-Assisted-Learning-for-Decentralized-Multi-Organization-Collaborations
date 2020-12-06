@@ -60,13 +60,14 @@ def loss_fn(output, target, reduction='mean'):
 def assist_loss_fn(input, output, run):
     if run:
         if input['assist'] is None:
-            if cfg['target_size'] > 1:
-                target = F.one_hot(input['target'], cfg['target_size']).float()
-                target[target == 0] = 1e-3
-                target = torch.log(target)
-            else:
-                target = input['target']
-            output['loss_local'] = F.mse_loss(output['target'], target)
+            # if cfg['target_size'] > 1:
+            #     target = F.one_hot(input['target'], cfg['target_size']).float()
+            #     target[target == 0] = 1e-3
+            #     target = torch.log(target)
+            # else:
+            #     target = input['target']
+            # output['loss_local'] = F.mse_loss(output['target'], target)
+            output['loss_local'] = loss_fn(output['target'], input['target'])
             output['loss'] = loss_fn(output['target'], input['target'])
         else:
             input['assist'].requires_grad = True

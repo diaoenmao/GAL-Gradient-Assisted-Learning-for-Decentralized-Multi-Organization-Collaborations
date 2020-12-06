@@ -6,7 +6,7 @@ control:
   assist_mode: 'stacking'
   assist_rate: '1'
 # data
-data_name: MNIST
+data_name: Wine
 # model
 model_name: linear
 # experiment

@@ -57,6 +57,7 @@ class Organization:
                 input = collate(input)
                 input_size = input['data'].size(0)
                 input['feature_split'] = self.feature_split
+                # print(organization_outputs['target'][:5], organization_outputs['id'][:5])
                 input['assist'] = None if organization_outputs is None else self.align(input['id'],
                                                                                        organization_outputs)
                 input = to_device(input, cfg['device'])
@@ -82,6 +83,7 @@ class Organization:
             organization_outputs['target'] = torch.cat(organization_outputs['target'], dim=0)
             organization_outputs['id'], indices = torch.sort(organization_outputs['id'])
             organization_outputs['target'] = organization_outputs['target'][indices]
+            # print(organization_outputs['target'][:5])
         return organization_outputs
 
     def align(self, id, organization_outputs):

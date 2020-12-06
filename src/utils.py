@@ -110,12 +110,12 @@ def process_control():
                   'BreastCancer': [30], 'QSAR': [41], 'MNIST': [1, 28, 28], 'CIFAR10': [3, 32, 32]}
     cfg['data_shape'] = data_shape[cfg['data_name']]
     cfg['linear'] = {}
-    cfg['mlp'] = {'hidden_size': [128, 256]}
+    cfg['mlp'] = {'hidden_size': [64, 128]}
     cfg['conv'] = {'hidden_size': [64, 128, 256, 512]}
     cfg['resnet18'] = {'hidden_size': [64, 128, 256, 512]}
     cfg['attention'] = {'hidden_size': 32, 'num_heads': 1}
     for model_name in ['linear', 'mlp', 'conv', 'resnet18']:
-        cfg[model_name]['shuffle'] = {'train': True, 'valid': False, 'test': False}
+        cfg[model_name]['shuffle'] = {'train': False, 'valid': False, 'test': False}
         cfg[model_name]['optimizer_name'] = 'SGD'
         cfg[model_name]['momentum'] = 0.9
         cfg[model_name]['weight_decay'] = 5e-4
@@ -164,12 +164,12 @@ def process_control():
         cfg['assist_rate'] = float(cfg['control']['assist_rate'])
         cfg['assist'] = {}
         cfg['assist']['batch_size'] = {'train': 1024, 'test': 1024}
-        cfg['assist']['shuffle'] = {'train': True, 'test': False}
-        cfg['assist']['optimizer_name'] = 'SGD'
+        cfg['assist']['shuffle'] = {'train': False, 'test': False}
+        cfg['assist']['optimizer_name'] = 'Adam'
         cfg['assist']['momentum'] = 0.9
         cfg['assist']['weight_decay'] = 5e-4
         cfg['assist']['scheduler_name'] = 'None'
-        cfg['assist']['lr'] = 1e-1
+        cfg['assist']['lr'] = 1
         cfg['assist']['num_epochs'] = 100
     cfg['stats'] = make_stats()
     return
