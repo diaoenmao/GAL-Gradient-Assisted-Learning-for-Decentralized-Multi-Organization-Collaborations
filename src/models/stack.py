@@ -16,12 +16,10 @@ class Stack(nn.Module):
     def forward(self, input):
         output = {}
         x = input['output']
-        # output['target'] = (x * self.stack.softmax(-1)).sum(-1)
-        output['target'] = x.mean(-1)
+        output['target'] = (x * self.stack.softmax(-1)).sum(-1)
         # output['target'] = self.stack(x).squeeze(-1)
         if self.training:
             if input['assist'] is None:
-                pass
                 # if cfg['target_size'] > 1:
                 #     target = F.one_hot(input['target'], cfg['target_size']).float()
                 #     target[target == 0] = 1e-3
@@ -29,24 +27,25 @@ class Stack(nn.Module):
                 # else:
                 #     target = input['target']
                 # output['loss'] = F.mse_loss(output['target'], target)
-                # output['loss'] = loss_fn(output['target'], input['target'])
+                output['loss'] = loss_fn(output['target'], input['target'])
             else:
-                pass
                 # input['assist'].requires_grad = True
                 # loss = loss_fn(input['assist'], input['target'], reduction='sum')
                 # loss.backward()
                 # target = copy.deepcopy(input['assist'].grad)
                 # output['loss'] = F.mse_loss(output['target'], target)
+
                 # if cfg['target_size'] > 1:
                 #     target = F.one_hot(input['target'], cfg['target_size']).float()
                 #     target[target == 0] = 1e-3
                 #     target = torch.log(target)
                 # else:
                 #     target = input['target']
-                # output['loss'] = F.mse_loss(input['assist'] - self.assist_rate * output['target'], target)
                 # input['assist'] = input['assist'].detach()
-                # output['loss'] = loss_fn(input['assist'] - cfg['assist_rate'] * output['target'], input['target'])
+                # output['loss'] = F.mse_loss(input['assist'] - cfg['assist_rate'] * output['target'], target)
+                output['loss'] = loss_fn(input['assist'] - 1 * output['target'], input['target'])
                 # output['loss'] = loss_fn(input['assist'] - self.assist_rate * output['target'], input['target'])
+                output['loss'] = loss_fn(output['target'], input['target'])
         return output
 
 

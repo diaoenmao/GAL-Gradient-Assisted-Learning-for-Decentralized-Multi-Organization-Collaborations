@@ -56,7 +56,7 @@ def runExperiment():
         logger = Logger(logger_path)
     else:
         last_epoch = 1
-        feature_split = split_dataset(cfg['num_users'], cfg['feature_split_mode'])
+        feature_split = split_dataset(cfg['num_users'])
         assist = Assist(feature_split, cfg['assist_rate'])
         organization = assist.make_organization()
         current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')

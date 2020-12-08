@@ -165,7 +165,7 @@ def process_control():
         cfg['assist'] = {}
         cfg['assist']['batch_size'] = {'train': 1024, 'test': 1024}
         cfg['assist']['shuffle'] = {'train': False, 'test': False}
-        cfg['assist']['optimizer_name'] = 'Adam'
+        cfg['assist']['optimizer_name'] = 'SGD'
         cfg['assist']['momentum'] = 0.9
         cfg['assist']['weight_decay'] = 5e-4
         cfg['assist']['scheduler_name'] = 'None'

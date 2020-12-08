@@ -2,9 +2,7 @@
 # control
 control:
   num_users: '4'
-  feature_split_mode: 'iid'
   assist_mode: 'stacking'
-  assist_rate: '1'
 # data
 data_name: Wine
 # model
