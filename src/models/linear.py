@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 from config import cfg
-from .utils import init_param, normalize, loss_fn, assist_loss_fn, feature_split
+from .utils import init_param, normalize, loss_fn, local_loss_fn, feature_split
 
 
 class Linear(nn.Module):
@@ -19,7 +19,7 @@ class Linear(nn.Module):
         x = x.view(x.size(0), -1)
         output['target'] = self.linear(x)
         if 'assist' in input:
-            output = assist_loss_fn(input, output, self.training)
+            output = local_loss_fn(input, output, self.training)
         else:
             output['loss'] = loss_fn(output['target'], input['target'])
         return output

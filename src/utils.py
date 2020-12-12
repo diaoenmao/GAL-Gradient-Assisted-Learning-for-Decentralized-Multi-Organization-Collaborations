@@ -159,18 +159,18 @@ def process_control():
             raise ValueError('Not valid model name')
     if 'assist_mode' in cfg['control']:
         cfg['num_users'] = int(cfg['control']['num_users'])
-        cfg['feature_split_mode'] = str(cfg['control']['feature_split_mode'])
         cfg['assist_mode'] = cfg['control']['assist_mode']
-        cfg['assist_rate'] = float(cfg['control']['assist_rate'])
         cfg['assist'] = {}
         cfg['assist']['batch_size'] = {'train': 1024, 'test': 1024}
         cfg['assist']['shuffle'] = {'train': False, 'test': False}
-        cfg['assist']['optimizer_name'] = 'SGD'
-        cfg['assist']['momentum'] = 0.9
-        cfg['assist']['weight_decay'] = 5e-4
+        cfg['assist']['optimizer_name'] = 'Adam'
         cfg['assist']['scheduler_name'] = 'None'
         cfg['assist']['lr'] = 1
         cfg['assist']['num_epochs'] = 100
+        cfg['linesearch'] = {}
+        cfg['linesearch']['optimizer_name'] = 'LBFGS'
+        cfg['linesearch']['lr'] = 1
+        cfg['linesearch']['num_epochs'] = 20
     cfg['stats'] = make_stats()
     return
 
@@ -219,13 +219,10 @@ def make_optimizer(model, tag):
     if cfg[tag]['optimizer_name'] == 'SGD':
         optimizer = optim.SGD(model.parameters(), lr=cfg[tag]['lr'], momentum=cfg[tag]['momentum'],
                               weight_decay=cfg[tag]['weight_decay'])
-    elif cfg[tag]['optimizer_name'] == 'RMSprop':
-        optimizer = optim.RMSprop(model.parameters(), lr=cfg[tag]['lr'], momentum=cfg[tag]['momentum'],
-                                  weight_decay=cfg[tag]['weight_decay'])
     elif cfg[tag]['optimizer_name'] == 'Adam':
         optimizer = optim.Adam(model.parameters(), lr=cfg[tag]['lr'], weight_decay=cfg[tag]['weight_decay'])
-    elif cfg[tag]['optimizer_name'] == 'Adamax':
-        optimizer = optim.Adamax(model.parameters(), lr=cfg[tag]['lr'], weight_decay=cfg[tag]['weight_decay'])
+    elif cfg[tag]['optimizer_name'] == 'LBFGS':
+        optimizer = optim.LBFGS(model.parameters(), lr=cfg[tag]['lr'])
     else:
         raise ValueError('Not valid optimizer name')
     return optimizer

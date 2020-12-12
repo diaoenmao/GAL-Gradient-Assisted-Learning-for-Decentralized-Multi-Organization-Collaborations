@@ -57,7 +57,7 @@ def runExperiment():
     else:
         last_epoch = 1
         feature_split = split_dataset(cfg['num_users'])
-        assist = Assist(feature_split, cfg['assist_rate'])
+        assist = Assist(feature_split)
         organization = assist.make_organization()
         current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')
         logger_path = 'output/runs/train_{}_{}'.format(cfg['model_tag'], current_time)
@@ -121,7 +121,7 @@ def test(data_loader, assist, organization, metric, logger, epoch):
 def broadcast(data_loader, organization, epoch):
     with torch.no_grad():
         num_active_users = len(organization)
-        organization_outputs = [{split: None for split in cfg['data_size']} for _ in range(num_active_users)]
+        organization_outputs = [{split: None for split in data_loader} for _ in range(num_active_users)]
         for i in range(num_active_users):
             for split in organization_outputs[i]:
                 organization_outputs[i][split] = organization[i].broadcast(epoch - 1, data_loader[i][split])
@@ -143,7 +143,7 @@ def resume(model_tag, load_tag='checkpoint', verbose=True):
         from logger import Logger
         last_epoch = 1
         feature_split = split_dataset(cfg['num_users'], cfg['feature_split_mode'])
-        assist = Assist(feature_split, cfg['assist_rate'])
+        assist = Assist(feature_split)
         organization = None
         logger_path = 'output/runs/train_{}_{}'.format(cfg['model_tag'], datetime.now().strftime('%b%d_%H-%M-%S'))
         logger = Logger(logger_path)
