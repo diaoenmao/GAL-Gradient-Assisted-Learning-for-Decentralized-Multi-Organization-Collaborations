@@ -115,7 +115,7 @@ def process_control():
     cfg['resnet18'] = {'hidden_size': [64, 128, 256, 512]}
     cfg['attention'] = {'hidden_size': 32, 'num_heads': 1}
     for model_name in ['linear', 'mlp', 'conv', 'resnet18']:
-        cfg[model_name]['shuffle'] = {'train': False, 'valid': False, 'test': False}
+        cfg[model_name]['shuffle'] = {'train': False, 'test': False}
         cfg[model_name]['optimizer_name'] = 'SGD'
         cfg[model_name]['momentum'] = 0.9
         cfg[model_name]['weight_decay'] = 5e-4

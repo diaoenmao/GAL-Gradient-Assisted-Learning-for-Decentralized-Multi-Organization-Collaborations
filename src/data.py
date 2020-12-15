@@ -1,5 +1,4 @@
 import torch
-import datasets
 import numpy as np
 from config import cfg
 from torchvision import transforms
@@ -8,6 +7,7 @@ from torch.utils.data.dataloader import default_collate
 
 
 def fetch_dataset(data_name, verbose=True):
+    import datasets
     dataset = {}
     if verbose:
         print('fetching data {}...'.format(data_name))
