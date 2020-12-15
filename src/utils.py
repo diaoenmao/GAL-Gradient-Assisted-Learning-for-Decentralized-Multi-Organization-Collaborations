@@ -113,7 +113,6 @@ def process_control():
     cfg['mlp'] = {'hidden_size': [64, 128]}
     cfg['conv'] = {'hidden_size': [64, 128, 256, 512]}
     cfg['resnet18'] = {'hidden_size': [64, 128, 256, 512]}
-    cfg['attention'] = {'hidden_size': 32, 'num_heads': 1}
     for model_name in ['linear', 'mlp', 'conv', 'resnet18']:
         cfg[model_name]['shuffle'] = {'train': False, 'test': False}
         cfg[model_name]['optimizer_name'] = 'SGD'
@@ -164,6 +163,7 @@ def process_control():
         cfg['assist']['batch_size'] = {'train': 1024, 'test': 1024}
         cfg['assist']['shuffle'] = {'train': False, 'test': False}
         cfg['assist']['optimizer_name'] = 'Adam'
+        cfg['assist']['weight_decay'] = 0
         cfg['assist']['scheduler_name'] = 'None'
         cfg['assist']['lr'] = 1
         cfg['assist']['num_epochs'] = 100

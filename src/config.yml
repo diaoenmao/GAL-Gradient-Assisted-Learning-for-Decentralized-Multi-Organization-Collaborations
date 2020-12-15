@@ -2,7 +2,7 @@
 # control
 control:
   num_users: '4'
-  assist_mode: 'stacking'
+  assist_mode: 'stack'
 # data
 data_name: Wine
 # model

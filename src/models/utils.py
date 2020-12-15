@@ -86,4 +86,5 @@ def assist_loss_fn(input, output, run):
             loss.backward()
             target = - copy.deepcopy(input['assist'].grad)
             output['loss'] = F.mse_loss(output['target'], target)
+            # output['loss'] = loss_fn(output['target'], input['target'])
     return output
