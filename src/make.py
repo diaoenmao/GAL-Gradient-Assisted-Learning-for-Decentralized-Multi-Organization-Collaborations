@@ -3,7 +3,6 @@ import itertools
 
 parser = argparse.ArgumentParser(description='Config')
 parser.add_argument('--run', default='train', type=str)
-parser.add_argument('--model_name', default=None, type=str)
 parser.add_argument('--num_gpu', default=4, type=int)
 parser.add_argument('--world_size', default=1, type=int)
 parser.add_argument('--init_seed', default=0, type=int)
@@ -29,7 +28,6 @@ def make_controls(script_name, data_names, model_names, init_seeds, world_size, 
 
 def main():
     run = args['run']
-    model_name = args['model_name']
     num_gpu = args['num_gpu']
     world_size = args['world_size']
     round = args['round']
@@ -56,6 +54,29 @@ def main():
         img_controls = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                      resume_mode, control_name)
         controls = toy_controls + img_controls
+    elif file == 'classifier_assist':
+        filename = '{}_{}'.format(run, file)
+        model_names = [['linear', 'mlp']]
+        data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
+        control_name = [[['1'], ['none']]]
+        toy_controls_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                     resume_mode, control_name)
+        model_names = [['linear', 'mlp']]
+        data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
+        control_name = [[['2', '4', '8'], ['none', 'bag', 'stack']]]
+        toy_controls_full = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                     resume_mode, control_name)
+        model_names = [['linear', 'mlp', 'conv', 'resnet18']]
+        data_names = [['MNIST', 'CIFAR10']]
+        control_name = [[['1'], ['none']]]
+        img_controls_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                     resume_mode, control_name)
+        model_names = [['linear', 'mlp', 'conv', 'resnet18']]
+        data_names = [['MNIST', 'CIFAR10']]
+        control_name = [[['2', '4', '8'], ['none', 'bag', 'stack']]]
+        img_controls_full = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                     resume_mode, control_name)
+        controls = toy_controls_1 + toy_controls_full + img_controls_1 + img_controls_full
     else:
         raise ValueError('Not valid model')
     s = '#!/bin/bash\n'
