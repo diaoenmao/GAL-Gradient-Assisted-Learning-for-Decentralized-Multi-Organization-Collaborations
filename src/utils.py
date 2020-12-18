@@ -114,7 +114,7 @@ def process_control():
     cfg['conv'] = {'hidden_size': [64, 128, 256, 512]}
     cfg['resnet18'] = {'hidden_size': [64, 128, 256, 512]}
     for model_name in ['linear', 'mlp', 'conv', 'resnet18']:
-        cfg[model_name]['shuffle'] = {'train': False, 'test': False}
+        cfg[model_name]['shuffle'] = {'train': True, 'test': False}
         cfg[model_name]['optimizer_name'] = 'SGD'
         cfg[model_name]['momentum'] = 0.9
         cfg[model_name]['weight_decay'] = 5e-4
@@ -161,16 +161,13 @@ def process_control():
         cfg['assist_mode'] = cfg['control']['assist_mode']
         cfg['assist'] = {}
         cfg['assist']['batch_size'] = {'train': 1024, 'test': 1024}
-        cfg['assist']['shuffle'] = {'train': False, 'test': False}
-        cfg['assist']['optimizer_name'] = 'Adam'
-        cfg['assist']['weight_decay'] = 0
-        cfg['assist']['scheduler_name'] = 'None'
+        cfg['assist']['optimizer_name'] = 'LBFGS'
         cfg['assist']['lr'] = 1
-        cfg['assist']['num_epochs'] = 100
+        cfg['assist']['num_epochs'] = 50
         cfg['linesearch'] = {}
         cfg['linesearch']['optimizer_name'] = 'LBFGS'
         cfg['linesearch']['lr'] = 1
-        cfg['linesearch']['num_epochs'] = 20
+        cfg['linesearch']['num_epochs'] = 50
     cfg['stats'] = make_stats()
     return
 

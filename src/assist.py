@@ -92,29 +92,29 @@ class Assist:
                             self.organization_outputs[i][split]['target'])
             for i in range(len(self.feature_split)):
                 if 'train' in _dataset[i]:
-                    _data_loader = make_data_loader(_dataset[i], 'assist')
+                    tensors = _dataset[i]['train'].tensors
+                    input = {'id': tensors[0], 'output': tensors[1], 'target': tensors[2], 'assist': None} if len(
+                        tensors) == 3 else {'id': tensors[0], 'output': tensors[1], 'target': tensors[2],
+                                            'assist': tensors[3]}
+                    input = to_device(input, cfg['device'])
                     model = eval('models.{}().to(cfg["device"])'.format(cfg['assist_mode']))
                     model.train(True)
                     optimizer = make_optimizer(model, 'assist')
-                    scheduler = make_scheduler(optimizer, 'assist')
                     for assist_epoch in range(1, cfg['assist']['num_epochs'] + 1):
-                        for j, input in enumerate(_data_loader['train']):
-                            input = {'id': input[0], 'output': input[1], 'target': input[2], 'assist': None} if len(
-                                input) == 3 else {'id': input[0], 'output': input[1], 'target': input[2],
-                                                  'assist': input[3]}
-                            input = to_device(input, cfg['device'])
-                            optimizer.zero_grad()
+                        def closure():
                             output = model(input)
+                            optimizer.zero_grad()
                             output['loss'].backward()
-                            optimizer.step()
-                        scheduler.step()
+                            return output['loss']
+
+                        optimizer.step(closure)
                     self.assist_parameters[i][iter] = model.to('cpu').state_dict()
             with torch.no_grad():
                 organization_outputs = [{split: {'id': torch.arange(cfg['data_size'][split]),
                                                  'target': torch.zeros(cfg['data_size'][split], cfg['target_size'])}
                                          for split in data_loader[0]} for _ in range(len(self.feature_split))]
                 for i in range(len(self.feature_split)):
-                    _data_loader = make_data_loader(_dataset[i], 'assist')
+                    _data_loader = make_data_loader(_dataset[i], 'assist', {'train': False, 'test': False})
                     for split in data_loader[0]:
                         model = eval('models.{}().to(cfg["device"])'.format(cfg['assist_mode']))
                         model.load_state_dict(self.assist_parameters[i][iter])
@@ -130,7 +130,6 @@ class Assist:
         else:
             raise ValueError('Not valid assist')
         if self.organization_outputs[i][split] is not None and 'train' in data_loader[0]:
-            _dataset = [{'train': None} for _ in range(len(self.feature_split))]
             for i in range(len(self.feature_split)):
                 input = {'id': torch.tensor(data_loader[i]['train'].dataset.id),
                          'output': organization_outputs[i]['train']['target'],
@@ -146,6 +145,7 @@ class Assist:
                         optimizer.zero_grad()
                         output['loss'].backward()
                         return output['loss']
+
                     optimizer.step(closure)
                 self.assist_rates[i][iter] = model.assist_rate.item()
         with torch.no_grad():

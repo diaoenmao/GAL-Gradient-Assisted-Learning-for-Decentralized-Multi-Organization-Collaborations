@@ -4,7 +4,7 @@ control:
   num_users: '4'
   assist_mode: 'stack'
 # data
-data_name: Wine
+data_name: QSAR
 # model
 model_name: linear
 # experiment

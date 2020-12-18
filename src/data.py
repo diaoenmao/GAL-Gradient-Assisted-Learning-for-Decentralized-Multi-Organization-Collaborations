@@ -38,12 +38,13 @@ def input_collate(batch):
         return default_collate(batch)
 
 
-def make_data_loader(dataset, tag):
+def make_data_loader(dataset, tag, shuffle=None):
     data_loader = {}
     for k in dataset:
-        data_loader[k] = DataLoader(dataset=dataset[k], shuffle=cfg[tag]['shuffle'][k],
-                                    batch_size=cfg[tag]['batch_size'][k],
-                                    pin_memory=True, num_workers=cfg['num_workers'], collate_fn=input_collate)
+        _shuffle = cfg[tag]['shuffle'][k] if shuffle is None else shuffle[k]
+        data_loader[k] = DataLoader(dataset=dataset[k], shuffle=_shuffle, batch_size=cfg[tag]['batch_size'][k],
+                                    pin_memory=True, num_workers=cfg['num_workers'], collate_fn=input_collate,
+                                    worker_init_fn=np.random.seed(0))
     return data_loader
 
 

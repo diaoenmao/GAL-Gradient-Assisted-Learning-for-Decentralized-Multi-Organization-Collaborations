@@ -25,19 +25,19 @@ from logger import Logger
 #         break
 #     exit()
 
-import torch.nn.functional as F
-
-if __name__ == "__main__":
-    N = 20
-    C = 5
-    score = torch.rand(N, C)
-    label = torch.randint(0, 2, (N,))
-    for i in range(10):
-        score.requires_grad = True
-        loss = F.cross_entropy(score, label)
-        print(loss)
-        loss.backward()
-        score = (score - 1000* score.grad).detach()
+# import torch.nn.functional as F
+#
+# if __name__ == "__main__":
+#     N = 20
+#     C = 5
+#     score = torch.rand(N, C)
+#     label = torch.randint(0, 2, (N,))
+#     for i in range(10):
+#         score.requires_grad = True
+#         loss = F.cross_entropy(score, label)
+#         print(loss)
+#         loss.backward()
+#         score = (score - 1000* score.grad).detach()
 #
 #
 # if __name__ == "__main__":
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 #     print(sm)
 #     print(loss)
 
-import math
+# import math
 
 # if __name__ == "__main__":
 #     h, w = 4, 4
@@ -72,14 +72,16 @@ import math
 #     print(len(b))
 
 # if __name__ == "__main__":
+#     torch.manual_seed(1)
+#     torch.cuda.manual_seed(1)
 #     process_control()
-#     cfg['data_name'] = 'QSAR'
+#     cfg['data_name'] = 'Wine'
 #     dataset = fetch_dataset(cfg['data_name'])
 #     process_dataset(dataset)
 #     data_loader = make_data_loader(dataset, cfg['model_name'])
 #     for i, input in enumerate(data_loader['train']):
 #         input = collate(input)
-#         print(input['data'].size())
-#         print(input['target'].size())
+#         print(input['data'][:10])
+#         print(input['target'][:10])
 #         break
 #     exit()
