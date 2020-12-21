@@ -2,9 +2,9 @@
 # control
 control:
   num_users: '4'
-  assist_mode: 'stack'
+  assist_mode: 'bag'
 # data
-data_name: QSAR
+data_name: MNIST
 # model
 model_name: linear
 # experiment

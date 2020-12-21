@@ -44,7 +44,7 @@ def runExperiment():
     dataset = fetch_dataset(cfg['data_name'])
     process_dataset(dataset)
     dataset = {'test': dataset['test']}
-    last_epoch, assist, organization, logger = resume(cfg['model_tag'], load_tag='best')
+    last_epoch, assist, organization, logger = resume(cfg['model_tag'], load_tag='checkpoint')
     assist.reset()
     data_loader = assist.make_data_loader(dataset)
     metric = Metric({'test': ['Loss']})
@@ -68,7 +68,8 @@ def test(data_loader, assist, organization, metric, logger, epoch):
     with torch.no_grad():
         num_active_users = len(organization)
         for i in range(num_active_users):
-            organization[i].test(epoch - 1, data_loader[i]['test'], logger, assist.organization_outputs[i]['test'])
+            organization[i].test(epoch - 1, data_loader[i]['test'], metric, logger,
+                                 assist.organization_outputs[i]['test'])
         info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
         logger.append(info, 'test', mean=False)
         print(logger.write('test', metric.metric_name['test']))
@@ -78,7 +79,7 @@ def test(data_loader, assist, organization, metric, logger, epoch):
 def broadcast(data_loader, organization, epoch):
     with torch.no_grad():
         num_active_users = len(organization)
-        organization_outputs = [{split: None for split in data_loader} for _ in range(num_active_users)]
+        organization_outputs = [{split: None for split in data_loader[i]} for i in range(num_active_users)]
         for i in range(num_active_users):
             for split in organization_outputs[i]:
                 organization_outputs[i][split] = organization[i].broadcast(epoch - 1, data_loader[i][split])
@@ -99,7 +100,7 @@ def resume(model_tag, load_tag='checkpoint', verbose=True):
         from datetime import datetime
         from logger import Logger
         last_epoch = 1
-        feature_split = split_dataset(cfg['num_users'], cfg['feature_split_mode'])
+        feature_split = split_dataset(cfg['num_users'])
         assist = Assist(feature_split)
         organization = None
         logger_path = 'output/runs/train_{}_{}'.format(cfg['model_tag'], datetime.now().strftime('%b%d_%H-%M-%S'))

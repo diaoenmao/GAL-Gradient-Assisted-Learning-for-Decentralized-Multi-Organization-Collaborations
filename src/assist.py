@@ -11,15 +11,15 @@ class Assist:
     def __init__(self, feature_split):
         self.feature_split = feature_split
         self.model_name = self.make_model_name()
+        self.assist_parameters = [[None for _ in range(cfg['global']['num_epochs'])] for _ in
+                                  range(len(self.feature_split))]
+        self.assist_rates = [[None for _ in range(cfg['global']['num_epochs'])] for _ in
+                             range(len(self.feature_split))]
         self.reset()
 
     def reset(self):
         self.organization_outputs = [{split: None for split in cfg['data_size']} for _ in
                                      range(len(self.feature_split))]
-        self.assist_parameters = [[None for _ in range(cfg['global']['num_epochs'])] for _ in
-                                  range(len(self.feature_split))]
-        self.assist_rates = [[None for _ in range(cfg['global']['num_epochs'])] for _ in
-                             range(len(self.feature_split))]
         return
 
     def make_model_name(self):
@@ -150,7 +150,7 @@ class Assist:
                 self.assist_rates[i][iter] = model.assist_rate.item()
         with torch.no_grad():
             for i in range(len(self.organization_outputs)):
-                for split in self.organization_outputs[i]:
+                for split in data_loader[i]:
                     if self.organization_outputs[i][split] is None:
                         self.organization_outputs[i][split] = copy.deepcopy(organization_outputs[i][split])
                     else:

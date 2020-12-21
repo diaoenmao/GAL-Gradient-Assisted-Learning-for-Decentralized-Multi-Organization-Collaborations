@@ -54,13 +54,14 @@ def split_dataset(num_users):
         feature_split = list(torch.randperm(num_features).split(num_features // num_users))
         feature_split = feature_split[:num_users - 1] + [torch.cat(feature_split[num_users - 1:])]
     elif cfg['data_name'] in ['MNIST', 'CIFAR10']:
-        num_features = np.prod(cfg['data_shape'][1:]).item()
-        idx = torch.arange(num_features).view(*cfg['data_shape'][1:])
+        num_features = np.prod(cfg['data_shape']).item()
+        idx = torch.arange(num_features).view(*cfg['data_shape'])
         power = np.log2(num_users)
         n_h, n_w = int(2 ** (power // 2)), int(2 ** (power - power // 2))
-        feature_split = idx.view(n_h, cfg['data_shape'][1] // n_h, n_w, cfg['data_shape'][2] // n_w) \
-            .transpose(1, 2).reshape(-1, cfg['data_shape'][1] // n_h, cfg['data_shape'][2] // n_w)
-        feature_split = list(feature_split.view(feature_split.size(0), -1))
+        feature_split = idx.view(cfg['data_shape'][0], n_h, cfg['data_shape'][1] // n_h, n_w,
+                                 cfg['data_shape'][2] // n_w).permute(1, 3, 0, 2, 4).reshape(
+            -1, cfg['data_shape'][0], cfg['data_shape'][1] // n_h, cfg['data_shape'][2] // n_w)
+        feature_split = list(feature_split.reshape(feature_split.size(0), -1))
     else:
         raise ValueError('Not valid data name')
     return feature_split

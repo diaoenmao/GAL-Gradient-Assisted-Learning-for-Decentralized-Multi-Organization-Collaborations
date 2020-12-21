@@ -60,23 +60,28 @@ def main():
         data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
         control_name = [[['1'], ['none']]]
         toy_controls_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                     resume_mode, control_name)
+                                       resume_mode, control_name)
         model_names = [['linear', 'mlp']]
         data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
-        control_name = [[['2', '4', '8'], ['none', 'bag', 'stack']]]
-        toy_controls_full = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                     resume_mode, control_name)
+        control_name = [[['2', '4'], ['none', 'bag', 'stack']]]
+        toy_controls_full_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size,
+                                            num_experiments, resume_mode, control_name)
+        model_names = [['linear', 'mlp']]
+        data_names = [['Blob', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
+        control_name = [[['8'], ['none', 'bag', 'stack']]]
+        toy_controls_full_2 = make_controls(script_name, data_names, model_names, init_seeds, world_size,
+                                            num_experiments, resume_mode, control_name)
         model_names = [['linear', 'mlp', 'conv', 'resnet18']]
         data_names = [['MNIST', 'CIFAR10']]
         control_name = [[['1'], ['none']]]
         img_controls_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                     resume_mode, control_name)
+                                       resume_mode, control_name)
         model_names = [['linear', 'mlp', 'conv', 'resnet18']]
         data_names = [['MNIST', 'CIFAR10']]
         control_name = [[['2', '4', '8'], ['none', 'bag', 'stack']]]
         img_controls_full = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                     resume_mode, control_name)
-        controls = toy_controls_1 + toy_controls_full + img_controls_1 + img_controls_full
+                                          resume_mode, control_name)
+        controls = toy_controls_1 + toy_controls_full_1 + toy_controls_full_2 + img_controls_1 + img_controls_full
     else:
         raise ValueError('Not valid model')
     s = '#!/bin/bash\n'

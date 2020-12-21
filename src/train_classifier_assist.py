@@ -142,7 +142,7 @@ def resume(model_tag, load_tag='checkpoint', verbose=True):
         from datetime import datetime
         from logger import Logger
         last_epoch = 1
-        feature_split = split_dataset(cfg['num_users'], cfg['feature_split_mode'])
+        feature_split = split_dataset(cfg['num_users'])
         assist = Assist(feature_split)
         organization = None
         logger_path = 'output/runs/train_{}_{}'.format(cfg['model_tag'], datetime.now().strftime('%b%d_%H-%M-%S'))

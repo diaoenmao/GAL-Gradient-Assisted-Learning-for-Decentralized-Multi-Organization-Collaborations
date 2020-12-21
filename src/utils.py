@@ -125,8 +125,6 @@ def process_control():
             cfg[model_name]['scheduler_name'] = 'None'
             cfg[model_name]['factor'] = 0.1
             cfg[model_name]['milestones'] = [50, 100]
-            cfg['global'] = {}
-            cfg['global']['num_epochs'] = 50
         elif model_name in ['mlp']:
             cfg[model_name]['batch_size'] = {'train': 1024, 'test': 1024}
             cfg[model_name]['lr'] = 1e-1
@@ -134,8 +132,6 @@ def process_control():
             cfg[model_name]['scheduler_name'] = 'None'
             cfg[model_name]['factor'] = 0.1
             cfg[model_name]['milestones'] = [50, 100]
-            cfg['global'] = {}
-            cfg['global']['num_epochs'] = 50
         elif model_name in ['conv']:
             cfg[model_name]['batch_size'] = {'train': 512, 'test': 512}
             cfg[model_name]['lr'] = 1e-1
@@ -143,8 +139,6 @@ def process_control():
             cfg[model_name]['scheduler_name'] = 'MultiStepLR'
             cfg[model_name]['factor'] = 0.1
             cfg[model_name]['milestones'] = [50, 100]
-            cfg['global'] = {}
-            cfg['global']['num_epochs'] = 50
         elif model_name in ['resnet18']:
             cfg[model_name]['batch_size'] = {'train': 512, 'test': 512}
             cfg[model_name]['lr'] = 1e-1
@@ -152,8 +146,6 @@ def process_control():
             cfg[model_name]['scheduler_name'] = 'MultiStepLR'
             cfg[model_name]['factor'] = 0.1
             cfg[model_name]['milestones'] = [150, 250]
-            cfg['global'] = {}
-            cfg['global']['num_epochs'] = 50
         else:
             raise ValueError('Not valid model name')
     if 'assist_mode' in cfg['control']:
@@ -168,6 +160,10 @@ def process_control():
         cfg['linesearch']['optimizer_name'] = 'LBFGS'
         cfg['linesearch']['lr'] = 1
         cfg['linesearch']['num_epochs'] = 50
+        if cfg['data_name'] in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']:
+            cfg['global'] = {'num_epochs': 50}
+        else:
+            cfg['global'] = {'num_epochs': 20}
     cfg['stats'] = make_stats()
     return
 

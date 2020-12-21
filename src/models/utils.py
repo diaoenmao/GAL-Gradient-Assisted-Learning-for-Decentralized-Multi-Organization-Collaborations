@@ -39,10 +39,10 @@ def feature_split(input, feature_split):
         mask[feature_split] = 1
         output = torch.masked_fill(input, mask == 0, 0)
     elif cfg['data_name'] in ['MNIST', 'CIFAR10']:
-        num_features = np.prod(cfg['data_shape'][1:]).item()
+        num_features = np.prod(cfg['data_shape']).item()
         mask = torch.zeros(num_features, device=input.device)
         mask[feature_split] = 1
-        mask = mask.view(input.size()[2:])
+        mask = mask.view(cfg['data_shape'])
         output = torch.masked_fill(input, mask == 0, 0)
     else:
         raise ValueError('Not valid data name')
