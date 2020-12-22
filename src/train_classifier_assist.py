@@ -7,6 +7,8 @@ import shutil
 import time
 import torch
 import torch.backends.cudnn as cudnn
+from itertools import repeat
+from multiprocessing import Pool
 from config import cfg
 from data import fetch_dataset, split_dataset
 from metrics import Metric
@@ -67,8 +69,7 @@ def runExperiment():
     data_loader = assist.make_data_loader(dataset)
     metric = Metric({'train': ['Loss', 'Loss_Local'], 'test': ['Loss']})
     for epoch in range(last_epoch, cfg['global']['num_epochs'] + 1):
-        logger.safe(True)
-        train(data_loader, assist, organization, metric, logger, epoch)
+        organization, logger = train(data_loader, assist, organization, metric, logger, epoch)
         organization_outputs = broadcast(data_loader, organization, epoch)
         assist.update(epoch - 1, data_loader, organization_outputs)
         test(data_loader, assist, organization, metric, logger, epoch)
@@ -85,25 +86,34 @@ def runExperiment():
     return
 
 
+def local_train(organization, iter, data_loader, logger, organization_outputs, model_tag):
+    process_control()
+    process_dataset({'train': data_loader['train'].dataset})
+    cfg['model_tag'] = model_tag
+    metric = Metric({'train': ['Loss', 'Loss_Local'], 'test': ['Loss']})
+    organization.train(iter, data_loader['train'], metric, logger, organization_outputs['train'])
+    return organization, logger
+
+
 def train(data_loader, assist, organization, metric, logger, epoch):
     start_time = time.time()
     num_active_users = len(organization)
-    for i in range(num_active_users):
-        organization[i].train(epoch - 1, data_loader[i]['train'], metric, logger,
-                              assist.organization_outputs[i]['train'])
-        if i % int((num_active_users * cfg['log_interval']) + 1) == 0:
-            local_time = (time.time() - start_time) / (i + 1)
-            epoch_finished_time = datetime.timedelta(seconds=local_time * (num_active_users - i - 1))
-            exp_finished_time = epoch_finished_time + datetime.timedelta(
-                seconds=round((cfg['global']['num_epochs'] - epoch) * local_time * num_active_users))
-            info = {'info': ['Model: {}'.format(cfg['model_tag']),
-                             'Train Epoch: {}({:.0f}%)'.format(epoch, 100. * i / num_active_users),
-                             'ID: {}/{}'.format(i + 1, num_active_users),
-                             'Epoch Finished Time: {}'.format(epoch_finished_time),
-                             'Experiment Finished Time: {}'.format(exp_finished_time)]}
-            logger.append(info, 'train', mean=False)
-            print(logger.write('train', metric.metric_name['train']))
-    return
+    with Pool() as pool:
+        pool = Pool(num_active_users)
+        organization, logger = zip(*pool.starmap(local_train,
+                     zip(organization, repeat(epoch - 1), data_loader, repeat(logger), assist.organization_outputs,
+                         repeat(cfg['model_tag']))))
+        logger[0].merge(logger[1:])
+        logger = logger[0]
+    logger.safe(True)
+    local_time = time.time() - start_time
+    exp_finished_time = datetime.timedelta(seconds=round((cfg['global']['num_epochs'] - epoch) * local_time))
+    info = {'info': ['Model: {}'.format(cfg['model_tag']),
+                     'Train Epoch: {}'.format(epoch),
+                     'Experiment Finished Time: {}'.format(exp_finished_time)]}
+    logger.append(info, 'train', mean=False)
+    print(logger.write('train', metric.metric_name['train']))
+    return organization, logger
 
 
 def test(data_loader, assist, organization, metric, logger, epoch):

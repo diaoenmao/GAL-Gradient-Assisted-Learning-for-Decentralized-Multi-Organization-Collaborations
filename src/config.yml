@@ -4,7 +4,7 @@ control:
   num_users: '4'
   assist_mode: 'bag'
 # data
-data_name: MNIST
+data_name: QSAR
 # model
 model_name: linear
 # experiment
