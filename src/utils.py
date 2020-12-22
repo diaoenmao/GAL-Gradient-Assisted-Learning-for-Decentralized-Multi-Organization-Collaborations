@@ -110,60 +110,81 @@ def process_control():
                   'BreastCancer': [30], 'QSAR': [41], 'MNIST': [1, 28, 28], 'CIFAR10': [3, 32, 32]}
     cfg['data_shape'] = data_shape[cfg['data_name']]
     cfg['linear'] = {}
-    cfg['mlp'] = {'hidden_size': [64, 128]}
+    cfg['mlp'] = {'hidden_size': [512, 128]}
     cfg['conv'] = {'hidden_size': [64, 128, 256, 512]}
     cfg['resnet18'] = {'hidden_size': [64, 128, 256, 512]}
-    for model_name in ['linear', 'mlp', 'conv', 'resnet18']:
-        cfg[model_name]['shuffle'] = {'train': True, 'test': False}
-        cfg[model_name]['optimizer_name'] = 'SGD'
-        cfg[model_name]['momentum'] = 0.9
-        cfg[model_name]['weight_decay'] = 5e-4
-        if model_name in ['linear']:
-            cfg[model_name]['batch_size'] = {'train': 1024, 'test': 1024}
-            cfg[model_name]['lr'] = 1e-1
-            cfg[model_name]['num_epochs'] = 200
-            cfg[model_name]['scheduler_name'] = 'None'
-            cfg[model_name]['factor'] = 0.1
-            cfg[model_name]['milestones'] = [50, 100]
-        elif model_name in ['mlp']:
-            cfg[model_name]['batch_size'] = {'train': 1024, 'test': 1024}
-            cfg[model_name]['lr'] = 1e-1
-            cfg[model_name]['num_epochs'] = 200
-            cfg[model_name]['scheduler_name'] = 'None'
-            cfg[model_name]['factor'] = 0.1
-            cfg[model_name]['milestones'] = [50, 100]
-        elif model_name in ['conv']:
-            cfg[model_name]['batch_size'] = {'train': 512, 'test': 512}
-            cfg[model_name]['lr'] = 1e-1
-            cfg[model_name]['num_epochs'] = 200
-            cfg[model_name]['scheduler_name'] = 'MultiStepLR'
-            cfg[model_name]['factor'] = 0.1
-            cfg[model_name]['milestones'] = [50, 100]
-        elif model_name in ['resnet18']:
-            cfg[model_name]['batch_size'] = {'train': 512, 'test': 512}
-            cfg[model_name]['lr'] = 1e-1
-            cfg[model_name]['num_epochs'] = 400
-            cfg[model_name]['scheduler_name'] = 'MultiStepLR'
-            cfg[model_name]['factor'] = 0.1
-            cfg[model_name]['milestones'] = [150, 250]
-        else:
-            raise ValueError('Not valid model name')
     if 'assist_mode' in cfg['control']:
         cfg['num_users'] = int(cfg['control']['num_users'])
         cfg['assist_mode'] = cfg['control']['assist_mode']
+        cfg['local_epoch'] = int(cfg['control']['local_epoch'])
         cfg['assist'] = {}
         cfg['assist']['batch_size'] = {'train': 1024, 'test': 1024}
         cfg['assist']['optimizer_name'] = 'LBFGS'
         cfg['assist']['lr'] = 1
-        cfg['assist']['num_epochs'] = 50
+        cfg['assist']['num_epochs'] = 10
         cfg['linesearch'] = {}
         cfg['linesearch']['optimizer_name'] = 'LBFGS'
         cfg['linesearch']['lr'] = 1
-        cfg['linesearch']['num_epochs'] = 50
-        if cfg['data_name'] in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']:
-            cfg['global'] = {'num_epochs': 50}
-        else:
-            cfg['global'] = {'num_epochs': 20}
+        cfg['linesearch']['num_epochs'] = 10
+        for model_name in ['linear', 'mlp', 'conv', 'resnet18']:
+            cfg[model_name]['shuffle'] = {'train': True, 'test': False}
+            cfg[model_name]['optimizer_name'] = 'SGD'
+            cfg[model_name]['momentum'] = 0.9
+            cfg[model_name]['weight_decay'] = 5e-4
+            if model_name in ['linear', 'mlp']:
+                cfg[model_name]['batch_size'] = {'train': 1024, 'test': 1024}
+                cfg[model_name]['lr'] = 1e-1
+                cfg[model_name]['num_epochs'] = cfg['local_epoch']
+                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
+                cfg[model_name]['factor'] = 0.1
+                cfg[model_name]['milestones'] = [50, 100]
+            elif model_name in ['conv']:
+                cfg[model_name]['batch_size'] = {'train': 512, 'test': 512}
+                cfg[model_name]['lr'] = 1e-1
+                cfg[model_name]['num_epochs'] = cfg['local_epoch']
+                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
+                cfg[model_name]['factor'] = 0.1
+                cfg[model_name]['milestones'] = [50, 100]
+            elif model_name in ['resnet18']:
+                cfg[model_name]['batch_size'] = {'train': 512, 'test': 512}
+                cfg[model_name]['lr'] = 1e-1
+                cfg[model_name]['num_epochs'] = cfg['local_epoch']
+                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
+                cfg[model_name]['factor'] = 0.1
+                cfg[model_name]['milestones'] = [50, 100]
+            else:
+                raise ValueError('Not valid model name')
+        cfg['global'] = {}
+        cfg['global']['num_epochs'] = 10
+    else:
+        for model_name in ['linear', 'mlp', 'conv', 'resnet18']:
+            cfg[model_name]['shuffle'] = {'train': True, 'test': False}
+            cfg[model_name]['optimizer_name'] = 'SGD'
+            cfg[model_name]['momentum'] = 0.9
+            cfg[model_name]['weight_decay'] = 5e-4
+            if model_name in ['linear', 'mlp']:
+                cfg[model_name]['batch_size'] = {'train': 1024, 'test': 1024}
+                cfg[model_name]['lr'] = 1e-1
+                cfg[model_name]['num_epochs'] = 100
+                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
+                cfg[model_name]['factor'] = 0.1
+                cfg[model_name]['milestones'] = [50]
+            elif model_name in ['conv']:
+                cfg[model_name]['batch_size'] = {'train': 512, 'test': 512}
+                cfg[model_name]['lr'] = 1e-1
+                cfg[model_name]['num_epochs'] = 200
+                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
+                cfg[model_name]['factor'] = 0.1
+                cfg[model_name]['milestones'] = [50, 100]
+            elif model_name in ['resnet18']:
+                cfg[model_name]['batch_size'] = {'train': 512, 'test': 512}
+                cfg[model_name]['lr'] = 1e-1
+                cfg[model_name]['num_epochs'] = 200
+                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
+                cfg[model_name]['factor'] = 0.1
+                cfg[model_name]['milestones'] = [50, 100]
+            else:
+                raise ValueError('Not valid model name')
     cfg['stats'] = make_stats()
     return
 

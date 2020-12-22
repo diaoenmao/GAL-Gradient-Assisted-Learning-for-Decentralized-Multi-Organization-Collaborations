@@ -85,21 +85,3 @@ class Logger():
     def flush(self):
         self.writer.flush()
         return
-
-    def merge(self, loggers):
-        for i in range(len(loggers)):
-            if self.iterator = loggers[i].iterator
-
-            self.tracker = loggers[i].tracker
-            self.history = loggers[i].history
-            for name in self.counter:
-                if isinstance(self.counter[name], Number):
-                    self.counter[name] += loggers[i].counter[name]
-                    self.mean[name] = ((self.counter[name] - loggers[i].counter[name]) * self.mean[name] +
-                                       loggers[i].counter[name] * loggers[i].mean[name]) / self.counter[name]
-                elif isinstance(self.counter[name], Iterable):
-                    for j in range(len(self.counter[name])):
-                        self.counter[name][j] += loggers[i].counter[name][j]
-                        self.mean[name][j] = ((self.counter[name][j] - loggers[i].counter[name][j]) * self.mean[name][
-                            j] + loggers[i].counter[name][j] * loggers[i].mean[name][j]) / self.counter[name][j]
-        return

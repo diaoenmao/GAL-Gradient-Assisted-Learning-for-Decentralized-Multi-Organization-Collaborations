@@ -1,5 +1,7 @@
+import datetime
 import numpy as np
 import sys
+import time
 import torch
 import models
 from config import cfg
@@ -19,6 +21,7 @@ class Organization:
         optimizer = make_optimizer(model, self.model_name)
         scheduler = make_scheduler(optimizer, self.model_name)
         for local_epoch in range(1, cfg[self.model_name]['num_epochs'] + 1):
+            start_time = time.time()
             for i, input in enumerate(data_loader):
                 input = collate(input)
                 input_size = input['data'].size(0)
@@ -37,10 +40,14 @@ class Organization:
                 scheduler.step(metrics=logger.mean['train/{}'.format(metric.pivot_name)])
             else:
                 scheduler.step()
+            local_time = (time.time() - start_time)
+            local_finished_time = datetime.timedelta(
+                seconds=round((cfg[self.model_name]['num_epochs'] - local_epoch) * local_time))
             info = {'info': ['Model: {}'.format(cfg['model_tag']),
                              'Train Local Epoch: {}({:.0f}%)'.format(local_epoch, 100. * local_epoch /
                                                                      cfg[self.model_name]['num_epochs']),
-                             'ID: {}'.format(self.organization_id)]}
+                             'ID: {}'.format(self.organization_id),
+                             'Local Finished Time: {}'.format(local_finished_time)]}
             logger.append(info, 'train', mean=False)
             print(logger.write('train', metric.metric_name['train']), end='\r', flush=True)
         sys.stdout.write('\x1b[2K')

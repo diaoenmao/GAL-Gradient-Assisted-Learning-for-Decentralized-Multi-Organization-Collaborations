@@ -1,12 +1,13 @@
 ---
 # control
 control:
-  num_users: '4'
-  assist_mode: 'bag'
+  num_users: '8'
+  assist_mode: 'stack'
+  local_epoch: '100'
 # data
-data_name: QSAR
+data_name: MNIST
 # model
-model_name: linear
+model_name: resnet18
 # experiment
 num_workers: 0
 init_seed: 0

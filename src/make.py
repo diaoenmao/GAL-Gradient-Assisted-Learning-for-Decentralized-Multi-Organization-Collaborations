@@ -10,6 +10,7 @@ parser.add_argument('--round', default=4, type=int)
 parser.add_argument('--experiment_step', default=1, type=int)
 parser.add_argument('--num_experiments', default=1, type=int)
 parser.add_argument('--resume_mode', default=0, type=int)
+parser.add_argument('--model', default=None, type=str)
 parser.add_argument('--file', default=None, type=str)
 args = vars(parser.parse_args())
 
@@ -35,6 +36,7 @@ def main():
     init_seed = args['init_seed']
     num_experiments = args['num_experiments']
     resume_mode = args['resume_mode']
+    model = args['model']
     file = args['file']
     gpu_ids = [','.join(str(i) for i in list(range(x, x + world_size))) for x in list(range(0, num_gpu, world_size))]
     script_name = [['{}_{}.py'.format(run, file)]]
@@ -55,33 +57,38 @@ def main():
                                      resume_mode, control_name)
         controls = toy_controls + img_controls
     elif file == 'classifier_assist':
-        filename = '{}_{}'.format(run, file)
-        model_names = [['linear', 'mlp']]
-        data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
-        control_name = [[['1'], ['none']]]
-        toy_controls_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                       resume_mode, control_name)
-        model_names = [['linear', 'mlp']]
-        data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
-        control_name = [[['2', '4'], ['none', 'bag', 'stack']]]
-        toy_controls_full_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size,
-                                            num_experiments, resume_mode, control_name)
-        model_names = [['linear', 'mlp']]
-        data_names = [['Blob', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
-        control_name = [[['8'], ['none', 'bag', 'stack']]]
-        toy_controls_full_2 = make_controls(script_name, data_names, model_names, init_seeds, world_size,
-                                            num_experiments, resume_mode, control_name)
-        model_names = [['linear', 'mlp', 'conv', 'resnet18']]
-        data_names = [['MNIST', 'CIFAR10']]
-        control_name = [[['1'], ['none']]]
-        img_controls_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                       resume_mode, control_name)
-        model_names = [['linear', 'mlp', 'conv', 'resnet18']]
-        data_names = [['MNIST', 'CIFAR10']]
-        control_name = [[['2', '4', '8'], ['none', 'bag', 'stack']]]
-        img_controls_full = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+        filename = '{}_{}'.format(run, model)
+        model_names = [[model]]
+        if model in ['linear', 'mlp']:
+            local_epoch = ['1', '10', '100']
+            data_names = [
+                ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']]
+            control_name = [[['1'], ['none'], local_epoch]]
+            control_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                      resume_mode, control_name)
+            data_names = [
+                ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']]
+            control_name = [[['2', '4'], ['none', 'bag', 'stack'], local_epoch]]
+            control_2_4 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                        resume_mode, control_name)
+            data_names = [
+                ['Blob', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']]
+            control_name = [[['8'], ['none', 'bag', 'stack'], local_epoch]]
+            control_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                      resume_mode, control_name)
+            controls = control_1 + control_2_4 + control_8
+        elif model in ['conv', 'resnet18']:
+            local_epoch = ['1', '10']
+            data_names = [['MNIST', 'CIFAR10']]
+            control_name = [[['1'], ['none'], local_epoch]]
+            control_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                      resume_mode, control_name)
+            data_names = [
+                ['MNIST', 'CIFAR10']]
+            control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch]]
+            control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
-        controls = toy_controls_1 + toy_controls_full_1 + toy_controls_full_2 + img_controls_1 + img_controls_full
+            controls = control_1 + control_2_4_8
     else:
         raise ValueError('Not valid model')
     s = '#!/bin/bash\n'

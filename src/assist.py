@@ -126,7 +126,7 @@ class Assist:
                                                   'assist': input[3]}
                             input = to_device(input, cfg['device'])
                             output = model(input)
-                            organization_outputs[i][split]['target'][input['id']] = output['target'][input['id']].cpu()
+                            organization_outputs[i][split]['target'][input['id']] = output['target'][:].cpu()
         else:
             raise ValueError('Not valid assist')
         if self.organization_outputs[i][split] is not None and 'train' in data_loader[0]:
