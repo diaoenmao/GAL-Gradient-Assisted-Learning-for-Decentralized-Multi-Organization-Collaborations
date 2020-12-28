@@ -119,7 +119,6 @@ class Assist:
                         model = eval('models.{}().to(cfg["device"])'.format(cfg['assist_mode']))
                         model.load_state_dict(self.assist_parameters[i][iter])
                         model.train(False)
-                        output = []
                         for j, input in enumerate(_data_loader[split]):
                             input = {'id': input[0], 'output': input[1], 'target': input[2], 'assist': None} if len(
                                 input) == 3 else {'id': input[0], 'output': input[1], 'target': input[2],
@@ -150,6 +149,7 @@ class Assist:
                 self.assist_rates[i][iter] = model.assist_rate.item()
         with torch.no_grad():
             for i in range(len(self.organization_outputs)):
+                print(self.assist_rates[i])
                 for split in data_loader[i]:
                     if self.organization_outputs[i][split] is None:
                         self.organization_outputs[i][split] = copy.deepcopy(organization_outputs[i][split])

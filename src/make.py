@@ -83,8 +83,7 @@ def main():
             control_name = [[['1'], ['none'], local_epoch]]
             control_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                       resume_mode, control_name)
-            data_names = [
-                ['MNIST', 'CIFAR10']]
+            data_names = [['MNIST', 'CIFAR10']]
             control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)

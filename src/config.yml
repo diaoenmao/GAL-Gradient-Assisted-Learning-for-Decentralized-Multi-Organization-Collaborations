@@ -2,12 +2,12 @@
 # control
 control:
   num_users: '8'
-  assist_mode: 'stack'
-  local_epoch: '100'
+  assist_mode: 'bag'
+  local_epoch: '1'
 # data
 data_name: MNIST
 # model
-model_name: resnet18
+model_name: mlp
 # experiment
 num_workers: 0
 init_seed: 0
