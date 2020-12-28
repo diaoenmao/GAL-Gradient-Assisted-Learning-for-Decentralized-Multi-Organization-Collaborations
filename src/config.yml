@@ -7,7 +7,7 @@ control:
 # data
 data_name: MNIST
 # model
-model_name: mlp
+model_name: linear
 # experiment
 num_workers: 0
 init_seed: 0

@@ -149,7 +149,6 @@ class Assist:
                 self.assist_rates[i][iter] = model.assist_rate.item()
         with torch.no_grad():
             for i in range(len(self.organization_outputs)):
-                print(self.assist_rates[i])
                 for split in data_loader[i]:
                     if self.organization_outputs[i][split] is None:
                         self.organization_outputs[i][split] = copy.deepcopy(organization_outputs[i][split])
