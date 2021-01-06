@@ -70,6 +70,7 @@ def runExperiment():
         organization = assist.make_organization()
     metric = Metric({'train': ['Loss', 'Loss_Local'], 'test': ['Loss']})
     for epoch in range(last_epoch, cfg['global']['num_epochs'] + 1):
+        logger.safe(True)
         data_loader = assist.make_data_loader(dataset, epoch - 1)
         train(data_loader, assist, organization, metric, logger, epoch)
         organization_outputs = broadcast(data_loader, organization, epoch)

@@ -13,90 +13,66 @@ result_path = './output/result'
 vis_path = './output/vis'
 num_experiments = 1
 exp = [str(x) for x in list(range(num_experiments))]
-model_split_mode = ['a', 'b', 'c', 'd', 'e']
-combination_mode = [x + '1' for x in model_split_mode]
-combination = []
-for i in range(1, len(combination_mode) + 1):
-    combination_mode_i = ['-'.join(list(x)) for x in itertools.combinations(combination_mode, i)]
-    combination.extend(combination_mode_i)
-combination = combination[5:]
-interp = []
-for i in range(1, 10):
-    for j in range(len(model_split_mode)):
-        for k in range(j + 1, len(model_split_mode)):
-            interp += ['{}{}-'.format(model_split_mode[j], i) + '{}{}'.format(model_split_mode[k], 10 - i)]
-model_split_rate = {'a': 1, 'b': 0.5, 'c': 0.25, 'd': 0.125, 'e': 0.0625}
-model_split_rate_key = list(model_split_rate.keys())
-colors = cm.rainbow(np.linspace(1, 0, len(model_split_rate_key)))
-model_color = {model_split_rate_key[i]: colors[i] for i in range(len(model_split_rate_key))}
-interp_name = ['a-b', 'a-c', 'a-d', 'a-e', 'b-c', 'b-d', 'b-e', 'c-d', 'c-e', 'd-e', 'e']
+# colors = cm.rainbow(np.linspace(1, 0, len(model_split_rate_key)))
+# model_color = {model_split_rate_key[i]: colors[i] for i in range(len(model_split_rate_key))}
 metric_name_dict = {'MNIST': 'Accuracy', 'CIFAR10': 'Accuracy', 'WikiText2': 'Perplexity'}
 loc_dict = {'MNIST': 'lower right', 'CIFAR10': 'lower right', 'WikiText2': 'upper right'}
 fontsize = 16
 
 
-def make_control_list(data_name):
-    data_name_dict = {'MNIST': 'conv', 'CIFAR10': 'resnet18', 'WikiText2': 'transformer'}
-    data_split_mode_dict = {'MNIST': ['iid', 'non-iid-2'], 'CIFAR10': ['iid', 'non-iid-2'], 'WikiText2': ['iid']}
-    model_name = data_name_dict[data_name]
-    data_split_mode = data_split_mode_dict[data_name]
-    no_fed_control = [exp, [data_name], ['label'], [model_name], ['0'], ['1'], ['1'], ['none'], ['fix'],
-                      combination_mode, ['bn'], ['1'], ['1']]
-    fed_single_control = [exp, [data_name], ['label'], [model_name], ['1'], ['100'], ['0.1'], data_split_mode,
-                          ['fix'], combination_mode, ['bn'], ['1'], ['1']]
-    fed_combination_control = [exp, [data_name], ['label'], [model_name], ['1'], ['100'], ['0.1'], data_split_mode,
-                               ['dynamic'], combination, ['bn'], ['1'], ['1']]
-    fed_interp_control = [exp, [data_name], ['label'], [model_name], ['1'], ['100'], ['0.1'], data_split_mode,
-                          ['fix'], interp, ['bn'], ['1'], ['1']]
-    controls_list = [no_fed_control, fed_single_control, fed_combination_control, fed_interp_control]
-    return controls_list
+def make_controls(data_names, model_names, control_name):
+    control_names = []
+    for i in range(len(control_name)):
+        control_names.extend(list('_'.join(x) for x in itertools.product(*control_name[i])))
+    control_names = [control_names]
+    controls = exp + data_names + model_names + control_names
+    controls = list(itertools.product(*controls))
+    return controls
 
 
-def make_ablation_control_list(data_name):
-    global interp_name
-    interp_name = ['a-e', 'e']
-    data_name_dict = {'MNIST': 'conv', 'CIFAR10': 'resnet18', 'WikiText2': 'transformer'}
-    data_split_mode_dict = {'MNIST': ['iid', 'non-iid-2'], 'CIFAR10': ['iid', 'non-iid-2']}
-    model_name = data_name_dict[data_name]
-    data_split_mode = data_split_mode_dict[data_name]
-    combination = ['a1-e1']
-    norm_1 = ['bn', 'none']
-    norm_2 = ['in', 'ln', 'gn']
-    controls_list = []
-    for d in data_split_mode:
-        if d == 'iid':
-            control_name_1 = [exp, [data_name], ['label'], [model_name], ['1'], ['100'], ['0.1'], [d], ['fix'],
-                              ['a1', 'e1'], norm_2 + norm_1, ['1'], ['1']]
-            control_name_2 = [exp, [data_name], ['label'], [model_name], ['1'], ['100'], ['0.1'], [d], ['dynamic'],
-                              combination, norm_2, ['1'], ['1']]
-            control_name_3 = [exp, [data_name], ['label'], [model_name], ['1'], ['100'], ['0.1'], [d], ['dynamic'],
-                              combination, norm_1, ['0', '1'], ['1']]
-            control_name = [control_name_1, control_name_2, control_name_3]
-        elif d == 'non-iid-2':
-            control_name_1 = [exp, [data_name], ['label'], [model_name], ['1'], ['100'], ['0.1'], [d], ['fix'],
-                              ['a1', 'e1'], norm_2, ['1'], ['1']]
-            control_name_2 = [exp, [data_name], ['label'], [model_name], ['1'], ['100'], ['0.1'], [d], ['fix'],
-                              ['a1', 'e1'], norm_1, ['1'], ['0', '1']]
-            control_name_3 = [exp, [data_name], ['label'], [model_name], ['1'], ['100'], ['0.1'], [d], ['dynamic'],
-                              combination, norm_2, ['1'], ['1']]
-            control_name_4 = [exp, [data_name], ['label'], [model_name], ['1'], ['100'], ['0.1'], [d], ['dynamic'],
-                              combination, norm_1, ['0', '1'], ['0', '1']]
-            control_name = [control_name_1, control_name_2, control_name_3, control_name_4]
-        controls_list = controls_list + control_name
-    return controls_list
+def make_control_list(model_name):
+    model_names = [[model_name]]
+    if model_name in ['linear', 'mlp']:
+        local_epoch = ['1', '10', '100']
+        data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']]
+        control_name = [[['1'], ['none'], local_epoch, ['10']]]
+        control_1 = make_controls(data_names, model_names, control_name)
+        data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']]
+        control_name = [[['2', '4'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
+        control_2_4 = make_controls(data_names, model_names, control_name)
+        data_names = [['Blob', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']]
+        control_name = [[['8'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
+        control_8 = make_controls(data_names, model_names, control_name)
+        controls = control_1 + control_2_4 + control_8
+    elif model_name in ['conv', 'resnet18']:
+        local_epoch = ['1', '10', '100']
+        data_names = [['MNIST', 'CIFAR10']]
+        control_name = [[['1'], ['none'], local_epoch, ['10']]]
+        control_1 = make_controls(data_names, model_names, control_name)
+        data_names = [['MNIST', 'CIFAR10']]
+        control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
+        control_2_4_8 = make_controls(data_names, model_names, control_name)
+        controls = control_1 + control_2_4_8
+    elif model_name in ['conv-linear', 'resnet18-linear']:
+        local_epoch = ['1', '10', '100']
+        data_names = [['MNIST', 'CIFAR10']]
+        control_name = [[['1'], ['none'], local_epoch, ['50']]]
+        control_1 = make_controls(data_names, model_names, control_name)
+        data_names = [['MNIST', 'CIFAR10']]
+        control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['50']]]
+        control_2_4_8 = make_controls(data_names, model_names, control_name)
+        controls = control_1 + control_2_4_8
+    else:
+        raise ValueError('Not valid model name')
+    return controls
 
 
 def main():
-    # mnist_control_list = make_ablation_control_list('MNIST')
-    # cifar10_control_list = make_ablation_control_list('CIFAR10')
-    # controls_list = mnist_control_list + cifar10_control_list
-    mnist_control_list = make_control_list('MNIST')
-    cifar10_control_list = make_control_list('CIFAR10')
-    wikitext2_control_list = make_control_list('WikiText2')
-    controls_list = mnist_control_list + cifar10_control_list + wikitext2_control_list
-    controls = []
-    for i in range(len(controls_list)):
-        controls.extend(list(itertools.product(*controls_list[i])))
+    linear_control_list = make_control_list('linear')
+    mlp_control_list = make_control_list('mlp')
+    conv_control_list = make_control_list('conv')
+    resnet18_control_list = make_control_list('resnet18')
+    controls = linear_control_list + mlp_control_list + conv_control_list + resnet18_control_list
     processed_result_exp, processed_result_history = process_result(controls)
     with open('{}/processed_result_exp.json'.format(result_path), 'w') as fp:
         json.dump(processed_result_exp, fp, indent=2)
@@ -127,20 +103,17 @@ def extract_result(control, model_tag, processed_result_exp, processed_result_hi
         exp_idx = exp.index(control[0])
         base_result_path_i = os.path.join(result_path, '{}.pt'.format(model_tag))
         if os.path.exists(base_result_path_i):
-            if 'params' not in processed_result_exp:
-                ratio, num_params, num_flops, space = make_stats(model_tag)
-                processed_result_exp['Ratio'] = {'exp': [ratio]}
-                processed_result_exp['Params'] = {'exp': [num_params]}
-                processed_result_exp['FLOPs'] = {'exp': [num_flops]}
-                processed_result_exp['Space'] = {'exp': [space]}
             base_result = load(base_result_path_i)
-            for k in base_result['logger']['test'].mean:
+            for k in base_result['logger']['test'].history:
                 metric_name = k.split('/')[1]
                 if metric_name not in processed_result_exp:
                     processed_result_exp[metric_name] = {'exp': [None for _ in range(num_experiments)]}
                     processed_result_history[metric_name] = {'history': [None for _ in range(num_experiments)]}
-                processed_result_exp[metric_name]['exp'][exp_idx] = base_result['logger']['test'].mean[k]
-                processed_result_history[metric_name]['history'][exp_idx] = base_result['logger']['train'].history[k]
+                if metric_name in ['Loss']:
+                    processed_result_exp[metric_name]['exp'][exp_idx] = min(base_result['logger']['test'].history[k])
+                else:
+                    processed_result_exp[metric_name]['exp'][exp_idx] = max(base_result['logger']['test'].history[k])
+                processed_result_history[metric_name]['history'][exp_idx] = base_result['logger']['test'].history[k]
         else:
             print('Missing {}'.format(base_result_path_i))
     else:
@@ -283,98 +256,6 @@ def make_vis(df):
         plt.savefig(fig_path, dpi=500, bbox_inches='tight', pad_inches=0)
         plt.close(fig_name)
     return
-
-
-def make_learning_curve(processed_result):
-    ylim_dict = {'iid': {'global': {'MNIST': [95, 100], 'CIFAR10': [50, 100], 'WikiText2': [0, 20]}},
-                 'non-iid-2': {'global': {'MNIST': [50, 100], 'CIFAR10': [0, 70]},
-                               'local': {'MNIST': [95, 100], 'CIFAR10': [50, 100]}}}
-    fig = {}
-    for exp_name in processed_result:
-        control = exp_name.split('_')
-        data_name = control[0]
-        metric_name = metric_name_dict[data_name]
-        control_name = control[-1]
-        if control_name in ['a5-b5', 'a5-c5', 'a5-d5', 'a5-e5', 'a1-b1', 'a1-c1', 'a1-d1', 'a1-e1']:
-            if 'non-iid-2' in exp_name:
-                y = processed_result[exp_name]['Local-{}_mean'.format(metric_name)]
-                x = np.arange(len(y))
-                label_name = '-'.join(['{}'.format(x[0]) for x in list(control_name.split('-'))])
-                fig_name = '{}_lc_local'.format('_'.join(control[:-1]))
-                fig[fig_name] = plt.figure(fig_name)
-                plt.plot(x, y, '-', label=label_name)
-                plt.legend(loc=loc_dict[data_name], fontsize=fontsize)
-                plt.xlabel('Communication rounds', fontsize=fontsize)
-                plt.ylabel('Test {}'.format(metric_name), fontsize=fontsize)
-                plt.ylim(ylim_dict['non-iid-2']['local'][data_name])
-                plt.xticks(fontsize=fontsize)
-                plt.yticks(fontsize=fontsize)
-                y = processed_result[exp_name]['Global-{}_mean'.format(metric_name)]
-                x = np.arange(len(y))
-                label_name = '-'.join(['{}'.format(x[0]) for x in list(control_name.split('-'))])
-                fig_name = '{}_lc_global'.format('_'.join(control[:-1]))
-                fig[fig_name] = plt.figure(fig_name)
-                plt.plot(x, y, '-', label=label_name)
-                plt.legend(loc=loc_dict[data_name], fontsize=fontsize)
-                plt.xlabel('Communication rounds', fontsize=fontsize)
-                plt.ylabel('Test {}'.format(metric_name), fontsize=fontsize)
-                plt.ylim(ylim_dict['non-iid-2']['global'][data_name])
-                plt.xticks(fontsize=fontsize)
-                plt.yticks(fontsize=fontsize)
-            else:
-                y = processed_result[exp_name]['Global-{}_mean'.format(metric_name)]
-                x = np.arange(len(y))
-                label_name = '-'.join(['{}'.format(x[0]) for x in list(control_name.split('-'))])
-                fig_name = '{}_lc_global'.format('_'.join(control[:-1]))
-                fig[fig_name] = plt.figure(fig_name)
-                plt.plot(x, y, '-', label=label_name)
-                plt.legend(loc=loc_dict[data_name], fontsize=fontsize)
-                plt.xlabel('Communication rounds', fontsize=fontsize)
-                plt.ylabel('Test {}'.format(metric_name), fontsize=fontsize)
-                plt.ylim(ylim_dict['iid']['global'][data_name])
-                plt.xticks(fontsize=fontsize)
-                plt.yticks(fontsize=fontsize)
-    for fig_name in fig:
-        fig[fig_name] = plt.figure(fig_name)
-        plt.grid()
-        fig_path = '{}/{}.{}'.format(vis_path, fig_name, cfg['save_format'])
-        makedir_exist_ok(vis_path)
-        plt.savefig(fig_path, dpi=500, bbox_inches='tight', pad_inches=0)
-        plt.close(fig_name)
-    return
-
-
-def make_stats(model_tag):
-    model_tag_list = model_tag.split('_')
-    data_name = model_tag_list[1]
-    model_name = model_tag_list[3]
-    # model_mode = model_tag_list[-1]
-    model_mode = model_tag_list[-4]
-    model_mode_list = model_mode.split('-')
-    global_model_mode = model_mode_list[0][0]
-    stats_result_path = os.path.join(result_path, '{}_{}_{}.pt'.format(data_name, model_name, global_model_mode))
-    stats_result = load(stats_result_path)
-    global_num_params = stats_result['num_params']
-    all_global_num_params = 0
-    num_params = 0
-    num_flops = 0
-    space = 0
-    frac = 0
-    for i in range(len(model_mode_list)):
-        model_mode_i = model_mode_list[i][0]
-        frac_i = int(model_mode_list[i][1])
-        stats_result_path_i = os.path.join(result_path, '{}_{}_{}.pt'.format(data_name, model_name, model_mode_i))
-        stats_result = load(stats_result_path_i)
-        num_params += stats_result['num_params'] * frac_i
-        num_flops += stats_result['num_flops'] * frac_i
-        space += stats_result['space'] * frac_i
-        all_global_num_params += global_num_params * frac_i
-        frac += frac_i
-    ratio = num_params / all_global_num_params
-    num_params /= frac
-    num_flops /= frac
-    space /= frac
-    return ratio, num_params, num_flops, space
 
 
 if __name__ == '__main__':

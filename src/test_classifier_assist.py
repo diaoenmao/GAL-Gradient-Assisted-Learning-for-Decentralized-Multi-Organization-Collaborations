@@ -57,9 +57,10 @@ def runExperiment():
         organization_outputs = broadcast(data_loader, organization, epoch)
         assist.update(epoch - 1, data_loader, organization_outputs)
         test(data_loader, assist, organization, metric, test_logger, epoch)
+        test_logger.safe(False)
         test_logger.reset()
-    assist.reset()
     test_logger.safe(False)
+    assist.reset()
     _, _, _, train_logger = resume(cfg['model_tag'], load_tag='checkpoint')
     save_result = {'cfg': cfg, 'epoch': last_epoch, 'assist': assist,
                    'logger': {'train': train_logger, 'test': test_logger}}

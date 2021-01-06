@@ -32,8 +32,6 @@ class Assist:
             model_name = [model_name for _ in range(len(self.feature_split))]
         else:
             raise ValueError('Not valid model name')
-        print(model_name)
-        exit()
         return model_name
 
     def make_data_loader(self, dataset, iter):
