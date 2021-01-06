@@ -29,7 +29,8 @@ for k in cfg:
 if args['control_name']:
     cfg['control'] = {k: v for k, v in zip(cfg['control'].keys(), args['control_name'].split('_'))} \
         if args['control_name'] != 'None' else {}
-cfg['control_name'] = '_'.join([cfg['control'][k] for k in cfg['control']]) if 'control' in cfg else ''
+cfg['control_name'] = '_'.join(
+    [cfg['control'][k] for k in cfg['control'] if cfg['control'][k]]) if 'control' in cfg else ''
 
 
 def main():
@@ -67,9 +68,9 @@ def runExperiment():
         logger = Logger(logger_path)
     if organization is None:
         organization = assist.make_organization()
-    data_loader = assist.make_data_loader(dataset)
     metric = Metric({'train': ['Loss', 'Loss_Local'], 'test': ['Loss']})
     for epoch in range(last_epoch, cfg['global']['num_epochs'] + 1):
+        data_loader = assist.make_data_loader(dataset, epoch - 1)
         train(data_loader, assist, organization, metric, logger, epoch)
         organization_outputs = broadcast(data_loader, organization, epoch)
         assist.update(epoch - 1, data_loader, organization_outputs)

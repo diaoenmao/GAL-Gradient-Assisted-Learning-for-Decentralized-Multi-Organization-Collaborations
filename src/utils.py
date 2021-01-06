@@ -117,6 +117,7 @@ def process_control():
         cfg['num_users'] = int(cfg['control']['num_users'])
         cfg['assist_mode'] = cfg['control']['assist_mode']
         cfg['local_epoch'] = int(cfg['control']['local_epoch'])
+        cfg['global_epoch'] = int(cfg['control']['global_epoch'])
         cfg['assist'] = {}
         cfg['assist']['batch_size'] = {'train': 1024, 'test': 1024}
         cfg['assist']['optimizer_name'] = 'LBFGS'
@@ -155,7 +156,7 @@ def process_control():
             else:
                 raise ValueError('Not valid model name')
         cfg['global'] = {}
-        cfg['global']['num_epochs'] = 10
+        cfg['global']['num_epochs'] = cfg['global_epoch']
     else:
         for model_name in ['linear', 'mlp', 'conv', 'resnet18']:
             cfg[model_name]['shuffle'] = {'train': True, 'test': False}

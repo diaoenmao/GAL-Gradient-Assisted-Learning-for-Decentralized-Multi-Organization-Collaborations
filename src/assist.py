@@ -23,16 +23,23 @@ class Assist:
         return
 
     def make_model_name(self):
-        model_name = cfg['model_name'].split('-')
-        model_idx = torch.arange(len(model_name)).repeat(round(len(self.feature_split) / len(model_name)))
-        model_idx = model_idx.tolist()[:len(self.feature_split)]
-        model_name = [model_name[i] for i in model_idx]
+        model_name_list = cfg['model_name'].split('-')
+        if len(model_name_list) == 1:
+            model_name = [model_name_list[0] for _ in range(cfg['global']['num_epochs'])]
+            model_name = [model_name for _ in range(len(self.feature_split))]
+        elif len(model_name_list) == 2:
+            model_name = [model_name_list[0]] + [model_name_list[1] for _ in range(cfg['global']['num_epochs'] - 1)]
+            model_name = [model_name for _ in range(len(self.feature_split))]
+        else:
+            raise ValueError('Not valid model name')
+        print(model_name)
+        exit()
         return model_name
 
-    def make_data_loader(self, dataset):
+    def make_data_loader(self, dataset, iter):
         data_loader = [None for _ in range(len(self.feature_split))]
         for i in range(len(self.feature_split)):
-            data_loader[i] = make_data_loader(dataset, self.model_name[i])
+            data_loader[i] = make_data_loader(dataset, self.model_name[i][iter])
         return data_loader
 
     def make_organization(self):
@@ -46,7 +53,6 @@ class Assist:
         return organization
 
     def update(self, iter, data_loader, new_organization_outputs):
-        import time
         if cfg['assist_mode'] == 'none':
             with torch.no_grad():
                 organization_outputs = [{split: {'id': torch.arange(cfg['data_size'][split]),

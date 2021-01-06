@@ -23,7 +23,8 @@ for k in cfg:
 if args['control_name']:
     cfg['control'] = {k: v for k, v in zip(cfg['control'].keys(), args['control_name'].split('_'))} \
         if args['control_name'] != 'None' else {}
-cfg['control_name'] = '_'.join([cfg['control'][k] for k in cfg['control']]) if 'control' in cfg else ''
+cfg['control_name'] = '_'.join(
+    [cfg['control'][k] for k in cfg['control'] if cfg['control'][k]]) if 'control' in cfg else ''
 
 
 def main():
@@ -46,13 +47,13 @@ def runExperiment():
     dataset = {'test': dataset['test']}
     last_epoch, assist, organization, logger = resume(cfg['model_tag'], load_tag='checkpoint')
     assist.reset()
-    data_loader = assist.make_data_loader(dataset)
     metric = Metric({'test': ['Loss']})
     current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')
     logger_path = 'output/runs/test_{}_{}'.format(cfg['model_tag'], current_time)
     test_logger = Logger(logger_path)
     for epoch in range(1, last_epoch):
         test_logger.safe(True)
+        data_loader = assist.make_data_loader(dataset, epoch - 1)
         organization_outputs = broadcast(data_loader, organization, epoch)
         assist.update(epoch - 1, data_loader, organization_outputs)
         test(data_loader, assist, organization, metric, test_logger, epoch)
