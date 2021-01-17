@@ -45,7 +45,7 @@ def make_control_list(model_name):
         control_8 = make_controls(data_names, model_names, control_name)
         controls = control_1 + control_2_4 + control_8
     elif model_name in ['conv', 'resnet18']:
-        local_epoch = ['1', '10', '100']
+        local_epoch = ['1', '10']
         data_names = [['MNIST', 'CIFAR10']]
         control_name = [[['1'], ['none'], local_epoch, ['10']]]
         control_1 = make_controls(data_names, model_names, control_name)
@@ -54,7 +54,7 @@ def make_control_list(model_name):
         control_2_4_8 = make_controls(data_names, model_names, control_name)
         controls = control_1 + control_2_4_8
     elif model_name in ['conv-linear', 'resnet18-linear']:
-        local_epoch = ['1', '10', '100']
+        local_epoch = ['1', '10']
         data_names = [['MNIST', 'CIFAR10']]
         control_name = [[['1'], ['none'], local_epoch, ['50']]]
         control_1 = make_controls(data_names, model_names, control_name)
@@ -72,19 +72,22 @@ def main():
     mlp_control_list = make_control_list('mlp')
     conv_control_list = make_control_list('conv')
     resnet18_control_list = make_control_list('resnet18')
-    controls = linear_control_list + mlp_control_list + conv_control_list + resnet18_control_list
+    convlinear_control_list = make_control_list('conv-linear')
+    resnet18linear_control_list = make_control_list('resnet18-linear')
+    controls = linear_control_list + mlp_control_list + conv_control_list + resnet18_control_list + \
+               convlinear_control_list + resnet18linear_control_list
     processed_result_exp, processed_result_history = process_result(controls)
     with open('{}/processed_result_exp.json'.format(result_path), 'w') as fp:
         json.dump(processed_result_exp, fp, indent=2)
     save(processed_result_exp, os.path.join(result_path, 'processed_result_exp.pt'))
     save(processed_result_history, os.path.join(result_path, 'processed_result_history.pt'))
-    extracted_processed_result = {}
-    extract_processed_result(extracted_processed_result, processed_result_exp, [])
-    df = make_df(extracted_processed_result)
-    make_vis(df)
-    extracted_processed_result = {}
-    extract_processed_result(extracted_processed_result, processed_result_history, [])
-    make_learning_curve(extracted_processed_result)
+    extracted_processed_result_exp = {}
+    extracted_processed_result_history = {}
+    extract_processed_result(extracted_processed_result_exp, processed_result_exp, [])
+    extract_processed_result(extracted_processed_result_history, processed_result_history, [])
+    df_exp = make_df_exp(extracted_processed_result_exp)
+    df_history = make_df_history(extracted_processed_result_history)
+    make_vis(df_history)
     return
 
 
@@ -109,11 +112,14 @@ def extract_result(control, model_tag, processed_result_exp, processed_result_hi
                 if metric_name not in processed_result_exp:
                     processed_result_exp[metric_name] = {'exp': [None for _ in range(num_experiments)]}
                     processed_result_history[metric_name] = {'history': [None for _ in range(num_experiments)]}
-                if metric_name in ['Loss']:
+                if metric_name in ['Loss', 'RMSE']:
                     processed_result_exp[metric_name]['exp'][exp_idx] = min(base_result['logger']['test'].history[k])
                 else:
                     processed_result_exp[metric_name]['exp'][exp_idx] = max(base_result['logger']['test'].history[k])
                 processed_result_history[metric_name]['history'][exp_idx] = base_result['logger']['test'].history[k]
+            if 'assist_rate' not in processed_result_history:
+                processed_result_history['assist_rate'] = {'history': [None for _ in range(num_experiments)]}
+            processed_result_history['assist_rate']['history'][exp_idx] = base_result['assist'].assist_rates[0][1:]
         else:
             print('Missing {}'.format(base_result_path_i))
     else:
@@ -167,37 +173,54 @@ def extract_processed_result(extracted_processed_result, processed_result, contr
     return
 
 
-def make_df(extracted_processed_result):
+def make_df_exp(extracted_processed_result_exp):
     df = defaultdict(list)
-    for exp_name in extracted_processed_result:
+    for exp_name in extracted_processed_result_exp:
         control = exp_name.split('_')
-        # data_split_mode, mode_split_mode, control_name = control[-3:]
-        data_split_mode, model_split_mode, control_name = control[-6:-3]
-        except_control_name = control[:-4] + control[-3:]
-        index_name = [control_name]
-        if data_split_mode == 'none':
-            df_name = '_'.join(except_control_name)
-            df[df_name].append(pd.DataFrame(data=extracted_processed_result[exp_name], index=index_name))
-        else:
-            if model_split_mode == 'fix' or control_name == 'e1':
-                if '-' in control_name:
-                    label_name = '-'.join(['{}'.format(x[0]) for x in list(control_name.split('-'))])
-                    df_name = '{}_{}'.format('_'.join(except_control_name), label_name)
-                    df[df_name].append(pd.DataFrame(data=extracted_processed_result[exp_name], index=index_name))
-                else:
-                    for label_name in interp_name:
-                        if control_name[0] == label_name[0]:
-                            df_name = '{}_{}'.format('_'.join(except_control_name), control_name)
-                            df[df_name].append(
-                                pd.DataFrame(data=extracted_processed_result[exp_name], index=index_name))
-            else:
-                df_name = '_'.join(except_control_name)
-                df[df_name].append(pd.DataFrame(data=extracted_processed_result[exp_name], index=index_name))
+        data_name, model_name, num_users, assist_mode, local_epoch, global_epoch = control
+        index_name = ['_'.join([num_users, assist_mode, local_epoch, global_epoch])]
+        df_name = '_'.join([data_name, model_name])
+        df[df_name].append(pd.DataFrame(data=extracted_processed_result_exp[exp_name], index=index_name))
     startrow = 0
-    writer = pd.ExcelWriter('{}/result.xlsx'.format(result_path), engine='xlsxwriter')
+    writer = pd.ExcelWriter('{}/result_exp.xlsx'.format(result_path), engine='xlsxwriter')
     for df_name in df:
         df[df_name] = pd.concat(df[df_name])
-        df[df_name] = df[df_name].sort_values(by=['Params_mean'], ascending=False)
+        df[df_name].to_excel(writer, sheet_name='Sheet1', startrow=startrow + 1)
+        writer.sheets['Sheet1'].write_string(startrow, 0, df_name)
+        startrow = startrow + len(df[df_name].index) + 3
+    writer.save()
+    return df
+
+
+def make_df_history(extracted_processed_result_history):
+    df = defaultdict(list)
+    for exp_name in extracted_processed_result_history:
+        control = exp_name.split('_')
+        data_name, model_name, num_users, assist_mode, local_epoch, global_epoch = control
+        index_name = ['_'.join([num_users, assist_mode, local_epoch, global_epoch])]
+        df_name_loss = '_'.join([data_name, model_name, 'Loss'])
+        df[df_name_loss].append(
+            pd.DataFrame(data=extracted_processed_result_history[exp_name]['Loss_mean'].reshape(1, -1),
+                         index=index_name))
+        if 'Accuracy_mean' in extracted_processed_result_history[exp_name]:
+            df_name_acc = '_'.join([data_name, model_name, 'Accuracy'])
+            df[df_name_acc].append(
+                pd.DataFrame(data=extracted_processed_result_history[exp_name]['Accuracy_mean'].reshape(1, -1),
+                             index=index_name))
+        if 'RMSE_mean' in extracted_processed_result_history[exp_name]:
+            df_name_acc = '_'.join([data_name, model_name, 'RMSE'])
+            df[df_name_acc].append(
+                pd.DataFrame(data=extracted_processed_result_history[exp_name]['RMSE_mean'].reshape(1, -1),
+                             index=index_name))
+        if 'assist_rate_mean' in extracted_processed_result_history[exp_name]:
+            df_name_assist_rate = '_'.join([data_name, model_name, 'assist_rate'])
+            df[df_name_assist_rate].append(
+                pd.DataFrame(data=extracted_processed_result_history[exp_name]['assist_rate_mean'].reshape(1, -1),
+                             index=index_name))
+    startrow = 0
+    writer = pd.ExcelWriter('{}/result_history.xlsx'.format(result_path), engine='xlsxwriter')
+    for df_name in df:
+        df[df_name] = pd.concat(df[df_name])
         df[df_name].to_excel(writer, sheet_name='Sheet1', startrow=startrow + 1)
         writer.sheets['Sheet1'].write_string(startrow, 0, df_name)
         startrow = startrow + len(df[df_name].index) + 3

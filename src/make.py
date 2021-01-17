@@ -89,7 +89,7 @@ def main():
                                           resume_mode, control_name)
             controls = control_1 + control_2_4_8
         elif model in ['conv-linear', 'resnet18-linear']:
-            local_epoch = ['1', '10', '100']
+            local_epoch = ['1', '10']
             data_names = [['MNIST', 'CIFAR10']]
             control_name = [[['1'], ['none'], local_epoch, ['50']]]
             control_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
