@@ -13,11 +13,6 @@ result_path = './output/result'
 vis_path = './output/vis'
 num_experiments = 1
 exp = [str(x) for x in list(range(num_experiments))]
-# colors = cm.rainbow(np.linspace(1, 0, len(model_split_rate_key)))
-# model_color = {model_split_rate_key[i]: colors[i] for i in range(len(model_split_rate_key))}
-metric_name_dict = {'MNIST': 'Accuracy', 'CIFAR10': 'Accuracy', 'WikiText2': 'Perplexity'}
-loc_dict = {'MNIST': 'lower right', 'CIFAR10': 'lower right', 'WikiText2': 'upper right'}
-fontsize = 16
 
 
 def make_controls(data_names, model_names, control_name):
@@ -38,10 +33,10 @@ def make_control_list(model_name):
         control_name = [[['1'], ['none'], local_epoch, ['10']]]
         control_1 = make_controls(data_names, model_names, control_name)
         data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']]
-        control_name = [[['2', '4'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
+        control_name = [[['2', '4'], ['none', 'bag'], local_epoch, ['10']]]
         control_2_4 = make_controls(data_names, model_names, control_name)
         data_names = [['Blob', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']]
-        control_name = [[['8'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
+        control_name = [[['8'], ['none', 'bag'], local_epoch, ['10']]]
         control_8 = make_controls(data_names, model_names, control_name)
         controls = control_1 + control_2_4 + control_8
     elif model_name in ['conv', 'resnet18']:
@@ -50,7 +45,7 @@ def make_control_list(model_name):
         control_name = [[['1'], ['none'], local_epoch, ['10']]]
         control_1 = make_controls(data_names, model_names, control_name)
         data_names = [['MNIST', 'CIFAR10']]
-        control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
+        control_name = [[['2', '4', '8'], ['none', 'bag'], local_epoch, ['10']]]
         control_2_4_8 = make_controls(data_names, model_names, control_name)
         controls = control_1 + control_2_4_8
     elif model_name in ['conv-linear', 'resnet18-linear']:
@@ -59,7 +54,7 @@ def make_control_list(model_name):
         control_name = [[['1'], ['none'], local_epoch, ['50']]]
         control_1 = make_controls(data_names, model_names, control_name)
         data_names = [['MNIST', 'CIFAR10']]
-        control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['50']]]
+        control_name = [[['2', '4', '8'], ['none', 'bag'], local_epoch, ['50']]]
         control_2_4_8 = make_controls(data_names, model_names, control_name)
         controls = control_1 + control_2_4_8
     else:
@@ -117,9 +112,9 @@ def extract_result(control, model_tag, processed_result_exp, processed_result_hi
                 else:
                     processed_result_exp[metric_name]['exp'][exp_idx] = max(base_result['logger']['test'].history[k])
                 processed_result_history[metric_name]['history'][exp_idx] = base_result['logger']['test'].history[k]
-            if 'assist_rate' not in processed_result_history:
-                processed_result_history['assist_rate'] = {'history': [None for _ in range(num_experiments)]}
-            processed_result_history['assist_rate']['history'][exp_idx] = base_result['assist'].assist_rates[0][1:]
+            if 'Assist-Rate' not in processed_result_history:
+                processed_result_history['Assist-Rate'] = {'history': [None for _ in range(num_experiments)]}
+            processed_result_history['Assist-Rate']['history'][exp_idx] = base_result['assist'].assist_rates[0][1:]
         else:
             print('Missing {}'.format(base_result_path_i))
     else:
@@ -178,8 +173,8 @@ def make_df_exp(extracted_processed_result_exp):
     for exp_name in extracted_processed_result_exp:
         control = exp_name.split('_')
         data_name, model_name, num_users, assist_mode, local_epoch, global_epoch = control
-        index_name = ['_'.join([num_users, assist_mode, local_epoch, global_epoch])]
-        df_name = '_'.join([data_name, model_name])
+        index_name = ['_'.join([local_epoch, assist_mode])]
+        df_name = '_'.join([data_name, model_name, num_users, global_epoch])
         df[df_name].append(pd.DataFrame(data=extracted_processed_result_exp[exp_name], index=index_name))
     startrow = 0
     writer = pd.ExcelWriter('{}/result_exp.xlsx'.format(result_path), engine='xlsxwriter')
@@ -197,25 +192,25 @@ def make_df_history(extracted_processed_result_history):
     for exp_name in extracted_processed_result_history:
         control = exp_name.split('_')
         data_name, model_name, num_users, assist_mode, local_epoch, global_epoch = control
-        index_name = ['_'.join([num_users, assist_mode, local_epoch, global_epoch])]
-        df_name_loss = '_'.join([data_name, model_name, 'Loss'])
+        index_name = ['_'.join([local_epoch, assist_mode])]
+        df_name_loss = '_'.join([data_name, model_name, num_users, global_epoch, 'Loss'])
         df[df_name_loss].append(
             pd.DataFrame(data=extracted_processed_result_history[exp_name]['Loss_mean'].reshape(1, -1),
                          index=index_name))
         if 'Accuracy_mean' in extracted_processed_result_history[exp_name]:
-            df_name_acc = '_'.join([data_name, model_name, 'Accuracy'])
+            df_name_acc = '_'.join([data_name, model_name, num_users, global_epoch, 'Accuracy'])
             df[df_name_acc].append(
                 pd.DataFrame(data=extracted_processed_result_history[exp_name]['Accuracy_mean'].reshape(1, -1),
                              index=index_name))
         if 'RMSE_mean' in extracted_processed_result_history[exp_name]:
-            df_name_acc = '_'.join([data_name, model_name, 'RMSE'])
-            df[df_name_acc].append(
+            df_name_rmse = '_'.join([data_name, model_name, num_users, global_epoch, 'RMSE'])
+            df[df_name_rmse].append(
                 pd.DataFrame(data=extracted_processed_result_history[exp_name]['RMSE_mean'].reshape(1, -1),
                              index=index_name))
-        if 'assist_rate_mean' in extracted_processed_result_history[exp_name]:
-            df_name_assist_rate = '_'.join([data_name, model_name, 'assist_rate'])
+        if 'Assist-Rate_mean' in extracted_processed_result_history[exp_name]:
+            df_name_assist_rate = '_'.join([data_name, model_name, num_users, global_epoch, 'Assist-Rate'])
             df[df_name_assist_rate].append(
-                pd.DataFrame(data=extracted_processed_result_history[exp_name]['assist_rate_mean'].reshape(1, -1),
+                pd.DataFrame(data=extracted_processed_result_history[exp_name]['Assist-Rate_mean'].reshape(1, -1),
                              index=index_name))
     startrow = 0
     writer = pd.ExcelWriter('{}/result_history.xlsx'.format(result_path), engine='xlsxwriter')
@@ -229,55 +224,75 @@ def make_df_history(extracted_processed_result_history):
 
 
 def make_vis(df):
+    color_dict = {'Joint': 'red', 'Separate': 'orange', 'Assist': 'dodgerblue'}
+    linestyle = {'1': '-', '10': '--', '100': ':'}
+    marker_dict = {'Joint': {'1': 'o', '10': 's', '100': 'D'}, 'Separate': {'1': 'v', '10': '>', '100': '^'},
+                   'Assist': {'1': 'H', '10': 'p', '100': '*'}}
+    loc_dict = {'Loss': 'lower right', 'Accuracy': 'lower right', 'RMSE': 'lower right', 'Assist Rate': 'lower right'}
+    fontsize = {'legend': 8, 'label': 16, 'ticks': 16}
+    save_format = 'png'
     fig = {}
     for df_name in df:
-        if 'fix' in df_name and 'none' not in df_name:
-            control = df_name.split('_')
-            data_name = control[0]
-            metric_name = metric_name_dict[data_name]
-            label_name = control[-1]
-            x = df[df_name]['Params_mean']
-            if 'non-iid-2' in df_name:
-                fig_name = '{}_{}_local'.format('_'.join(control[:-1]), label_name[0])
-                fig[fig_name] = plt.figure(fig_name)
-                y = df[df_name]['Local-{}_mean'.format(metric_name)]
-                plt.plot(x, y, '^--', label=label_name)
-                plt.legend(loc=loc_dict[data_name], fontsize=fontsize)
-                plt.xlabel('Number of Model Parameters', fontsize=fontsize)
-                plt.ylabel(metric_name, fontsize=fontsize)
-                plt.xticks(fontsize=fontsize)
-                plt.yticks(fontsize=fontsize)
-                plt.ticklabel_format(axis="x", style="sci", scilimits=(0, 0))
-                fig_name = '{}_{}_global'.format('_'.join(control[:-1]), label_name[0])
-                fig[fig_name] = plt.figure(fig_name)
-                y = df[df_name]['Global-{}_mean'.format(metric_name)]
-                plt.plot(x, y, '^--', label=label_name)
-                plt.legend(loc=loc_dict[data_name], fontsize=fontsize)
-                plt.xlabel('Number of Model Parameters', fontsize=fontsize)
-                plt.ylabel(metric_name, fontsize=fontsize)
-                plt.xticks(fontsize=fontsize)
-                plt.yticks(fontsize=fontsize)
-                plt.ticklabel_format(axis="x", style="sci", scilimits=(0, 0))
-            elif 'iid' in df_name:
-                fig_name = '{}_{}'.format('_'.join(control[:-1]), label_name[0])
-                fig[fig_name] = plt.figure(fig_name)
-                y = df[df_name]['Global-{}_mean'.format(metric_name)]
-                plt.plot(x, y, '^--', label=label_name)
-                plt.legend(loc=loc_dict[data_name], fontsize=fontsize)
-                plt.xlabel('Number of Model Parameters', fontsize=fontsize)
-                plt.ylabel(metric_name, fontsize=fontsize)
-                plt.xticks(fontsize=fontsize)
-                plt.yticks(fontsize=fontsize)
-                plt.ticklabel_format(axis="x", style="sci", scilimits=(0, 0))
+        print(df_name)
+        data_name, model_name, num_users, global_epoch, metric_name = df_name.split('_')
+        if num_users == '1':
+            continue
+        baseline_df_name = '_'.join([data_name, model_name, '1', global_epoch, metric_name])
+        if metric_name in ['Loss', 'Accuracy', 'RMSE']:
+            x = np.arange(1, int(global_epoch) + 1)
+        elif metric_name in ['Assist-Rate']:
+            x = np.arange(2, int(global_epoch) + 1)
+            metric_name = 'Assist Rate'
+        else:
+            raise ValueError('Not valid metric name')
+        if global_epoch == '10':
+            markevery = 1
+            xticks = np.arange(1, int(global_epoch) + 1, step=markevery)
+        elif global_epoch == '50':
+            markevery = 10
+            xticks = np.arange(int(global_epoch) + 1, step=markevery)
+            xticks[0] = 1
+        else:
+            raise ValueError('Not valid global epoch')
+        for index, row in df[baseline_df_name].iterrows():
+            local_epoch, assist_mode = index.split('_')
+            if assist_mode == 'none':
+                assist_mode = 'Joint'
             else:
-                raise ValueError('Not valid df name')
-    for fig_name in fig:
-        fig[fig_name] = plt.figure(fig_name)
+                raise ValueError('Not valid assist_mode')
+            label_name = 'E={}, {}'.format(local_epoch, assist_mode)
+            y = row.to_numpy()
+            fig[df_name] = plt.figure(df_name)
+            plt.plot(x, y, color=color_dict[assist_mode], linestyle=linestyle[local_epoch], label=label_name,
+                     marker=marker_dict[assist_mode][local_epoch], markevery=markevery)
+            plt.legend(loc=loc_dict[metric_name], fontsize=fontsize['legend'])
+            plt.xlabel('Assist Round (T)', fontsize=fontsize['label'])
+            plt.ylabel(metric_name, fontsize=fontsize['label'])
+            plt.xticks(xticks, fontsize=fontsize['ticks'])
+            plt.yticks(fontsize=fontsize['ticks'])
+        for index, row in df[df_name].iterrows():
+            local_epoch, assist_mode = index.split('_')
+            if assist_mode == 'none':
+                assist_mode = 'Separate'
+            elif assist_mode == 'bag':
+                assist_mode = 'Assist'
+            else:
+                raise ValueError('Not valid assist_mode')
+            label_name = 'M={}, E={}, {}'.format(num_users, local_epoch, assist_mode)
+            y = row.to_numpy()
+            fig[df_name] = plt.figure(df_name)
+            plt.plot(x, y, color=color_dict[assist_mode], linestyle=linestyle[local_epoch], label=label_name,
+                     marker=marker_dict[assist_mode][local_epoch], markevery=markevery)
+            plt.legend(loc=loc_dict[metric_name], fontsize=fontsize['legend'])
+            plt.xlabel('Assist Round (T)', fontsize=fontsize['label'])
+            plt.ylabel(metric_name, fontsize=fontsize['label'])
+            plt.xticks(xticks, fontsize=fontsize['ticks'])
+            plt.yticks(fontsize=fontsize['ticks'])
         plt.grid()
-        fig_path = '{}/{}.{}'.format(vis_path, fig_name, cfg['save_format'])
+        fig_path = '{}/{}.{}'.format(vis_path, df_name, save_format)
         makedir_exist_ok(vis_path)
         plt.savefig(fig_path, dpi=500, bbox_inches='tight', pad_inches=0)
-        plt.close(fig_name)
+        plt.close(df_name)
     return
 
 
