@@ -28,7 +28,7 @@ def make_controls(data_names, model_names, control_name):
 def make_control_list(model_name):
     model_names = [[model_name]]
     if model_name in ['linear', 'mlp']:
-        local_epoch = ['1', '10', '100']
+        local_epoch = ['1', '10']
         data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']]
         control_name = [[['1'], ['none'], local_epoch, ['10']]]
         control_1 = make_controls(data_names, model_names, control_name)
@@ -229,7 +229,7 @@ def make_vis(df):
     marker_dict = {'Joint': {'1': 'o', '10': 's', '100': 'D'}, 'Separate': {'1': 'v', '10': '>', '100': '^'},
                    'Assist': {'1': 'H', '10': 'p', '100': '*'}}
     loc_dict = {'Loss': 'lower right', 'Accuracy': 'lower right', 'RMSE': 'lower right', 'Assist Rate': 'lower right'}
-    fontsize = {'legend': 8, 'label': 16, 'ticks': 16}
+    fontsize = {'legend': 10, 'label': 16, 'ticks': 16}
     save_format = 'png'
     fig = {}
     for df_name in df:
@@ -284,7 +284,7 @@ def make_vis(df):
             plt.plot(x, y, color=color_dict[assist_mode], linestyle=linestyle[local_epoch], label=label_name,
                      marker=marker_dict[assist_mode][local_epoch], markevery=markevery)
             plt.legend(loc=loc_dict[metric_name], fontsize=fontsize['legend'])
-            plt.xlabel('Assist Round (T)', fontsize=fontsize['label'])
+            plt.xlabel('Assist Round', fontsize=fontsize['label'])
             plt.ylabel(metric_name, fontsize=fontsize['label'])
             plt.xticks(xticks, fontsize=fontsize['ticks'])
             plt.yticks(fontsize=fontsize['ticks'])
