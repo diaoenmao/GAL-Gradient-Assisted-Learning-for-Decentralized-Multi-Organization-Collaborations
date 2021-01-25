@@ -34,7 +34,7 @@ def denormalize(input):
 
 
 def feature_split(input, feature_split):
-    if cfg['data_name'] in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']:
+    if cfg['data_name'] in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MIMIC']:
         mask = torch.zeros(input.size(1), device=input.device)
         mask[feature_split] = 1
         output = torch.masked_fill(input, mask == 0, 0)
@@ -86,5 +86,4 @@ def assist_loss_fn(input, output, run):
             loss.backward()
             target = - copy.deepcopy(input['assist'].grad)
             output['loss'] = F.mse_loss(output['target'], target)
-            # output['loss'] = loss_fn(output['target'], input['target'])
     return output

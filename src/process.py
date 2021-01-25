@@ -6,7 +6,6 @@ import pandas as pd
 from utils import save, load, makedir_exist_ok
 from config import cfg
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 from collections import defaultdict
 
 result_path = './output/result'
@@ -33,10 +32,10 @@ def make_control_list(model_name):
         control_name = [[['1'], ['none'], local_epoch, ['10']]]
         control_1 = make_controls(data_names, model_names, control_name)
         data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']]
-        control_name = [[['2', '4'], ['none', 'bag'], local_epoch, ['10']]]
+        control_name = [[['2', '4'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
         control_2_4 = make_controls(data_names, model_names, control_name)
         data_names = [['Blob', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']]
-        control_name = [[['8'], ['none', 'bag'], local_epoch, ['10']]]
+        control_name = [[['8'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
         control_8 = make_controls(data_names, model_names, control_name)
         controls = control_1 + control_2_4 + control_8
     elif model_name in ['conv', 'resnet18']:
@@ -45,7 +44,7 @@ def make_control_list(model_name):
         control_name = [[['1'], ['none'], local_epoch, ['10']]]
         control_1 = make_controls(data_names, model_names, control_name)
         data_names = [['MNIST', 'CIFAR10']]
-        control_name = [[['2', '4', '8'], ['none', 'bag'], local_epoch, ['10']]]
+        control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
         control_2_4_8 = make_controls(data_names, model_names, control_name)
         controls = control_1 + control_2_4_8
     elif model_name in ['conv-linear', 'resnet18-linear']:
@@ -54,7 +53,7 @@ def make_control_list(model_name):
         control_name = [[['1'], ['none'], local_epoch, ['50']]]
         control_1 = make_controls(data_names, model_names, control_name)
         data_names = [['MNIST', 'CIFAR10']]
-        control_name = [[['2', '4', '8'], ['none', 'bag'], local_epoch, ['50']]]
+        control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['50']]]
         control_2_4_8 = make_controls(data_names, model_names, control_name)
         controls = control_1 + control_2_4_8
     else:
@@ -224,10 +223,10 @@ def make_df_history(extracted_processed_result_history):
 
 
 def make_vis(df):
-    color_dict = {'Joint': 'red', 'Separate': 'orange', 'Assist': 'dodgerblue'}
+    color_dict = {'Joint': 'red', 'Separate': 'orange', 'Bag': 'dodgerblue', 'Stack': 'green'}
     linestyle = {'1': '-', '10': '--', '100': ':'}
     marker_dict = {'Joint': {'1': 'o', '10': 's', '100': 'D'}, 'Separate': {'1': 'v', '10': '>', '100': '^'},
-                   'Assist': {'1': 'H', '10': 'p', '100': '*'}}
+                   'Bag': {'1': 'H', '10': 'p', '100': '*'}, 'Stack': {'1': '|', '10': '_', '100': 'x'}}
     loc_dict = {'Loss': 'lower right', 'Accuracy': 'lower right', 'RMSE': 'lower right', 'Assist Rate': 'lower right'}
     fontsize = {'legend': 10, 'label': 16, 'ticks': 16}
     save_format = 'png'
@@ -275,7 +274,9 @@ def make_vis(df):
             if assist_mode == 'none':
                 assist_mode = 'Separate'
             elif assist_mode == 'bag':
-                assist_mode = 'Assist'
+                assist_mode = 'Bag'
+            elif assist_mode == 'stack':
+                assist_mode = 'Stack'
             else:
                 raise ValueError('Not valid assist_mode')
             label_name = 'M={}, E={}, {}'.format(num_users, local_epoch, assist_mode)

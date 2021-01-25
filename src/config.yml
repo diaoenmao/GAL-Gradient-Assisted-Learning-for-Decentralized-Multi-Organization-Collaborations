@@ -1,8 +1,8 @@
 ---
 # control
 control:
-  num_users: '4'
-  assist_mode: 'bag'
+  num_users: '8'
+  assist_mode: 'stack'
   local_epoch: '10'
   global_epoch: '10'
 # data

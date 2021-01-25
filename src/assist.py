@@ -4,17 +4,15 @@ import models
 from config import cfg
 from data import make_data_loader
 from organization import Organization
-from utils import make_optimizer, make_scheduler, collate, to_device
+from utils import make_optimizer, to_device
 
 
 class Assist:
     def __init__(self, feature_split):
         self.feature_split = feature_split
         self.model_name = self.make_model_name()
-        self.assist_parameters = [[None for _ in range(cfg['global']['num_epochs'])] for _ in
-                                  range(len(self.feature_split))]
-        self.assist_rates = [[None for _ in range(cfg['global']['num_epochs'])] for _ in
-                             range(len(self.feature_split))]
+        self.assist_parameters = [None for _ in range(cfg['global']['num_epochs'])]
+        self.assist_rates = [None for _ in range(cfg['global']['num_epochs'])]
         self.reset()
 
     def reset(self):
@@ -81,47 +79,41 @@ class Assist:
                     _new_organization_outputs[split]['target'].append(new_organization_outputs[i][split]['target'])
                 _new_organization_outputs[split]['target'] = torch.stack(_new_organization_outputs[split]['target'],
                                                                          dim=-1)
-            _dataset = [{split: None for split in data_loader[0]} for _ in range(len(self.feature_split))]
-            for i in range(len(self.feature_split)):
-                for split in data_loader[i]:
-                    if self.organization_outputs[i][split] is None:
-                        _dataset[i][split] = torch.utils.data.TensorDataset(
-                            torch.tensor(data_loader[i][split].dataset.id), _new_organization_outputs[split]['target'],
-                            torch.tensor(data_loader[i][split].dataset.target))
-                    else:
-                        _dataset[i][split] = torch.utils.data.TensorDataset(
-                            torch.tensor(data_loader[i][split].dataset.id),
-                            _new_organization_outputs[split]['target'],
-                            torch.tensor(data_loader[i][split].dataset.target),
-                            self.organization_outputs[i][split]['target'])
-            for i in range(len(self.feature_split)):
-                if 'train' in _dataset[i]:
-                    tensors = _dataset[i]['train'].tensors
-                    input = {'id': tensors[0], 'output': tensors[1], 'target': tensors[2], 'assist': None} if len(
-                        tensors) == 3 else {'id': tensors[0], 'output': tensors[1], 'target': tensors[2],
-                                            'assist': tensors[3]}
-                    input = to_device(input, cfg['device'])
-                    model = eval('models.{}().to(cfg["device"])'.format(cfg['assist_mode']))
-                    model.train(True)
-                    optimizer = make_optimizer(model, 'assist')
-                    for assist_epoch in range(1, cfg['assist']['num_epochs'] + 1):
-                        def closure():
-                            output = model(input)
-                            optimizer.zero_grad()
-                            output['loss'].backward()
-                            return output['loss']
-
-                        optimizer.step(closure)
-                    self.assist_parameters[i][iter] = model.to('cpu').state_dict()
+            _dataset = {split: None for split in data_loader[0]}
+            for split in data_loader[0]:
+                if self.organization_outputs[0][split] is None:
+                    _dataset[split] = torch.utils.data.TensorDataset(
+                        torch.tensor(data_loader[0][split].dataset.id), _new_organization_outputs[split]['target'],
+                        torch.tensor(data_loader[0][split].dataset.target))
+                else:
+                    _dataset[split] = torch.utils.data.TensorDataset(
+                        torch.tensor(data_loader[0][split].dataset.id),
+                        _new_organization_outputs[split]['target'],
+                        torch.tensor(data_loader[0][split].dataset.target), self.organization_outputs[0][split]['target'])
+            if 'train' in _dataset:
+                tensors = _dataset['train'].tensors
+                input = {'id': tensors[0], 'output': tensors[1], 'target': tensors[2], 'assist': None} if len(
+                    tensors) == 3 else {'id': tensors[0], 'output': tensors[1], 'target': tensors[2],
+                                        'assist': tensors[3]}
+                input = to_device(input, cfg['device'])
+                model = eval('models.{}().to(cfg["device"])'.format(cfg['assist_mode']))
+                model.train(True)
+                optimizer = make_optimizer(model, 'assist')
+                for assist_epoch in range(1, cfg['assist']['num_epochs'] + 1):
+                    output = model(input)
+                    optimizer.zero_grad()
+                    output['loss'].backward()
+                    optimizer.step()
+                self.assist_parameters[iter] = model.to('cpu').state_dict()
             with torch.no_grad():
                 organization_outputs = [{split: {'id': torch.arange(cfg['data_size'][split]),
                                                  'target': torch.zeros(cfg['data_size'][split], cfg['target_size'])}
                                          for split in data_loader[0]} for _ in range(len(self.feature_split))]
                 for i in range(len(self.feature_split)):
-                    _data_loader = make_data_loader(_dataset[i], 'assist', {'train': False, 'test': False})
+                    _data_loader = make_data_loader(_dataset, 'assist', {'train': False, 'test': False})
                     for split in data_loader[0]:
                         model = eval('models.{}().to(cfg["device"])'.format(cfg['assist_mode']))
-                        model.load_state_dict(self.assist_parameters[i][iter])
+                        model.load_state_dict(self.assist_parameters[iter])
                         model.train(False)
                         for j, input in enumerate(_data_loader[split]):
                             input = {'id': input[0], 'output': input[1], 'target': input[2], 'assist': None} if len(
@@ -133,24 +125,23 @@ class Assist:
         else:
             raise ValueError('Not valid assist')
         if self.organization_outputs[i][split] is not None and 'train' in data_loader[0]:
-            for i in range(len(self.feature_split)):
-                input = {'id': torch.tensor(data_loader[i]['train'].dataset.id),
-                         'output': organization_outputs[i]['train']['target'],
-                         'target': torch.tensor(data_loader[i]['train'].dataset.target),
-                         'assist': self.organization_outputs[i]['train']['target']}
-                input = to_device(input, cfg['device'])
-                model = models.linesearch().to(cfg['device'])
-                model.train(True)
-                optimizer = make_optimizer(model, 'linesearch')
-                for linearsearch_epoch in range(1, cfg['linesearch']['num_epochs'] + 1):
-                    def closure():
-                        output = model(input)
-                        optimizer.zero_grad()
-                        output['loss'].backward()
-                        return output['loss']
+            input = {'id': torch.tensor(data_loader[0]['train'].dataset.id),
+                     'output': organization_outputs[0]['train']['target'],
+                     'target': torch.tensor(data_loader[0]['train'].dataset.target),
+                     'assist': self.organization_outputs[0]['train']['target']}
+            input = to_device(input, cfg['device'])
+            model = models.linesearch().to(cfg['device'])
+            model.train(True)
+            optimizer = make_optimizer(model, 'linesearch')
+            for linearsearch_epoch in range(1, cfg['linesearch']['num_epochs'] + 1):
+                def closure():
+                    output = model(input)
+                    optimizer.zero_grad()
+                    output['loss'].backward()
+                    return output['loss']
 
-                    optimizer.step(closure)
-                self.assist_rates[i][iter] = model.assist_rate.item()
+                optimizer.step(closure)
+            self.assist_rates[iter] = model.assist_rate.item()
         with torch.no_grad():
             for i in range(len(self.organization_outputs)):
                 for split in data_loader[i]:
@@ -158,6 +149,6 @@ class Assist:
                         self.organization_outputs[i][split] = copy.deepcopy(organization_outputs[i][split])
                     else:
                         self.organization_outputs[i][split]['target'] = self.organization_outputs[i][split][
-                                                                            'target'] + self.assist_rates[i][iter] * \
+                                                                            'target'] + self.assist_rates[iter] * \
                                                                         organization_outputs[i][split]['target']
         return

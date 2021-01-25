@@ -32,7 +32,7 @@ class Metric(object):
         for split in metric_name:
             if cfg['data_name'] in ['Blob', 'Iris', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']:
                 metric_name[split] += ['Accuracy']
-            elif cfg['data_name'] in ['Diabetes', 'BostonHousing']:
+            elif cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMIC']:
                 metric_name[split] += ['RMSE']
             else:
                 raise ValueError('Not valid data name')
@@ -43,7 +43,7 @@ class Metric(object):
             pivot = -float('inf')
             pivot_name = 'Accuracy'
             pivot_direction = 'up'
-        elif cfg['data_name'] in ['Diabetes', 'BostonHousing']:
+        elif cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMIC']:
             pivot = float('inf')
             pivot_name = 'RMSE'
             pivot_direction = 'down'

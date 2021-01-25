@@ -75,13 +75,29 @@ from logger import Logger
 #     torch.manual_seed(1)
 #     torch.cuda.manual_seed(1)
 #     process_control()
-#     cfg['data_name'] = 'Wine'
+#     cfg['data_name'] = 'MIMIC'
 #     dataset = fetch_dataset(cfg['data_name'])
 #     process_dataset(dataset)
 #     data_loader = make_data_loader(dataset, cfg['model_name'])
 #     for i, input in enumerate(data_loader['train']):
 #         input = collate(input)
-#         print(input['data'][:10])
-#         print(input['target'][:10])
+#         print(input['data'].shape)
+#         print(input['target'].shape)
 #         break
 #     exit()
+import numpy as np
+from sklearn.linear_model import LinearRegression
+
+if __name__ == "__main__":
+    torch.manual_seed(1)
+    torch.cuda.manual_seed(1)
+    process_control()
+    cfg['data_name'] = 'MIMIC'
+    dataset = fetch_dataset(cfg['data_name'])
+    process_dataset(dataset)
+    X_train, y_train = dataset['train'].data, dataset['train'].target
+    X_test, y_test = dataset['test'].data, dataset['test'].target
+    reg = LinearRegression().fit(X_train, y_train)
+    y_pred = reg.predict(X_test)
+    rmse = np.sqrt(np.mean((y_pred-y_test)**2))
+    print(rmse)
