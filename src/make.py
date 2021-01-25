@@ -79,24 +79,46 @@ def main():
             control_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                       resume_mode, control_name)
             controls = control_1 + control_2_4 + control_8
-        elif model in ['conv', 'resnet18']:
+        elif model in ['conv']:
             local_epoch = ['1', '10']
-            data_names = [['MNIST', 'CIFAR10']]
+            data_names = [['MNIST']]
             control_name = [[['1'], ['none'], local_epoch, ['10']]]
             control_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                       resume_mode, control_name)
-            data_names = [['MNIST', 'CIFAR10']]
+            data_names = [['MNIST']]
             control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
             controls = control_1 + control_2_4_8
-        elif model in ['conv-linear', 'resnet18-linear']:
+        elif model in ['resnet18']:
             local_epoch = ['1', '10']
-            data_names = [['MNIST', 'CIFAR10']]
+            data_names = [['CIFAR10']]
+            control_name = [[['1'], ['none'], local_epoch, ['10']]]
+            control_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                      resume_mode, control_name)
+            data_names = [['CIFAR10']]
+            control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
+            control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                          resume_mode, control_name)
+            controls = control_1 + control_2_4_8
+        elif model in ['conv-linear']:
+            local_epoch = ['1', '10']
+            data_names = [['MNIST']]
             control_name = [[['1'], ['none'], local_epoch, ['50']]]
             control_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                       resume_mode, control_name)
-            data_names = [['MNIST', 'CIFAR10']]
+            data_names = [['MNIST']]
+            control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['50']]]
+            control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                          resume_mode, control_name)
+            controls = control_1 + control_2_4_8
+        elif model in ['resnet18-linear']:
+            local_epoch = ['1', '10']
+            data_names = [['CIFAR10']]
+            control_name = [[['1'], ['none'], local_epoch, ['50']]]
+            control_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                      resume_mode, control_name)
+            data_names = [['CIFAR10']]
             control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['50']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
