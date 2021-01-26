@@ -157,8 +157,6 @@ def process_control():
                 cfg[model_name]['milestones'] = [50, 100]
             else:
                 raise ValueError('Not valid model name')
-        cfg['global'] = {}
-        cfg['global']['num_epochs'] = cfg['global_epoch']
     else:
         for model_name in ['linear', 'mlp', 'conv', 'resnet18']:
             cfg[model_name]['shuffle'] = {'train': True, 'test': False}
