@@ -5,7 +5,7 @@ import torch
 import torch.backends.cudnn as cudnn
 import models
 from config import cfg
-from data import fetch_dataset, split_dataset
+from data import fetch_dataset, make_data_loader, split_dataset
 from metrics import Metric
 from assist import Assist
 from utils import save, load, process_control, process_dataset, resume
@@ -45,18 +45,19 @@ def runExperiment():
     dataset = fetch_dataset(cfg['data_name'])
     process_dataset(dataset)
     dataset = {'test': dataset['test']}
-    last_epoch, assist, organization, logger = resume(cfg['model_tag'], load_tag='checkpoint')
+    last_epoch, assist, organization, _ = resume(cfg['model_tag'], load_tag='checkpoint')
     assist.reset()
     metric = Metric({'test': ['Loss']})
     current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')
     logger_path = 'output/runs/test_{}_{}'.format(cfg['model_tag'], current_time)
     test_logger = Logger(logger_path)
+    initialize(dataset, assist, organization[0], metric, test_logger, 0)
     for epoch in range(1, last_epoch):
         test_logger.safe(True)
-        data_loader = assist.make_data_loader(dataset, epoch - 1)
-        organization_outputs = broadcast(data_loader, organization, epoch)
-        assist.update(epoch - 1, data_loader, organization_outputs)
-        test(data_loader, assist, organization, metric, test_logger, epoch)
+        data_loader = assist.broadcast(dataset, epoch)
+        organization_outputs = gather(data_loader, organization, epoch)
+        assist.update(organization_outputs, epoch)
+        test(assist, metric, test_logger, epoch)
         test_logger.safe(False)
         test_logger.reset()
     test_logger.safe(False)
@@ -68,26 +69,40 @@ def runExperiment():
     return
 
 
-def test(data_loader, assist, organization, metric, logger, epoch):
+def initialize(dataset, assist, organization, metric, logger, epoch):
+    data_loader = make_data_loader(dataset, assist.model_name[0][epoch])
+    organization.test(epoch, data_loader['test'], metric, logger)
+    info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
+    logger.append(info, 'test', mean=False)
+    print(logger.write('test', metric.metric_name['test']))
+    for split in dataset:
+        assist.organization_output[0][split] = organization.predict(epoch, data_loader[split])['target']
+        assist.organization_target[0][split] = torch.tensor(dataset[split].target)
+    return
+
+
+def gather(data_loader, organization, epoch):
     with torch.no_grad():
-        num_active_users = len(organization)
-        for i in range(num_active_users):
-            organization[i].test(epoch - 1, data_loader[i]['test'], metric, logger,
-                                 assist.organization_outputs[i]['test'])
+        num_organizations = len(organization)
+        organization_outputs = [{split: None for split in data_loader[i]} for i in range(num_organizations)]
+        for i in range(num_organizations):
+            for split in organization_outputs[i]:
+                organization_outputs[i][split] = organization[i].predict(epoch, data_loader[i][split])['target']
+    return organization_outputs
+
+
+def test(assist, metric, logger, epoch):
+    with torch.no_grad():
+        input_size = assist.organization_target[0]['test'].size(0)
+        input = {'target': assist.organization_target[0]['test']}
+        output = {'target': assist.organization_output[epoch]['test']}
+        output['loss'] = models.loss_fn(output['target'], input['target'])
+        evaluation = metric.evaluate(metric.metric_name['test'], input, output)
+        logger.append(evaluation, 'test', n=input_size)
         info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
         logger.append(info, 'test', mean=False)
         print(logger.write('test', metric.metric_name['test']))
     return
-
-
-def broadcast(data_loader, organization, epoch):
-    with torch.no_grad():
-        num_active_users = len(organization)
-        organization_outputs = [{split: None for split in data_loader[i]} for i in range(num_active_users)]
-        for i in range(num_active_users):
-            for split in organization_outputs[i]:
-                organization_outputs[i][split] = organization[i].broadcast(epoch - 1, data_loader[i][split])
-    return organization_outputs
 
 
 def resume(model_tag, load_tag='checkpoint', verbose=True):

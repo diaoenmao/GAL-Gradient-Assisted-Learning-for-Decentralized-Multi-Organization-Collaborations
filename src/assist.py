@@ -11,32 +11,28 @@ class Assist:
     def __init__(self, feature_split):
         self.feature_split = feature_split
         self.model_name = self.make_model_name()
-        self.assist_parameters = [None for _ in range(cfg['global']['num_epochs'])]
-        self.assist_rates = [None for _ in range(cfg['global']['num_epochs'])]
+        self.assist_parameters = [None for _ in range(cfg['global']['num_epochs'] + 1)]
+        self.assist_rates = [None for _ in range(cfg['global']['num_epochs'] + 1)]
         self.reset()
 
     def reset(self):
-        self.organization_outputs = [{split: None for split in cfg['data_size']} for _ in
-                                     range(len(self.feature_split))]
+        self.organization_output = [{split: None for split in cfg['data_size']} for _ in
+                                    range(cfg['global']['num_epochs'] + 1)]
+        self.organization_target = [{split: None for split in cfg['data_size']} for _ in
+                                    range(cfg['global']['num_epochs'] + 1)]
         return
 
     def make_model_name(self):
         model_name_list = cfg['model_name'].split('-')
         if len(model_name_list) == 1:
-            model_name = [model_name_list[0] for _ in range(cfg['global']['num_epochs'])]
+            model_name = [model_name_list[0] for _ in range(cfg['global']['num_epochs'] + 1)]
             model_name = [model_name for _ in range(len(self.feature_split))]
         elif len(model_name_list) == 2:
-            model_name = [model_name_list[0]] + [model_name_list[1] for _ in range(cfg['global']['num_epochs'] - 1)]
+            model_name = [model_name_list[0]] + [model_name_list[1] for _ in range(cfg['global']['num_epochs'])]
             model_name = [model_name for _ in range(len(self.feature_split))]
         else:
             raise ValueError('Not valid model name')
         return model_name
-
-    def make_data_loader(self, dataset, iter):
-        data_loader = [None for _ in range(len(self.feature_split))]
-        for i in range(len(self.feature_split)):
-            data_loader[i] = make_data_loader(dataset, self.model_name[i][iter])
-        return data_loader
 
     def make_organization(self):
         feature_split = self.feature_split
@@ -48,53 +44,41 @@ class Assist:
             organization[i] = Organization(i, feature_split_i, model_name_i)
         return organization
 
-    def update(self, iter, data_loader, new_organization_outputs):
+    def broadcast(self, dataset, iter):
+        for split in dataset:
+            self.organization_output[iter - 1][split].requires_grad = True
+            loss = models.loss_fn(self.organization_output[iter - 1][split],
+                                  self.organization_target[0][split], reduction='sum')
+            loss.backward()
+            self.organization_target[iter][split] = - copy.deepcopy(self.organization_output[iter - 1][split].grad)
+            dataset[split].target = self.organization_target[iter][split].numpy()
+            self.organization_output[iter - 1][split].detach_()
+        data_loader = [None for _ in range(len(self.feature_split))]
+        for i in range(len(self.feature_split)):
+            data_loader[i] = make_data_loader(dataset, self.model_name[i][iter])
+        return data_loader
+
+    def update(self, organization_outputs, iter):
         if cfg['assist_mode'] == 'none':
-            with torch.no_grad():
-                organization_outputs = [{split: {'id': torch.arange(cfg['data_size'][split]),
-                                                 'target': torch.zeros(cfg['data_size'][split], cfg['target_size'])}
-                                         for split in data_loader[0]} for _ in range(len(self.feature_split))]
-                for i in range(len(self.feature_split)):
-                    for split in data_loader[0]:
-                        organization_outputs[i][split]['target'] = new_organization_outputs[i][split]['target']
+            for split in organization_outputs[0]:
+                self.organization_output[iter][split] = organization_outputs[0][split]
         elif cfg['assist_mode'] == 'bag':
-            _new_organization_outputs = {split: {'target': []} for split in data_loader[0]}
-            for split in data_loader[0]:
-                for i in range(len(new_organization_outputs)):
-                    _new_organization_outputs[split]['target'].append(new_organization_outputs[i][split]['target'])
-                _new_organization_outputs[split]['target'] = torch.stack(_new_organization_outputs[split]['target'],
-                                                                         dim=-1)
-            with torch.no_grad():
-                organization_outputs = [{split: {'id': torch.arange(cfg['data_size'][split]),
-                                                 'target': torch.zeros(cfg['data_size'][split], cfg['target_size'])}
-                                         for split in data_loader[0]} for _ in range(len(self.feature_split))]
-                for i in range(len(self.feature_split)):
-                    for split in data_loader[0]:
-                        organization_outputs[i][split]['target'] = _new_organization_outputs[split]['target'].mean(
-                            dim=-1)
-        elif cfg['assist_mode'] in ['stack']:
-            _new_organization_outputs = {split: {'target': []} for split in data_loader[0]}
-            for split in data_loader[0]:
-                for i in range(len(new_organization_outputs)):
-                    _new_organization_outputs[split]['target'].append(new_organization_outputs[i][split]['target'])
-                _new_organization_outputs[split]['target'] = torch.stack(_new_organization_outputs[split]['target'],
-                                                                         dim=-1)
-            _dataset = {split: None for split in data_loader[0]}
-            for split in data_loader[0]:
-                if self.organization_outputs[0][split] is None:
-                    _dataset[split] = torch.utils.data.TensorDataset(
-                        torch.tensor(data_loader[0][split].dataset.id), _new_organization_outputs[split]['target'],
-                        torch.tensor(data_loader[0][split].dataset.target))
-                else:
-                    _dataset[split] = torch.utils.data.TensorDataset(
-                        torch.tensor(data_loader[0][split].dataset.id),
-                        _new_organization_outputs[split]['target'],
-                        torch.tensor(data_loader[0][split].dataset.target), self.organization_outputs[0][split]['target'])
-            if 'train' in _dataset:
-                tensors = _dataset['train'].tensors
-                input = {'id': tensors[0], 'output': tensors[1], 'target': tensors[2], 'assist': None} if len(
-                    tensors) == 3 else {'id': tensors[0], 'output': tensors[1], 'target': tensors[2],
-                                        'assist': tensors[3]}
+            _organization_outputs = {split: [] for split in organization_outputs[0]}
+            for split in organization_outputs[0]:
+                for i in range(len(organization_outputs)):
+                    _organization_outputs[split].append(organization_outputs[i][split])
+                _organization_outputs[split] = torch.stack(_organization_outputs[split], dim=-1)
+            for split in organization_outputs[0]:
+                self.organization_output[iter][split] = _organization_outputs[split].mean(dim=-1)
+        elif cfg['assist_mode'] == 'stack':
+            _organization_outputs = {split: [] for split in organization_outputs[0]}
+            for split in organization_outputs[0]:
+                for i in range(len(organization_outputs)):
+                    _organization_outputs[split].append(organization_outputs[i][split])
+                _organization_outputs[split] = torch.stack(_organization_outputs[split], dim=-1)
+            if 'train' in organization_outputs[0]:
+                input = {'output': _organization_outputs['train'],
+                         'target': self.organization_target[iter]['train']}
                 input = to_device(input, cfg['device'])
                 model = eval('models.{}().to(cfg["device"])'.format(cfg['assist_mode']))
                 model.train(True)
@@ -106,29 +90,19 @@ class Assist:
                     optimizer.step()
                 self.assist_parameters[iter] = model.to('cpu').state_dict()
             with torch.no_grad():
-                organization_outputs = [{split: {'id': torch.arange(cfg['data_size'][split]),
-                                                 'target': torch.zeros(cfg['data_size'][split], cfg['target_size'])}
-                                         for split in data_loader[0]} for _ in range(len(self.feature_split))]
-                for i in range(len(self.feature_split)):
-                    _data_loader = make_data_loader(_dataset, 'assist', {'train': False, 'test': False})
-                    for split in data_loader[0]:
-                        model = eval('models.{}().to(cfg["device"])'.format(cfg['assist_mode']))
-                        model.load_state_dict(self.assist_parameters[iter])
-                        model.train(False)
-                        for j, input in enumerate(_data_loader[split]):
-                            input = {'id': input[0], 'output': input[1], 'target': input[2], 'assist': None} if len(
-                                input) == 3 else {'id': input[0], 'output': input[1], 'target': input[2],
-                                                  'assist': input[3]}
-                            input = to_device(input, cfg['device'])
-                            output = model(input)
-                            organization_outputs[i][split]['target'][input['id']] = output['target'][:].cpu()
+                model = eval('models.{}().to(cfg["device"])'.format(cfg['assist_mode']))
+                model.load_state_dict(self.assist_parameters[iter])
+                model.train(False)
+                for split in organization_outputs[0]:
+                    input = {'output': _organization_outputs[split],
+                             'target': self.organization_target[iter][split]}
+                    input = to_device(input, cfg['device'])
+                    self.organization_output[iter][split] = model(input)['target'].cpu()
         else:
             raise ValueError('Not valid assist')
-        if self.organization_outputs[i][split] is not None and 'train' in data_loader[0]:
-            input = {'id': torch.tensor(data_loader[0]['train'].dataset.id),
-                     'output': organization_outputs[0]['train']['target'],
-                     'target': torch.tensor(data_loader[0]['train'].dataset.target),
-                     'assist': self.organization_outputs[0]['train']['target']}
+        if 'train' in organization_outputs[0]:
+            input = {'history': self.organization_output[iter - 1]['train'],
+                     'output': self.organization_output[iter]['train'], 'target': self.organization_target[0]['train']}
             input = to_device(input, cfg['device'])
             model = models.linesearch().to(cfg['device'])
             model.train(True)
@@ -143,12 +117,7 @@ class Assist:
                 optimizer.step(closure)
             self.assist_rates[iter] = model.assist_rate.item()
         with torch.no_grad():
-            for i in range(len(self.organization_outputs)):
-                for split in data_loader[i]:
-                    if self.organization_outputs[i][split] is None:
-                        self.organization_outputs[i][split] = copy.deepcopy(organization_outputs[i][split])
-                    else:
-                        self.organization_outputs[i][split]['target'] = self.organization_outputs[i][split][
-                                                                            'target'] + self.assist_rates[iter] * \
-                                                                        organization_outputs[i][split]['target']
+            for split in organization_outputs[0]:
+                self.organization_output[iter][split] = self.organization_output[iter - 1][split] + self.assist_rates[
+                    iter] * self.organization_output[iter][split]
         return

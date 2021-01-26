@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from config import cfg
-from .utils import init_param, normalize, loss_fn, local_loss_fn, feature_split
+from .utils import init_param, normalize, loss_fn, feature_split
 
 
 class Conv(nn.Module):
@@ -30,10 +30,7 @@ class Conv(nn.Module):
             x = feature_split(x, input['feature_split'])
         out = self.blocks(x)
         output['target'] = out
-        if 'assist' in input:
-            output = local_loss_fn(input, output, self.training)
-        else:
-            output['loss'] = loss_fn(output['target'], input['target'])
+        output['loss'] = loss_fn(output['target'], input['target'])
         return output
 
 

@@ -107,7 +107,7 @@ def process_dataset(dataset):
 
 def process_control():
     data_shape = {'Blob': [10], 'Iris': [4], 'Diabetes': [10], 'BostonHousing': [13], 'Wine': [13],
-                  'BreastCancer': [30], 'QSAR': [41], 'MIMIC': [17], 'MNIST': [1, 28, 28], 'CIFAR10': [3, 32, 32]}
+                  'BreastCancer': [30], 'QSAR': [41], 'MNIST': [1, 28, 28], 'CIFAR10': [3, 32, 32]}
     cfg['data_shape'] = data_shape[cfg['data_name']]
     cfg['linear'] = {}
     cfg['mlp'] = {'hidden_size': [512, 128]}
@@ -121,7 +121,8 @@ def process_control():
         cfg['assist'] = {}
         cfg['assist']['batch_size'] = {'train': 1024, 'test': 1024}
         cfg['assist']['optimizer_name'] = 'Adam'
-        cfg['assist']['lr'] = 1e-3
+        cfg['assist']['lr'] = 1e-1
+        cfg['assist']['momentum'] = 0.9
         cfg['assist']['weight_decay'] = 5e-4
         cfg['assist']['num_epochs'] = 100
         cfg['linesearch'] = {}

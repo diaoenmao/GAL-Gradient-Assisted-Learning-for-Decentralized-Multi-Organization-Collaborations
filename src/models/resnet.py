@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .utils import init_param, normalize, loss_fn, local_loss_fn, feature_split
+from .utils import init_param, normalize, loss_fn, feature_split
 from config import cfg
 
 
@@ -87,10 +87,7 @@ class ResNet(nn.Module):
         out = out.view(out.size(0), -1)
         out = self.linear(out)
         output['target'] = out
-        if 'assist' in input:
-            output = local_loss_fn(input, output, self.training)
-        else:
-            output['loss'] = loss_fn(output['target'], input['target'])
+        output['loss'] = loss_fn(output['target'], input['target'])
         return output
 
 

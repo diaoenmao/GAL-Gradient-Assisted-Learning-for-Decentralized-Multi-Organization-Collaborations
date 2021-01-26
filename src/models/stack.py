@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from config import cfg
-from .utils import assist_loss_fn
+from .utils import loss_fn
 
 
 class Stack(nn.Module):
@@ -13,7 +13,7 @@ class Stack(nn.Module):
         output = {}
         x = input['output']
         output['target'] = (x * self.stack.softmax(-1)).sum(-1)
-        output = assist_loss_fn(input, output, self.training)
+        output['loss'] = loss_fn(output['target'], input['target'])
         return output
 
 

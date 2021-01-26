@@ -24,18 +24,18 @@ class Metric(object):
         self.metric_name = self.make_metric_name(metric_name)
         self.pivot, self.pivot_name, self.pivot_direction = self.make_pivot()
         self.metric = {'Loss': (lambda input, output: output['loss'].item()),
-                       'Loss_Local': (lambda input, output: output['loss_local'].item()),
                        'Accuracy': (lambda input, output: recur(Accuracy, output['target'], input['target'])),
                        'RMSE': (lambda input, output: recur(RMSE, output['target'], input['target']))}
 
     def make_metric_name(self, metric_name):
         for split in metric_name:
-            if cfg['data_name'] in ['Blob', 'Iris', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']:
-                metric_name[split] += ['Accuracy']
-            elif cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMIC']:
-                metric_name[split] += ['RMSE']
-            else:
-                raise ValueError('Not valid data name')
+            if split == 'test':
+                if cfg['data_name'] in ['Blob', 'Iris', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']:
+                    metric_name[split] += ['Accuracy']
+                elif cfg['data_name'] in ['Diabetes', 'BostonHousing']:
+                    metric_name[split] += ['RMSE']
+                else:
+                    raise ValueError('Not valid data name')
         return metric_name
 
     def make_pivot(self):
@@ -43,7 +43,7 @@ class Metric(object):
             pivot = -float('inf')
             pivot_name = 'Accuracy'
             pivot_direction = 'up'
-        elif cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMIC']:
+        elif cfg['data_name'] in ['Diabetes', 'BostonHousing']:
             pivot = float('inf')
             pivot_name = 'RMSE'
             pivot_direction = 'down'

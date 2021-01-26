@@ -64,6 +64,8 @@ class QSAR(Dataset):
         data[data.columns[-1]] = data[data.columns[-1]].astype('category')
         data[data.columns[-1]] = data[data.columns[-1]].cat.codes
         data = data.to_numpy()
+        perm = np.random.permutation(len(data))
+        data = data[perm]
         split_idx = int(data.shape[0] * 0.8)
         train_data, test_data = data[:split_idx, :-1].astype(np.float32), data[split_idx:, :-1].astype(np.float32)
         train_target, test_target = data[:split_idx, -1].astype(np.int64), data[split_idx:, -1].astype(np.int64)

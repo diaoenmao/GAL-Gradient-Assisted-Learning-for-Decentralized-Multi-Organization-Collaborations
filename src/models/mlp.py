@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from .utils import init_param, normalize, loss_fn, local_loss_fn, feature_split
+from .utils import init_param, normalize, loss_fn, feature_split
 from config import cfg
 
 
@@ -38,10 +38,7 @@ class MLP(nn.Module):
             x = feature_split(x, input['feature_split'])
         x = x.view(x.size(0), -1)
         output['target'] = self.blocks(x)
-        if 'assist' in input:
-            output = local_loss_fn(input, output, self.training)
-        else:
-            output['loss'] = loss_fn(output['target'], input['target'])
+        output['loss'] = loss_fn(output['target'], input['target'])
         return output
 
 

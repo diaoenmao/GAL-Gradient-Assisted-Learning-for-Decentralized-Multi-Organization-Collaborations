@@ -11,7 +11,7 @@ from itertools import repeat
 # from pathos.multiprocessing import ProcessingPool as Pool
 from multiprocessing import Pool
 from config import cfg
-from data import fetch_dataset, split_dataset
+from data import fetch_dataset, make_data_loader, split_dataset
 from metrics import Metric
 from assist import Assist
 from utils import save, load, process_control, process_dataset
@@ -68,14 +68,16 @@ def runExperiment():
         logger = Logger(logger_path)
     if organization is None:
         organization = assist.make_organization()
-    metric = Metric({'train': ['Loss', 'Loss_Local'], 'test': ['Loss']})
+    metric = Metric({'train': ['Loss'], 'test': ['Loss']})
+    if last_epoch == 1:
+        initialize(dataset, assist, organization[0], metric, logger, 0)
     for epoch in range(last_epoch, cfg['global']['num_epochs'] + 1):
         logger.safe(True)
-        data_loader = assist.make_data_loader(dataset, epoch - 1)
-        train(data_loader, assist, organization, metric, logger, epoch)
-        organization_outputs = broadcast(data_loader, organization, epoch)
-        assist.update(epoch - 1, data_loader, organization_outputs)
-        test(data_loader, assist, organization, metric, logger, epoch)
+        data_loader = assist.broadcast(dataset, epoch)
+        train(data_loader, organization, metric, logger, epoch)
+        organization_outputs = gather(data_loader, organization, epoch)
+        assist.update(organization_outputs, epoch)
+        test(assist, metric, logger, epoch)
         logger.safe(False)
         save_result = {
             'cfg': cfg, 'epoch': epoch + 1, 'assist': assist, 'organization': organization, 'logger': logger}
@@ -89,20 +91,43 @@ def runExperiment():
     return
 
 
-def train(data_loader, assist, organization, metric, logger, epoch):
+def initialize(dataset, assist, organization, metric, logger, epoch):
     start_time = time.time()
-    num_active_users = len(organization)
-    for i in range(num_active_users):
-        organization[i].train(epoch - 1, data_loader[i]['train'], metric, logger,
-                              assist.organization_outputs[i]['train'])
-        if i % int((num_active_users * cfg['log_interval']) + 1) == 0:
+    data_loader = make_data_loader(dataset, assist.model_name[0][epoch])
+    organization.train(epoch, data_loader['train'], metric, logger)
+    local_time = (time.time() - start_time)
+    epoch_finished_time = datetime.timedelta(seconds=local_time)
+    exp_finished_time = epoch_finished_time + datetime.timedelta(
+        seconds=round((cfg['global']['num_epochs'] - epoch) * local_time))
+    info = {'info': ['Model: {}'.format(cfg['model_tag']),
+                     'Train Epoch: {}'.format(epoch), 'ID: 1',
+                     'Epoch Finished Time: {}'.format(epoch_finished_time),
+                     'Experiment Finished Time: {}'.format(exp_finished_time)]}
+    logger.append(info, 'train', mean=False)
+    print(logger.write('train', metric.metric_name['train']))
+    organization.test(epoch, data_loader['test'], metric, logger)
+    info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
+    logger.append(info, 'test', mean=False)
+    print(logger.write('test', metric.metric_name['test']))
+    for split in dataset:
+        assist.organization_output[0][split] = organization.predict(epoch, data_loader[split])['target']
+        assist.organization_target[0][split] = torch.tensor(dataset[split].target)
+    return
+
+
+def train(data_loader, organization, metric, logger, epoch):
+    start_time = time.time()
+    num_organizations = len(organization)
+    for i in range(num_organizations):
+        organization[i].train(epoch, data_loader[i]['train'], metric, logger)
+        if i % int((num_organizations * cfg['log_interval']) + 1) == 0:
             local_time = (time.time() - start_time) / (i + 1)
-            epoch_finished_time = datetime.timedelta(seconds=local_time * (num_active_users - i - 1))
+            epoch_finished_time = datetime.timedelta(seconds=local_time * (num_organizations - i - 1))
             exp_finished_time = epoch_finished_time + datetime.timedelta(
-                seconds=round((cfg['global']['num_epochs'] - epoch) * local_time * num_active_users))
+                seconds=round((cfg['global']['num_epochs'] - epoch) * local_time * num_organizations))
             info = {'info': ['Model: {}'.format(cfg['model_tag']),
-                             'Train Epoch: {}({:.0f}%)'.format(epoch, 100. * i / num_active_users),
-                             'ID: {}/{}'.format(i + 1, num_active_users),
+                             'Train Epoch: {}({:.0f}%)'.format(epoch, 100. * i / num_organizations),
+                             'ID: {}/{}'.format(i + 1, num_organizations),
                              'Epoch Finished Time: {}'.format(epoch_finished_time),
                              'Experiment Finished Time: {}'.format(exp_finished_time)]}
             logger.append(info, 'train', mean=False)
@@ -110,26 +135,28 @@ def train(data_loader, assist, organization, metric, logger, epoch):
     return
 
 
-def test(data_loader, assist, organization, metric, logger, epoch):
+def gather(data_loader, organization, epoch):
     with torch.no_grad():
-        num_active_users = len(organization)
-        for i in range(num_active_users):
-            organization[i].test(epoch - 1, data_loader[i]['test'], metric, logger,
-                                 assist.organization_outputs[i]['test'])
+        num_organizations = len(organization)
+        organization_outputs = [{split: None for split in data_loader[i]} for i in range(num_organizations)]
+        for i in range(num_organizations):
+            for split in organization_outputs[i]:
+                organization_outputs[i][split] = organization[i].predict(epoch, data_loader[i][split])['target']
+    return organization_outputs
+
+
+def test(assist, metric, logger, epoch):
+    with torch.no_grad():
+        input_size = assist.organization_target[0]['test'].size(0)
+        input = {'target': assist.organization_target[0]['test']}
+        output = {'target': assist.organization_output[epoch]['test']}
+        output['loss'] = models.loss_fn(output['target'], input['target'])
+        evaluation = metric.evaluate(metric.metric_name['test'], input, output)
+        logger.append(evaluation, 'test', n=input_size)
         info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
         logger.append(info, 'test', mean=False)
         print(logger.write('test', metric.metric_name['test']))
     return
-
-
-def broadcast(data_loader, organization, epoch):
-    with torch.no_grad():
-        num_active_users = len(organization)
-        organization_outputs = [{split: None for split in data_loader[i]} for i in range(num_active_users)]
-        for i in range(num_active_users):
-            for split in organization_outputs[i]:
-                organization_outputs[i][split] = organization[i].broadcast(epoch - 1, data_loader[i][split])
-    return organization_outputs
 
 
 def resume(model_tag, load_tag='checkpoint', verbose=True):

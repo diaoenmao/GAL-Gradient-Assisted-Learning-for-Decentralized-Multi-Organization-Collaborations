@@ -10,7 +10,7 @@ class LineSearch(nn.Module):
 
     def forward(self, input):
         output = {}
-        output['loss'] = loss_fn(input['assist'] + self.assist_rate * input['output'], input['target'])
+        output['loss'] = loss_fn(input['history'] + self.assist_rate * input['output'], input['target'])
         return output
 
 

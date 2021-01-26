@@ -13,9 +13,9 @@ class Organization:
         self.organization_id = organization_id
         self.feature_split = feature_split
         self.model_name = model_name
-        self.model_parameters = [None for _ in range(cfg['global']['num_epochs'])]
+        self.model_parameters = [None for _ in range(cfg['global']['num_epochs'] + 1)]
 
-    def train(self, iter, data_loader, metric, logger, organization_outputs=None):
+    def train(self, iter, data_loader, metric, logger):
         model = eval('models.{}().to(cfg["device"])'.format(self.model_name[iter]))
         model.train(True)
         optimizer = make_optimizer(model, self.model_name[iter])
@@ -26,12 +26,10 @@ class Organization:
                 input = collate(input)
                 input_size = input['data'].size(0)
                 input['feature_split'] = self.feature_split
-                input['assist'] = None if organization_outputs is None else self.align(input['id'],
-                                                                                       organization_outputs)
                 input = to_device(input, cfg['device'])
                 optimizer.zero_grad()
                 output = model(input)
-                output['loss_local'].backward()
+                output['loss'].backward()
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1)
                 optimizer.step()
                 evaluation = metric.evaluate(metric.metric_name['train'], input, output)
@@ -54,7 +52,7 @@ class Organization:
         self.model_parameters[iter] = model.to('cpu').state_dict()
         return
 
-    def test(self, iter, data_loader, metric, logger, organization_outputs=None):
+    def test(self, iter, data_loader, metric, logger):
         with torch.no_grad():
             model = eval('models.{}().to(cfg["device"])'.format(self.model_name[iter]))
             model.load_state_dict(self.model_parameters[iter])
@@ -63,36 +61,27 @@ class Organization:
                 input = collate(input)
                 input_size = input['data'].size(0)
                 input['feature_split'] = self.feature_split
-                input['assist'] = None if organization_outputs is None else self.align(input['id'],
-                                                                                       organization_outputs)
                 input = to_device(input, cfg['device'])
                 output = model(input)
                 evaluation = metric.evaluate(metric.metric_name['test'], input, output)
                 logger.append(evaluation, 'test', n=input_size)
         return
 
-    def broadcast(self, iter, data_loader):
+    def predict(self, iter, data_loader):
         with torch.no_grad():
             model = eval('models.{}().to(cfg["device"])'.format(self.model_name[iter]))
             model.load_state_dict(self.model_parameters[iter])
             model.train(False)
-            organization_outputs = {'id': [], 'target': []}
+            organization_output = {'id': [], 'target': []}
             for i, input in enumerate(data_loader):
                 input = collate(input)
                 input['feature_split'] = self.feature_split
                 input = to_device(input, cfg['device'])
                 output = model(input)
-                organization_outputs['id'].append(input['id'].cpu())
-                organization_outputs['target'].append(output['target'].cpu())
-            organization_outputs['id'] = torch.cat(organization_outputs['id'], dim=0)
-            organization_outputs['target'] = torch.cat(organization_outputs['target'], dim=0)
-            organization_outputs['id'], indices = torch.sort(organization_outputs['id'])
-            organization_outputs['target'] = organization_outputs['target'][indices]
-        return organization_outputs
-
-    def align(self, id, organization_outputs):
-        assist = torch.empty(id.size(0), cfg['target_size']).fill_(float('nan'))
-        _, id_idx, organization_idx = np.intersect1d(id.numpy(), organization_outputs['id'].numpy(),
-                                                     assume_unique=True, return_indices=True)
-        assist[torch.tensor(id_idx)] = organization_outputs['target'][torch.tensor(organization_idx)]
-        return assist
+                organization_output['id'].append(input['id'].cpu())
+                organization_output['target'].append(output['target'].cpu())
+            organization_output['id'] = torch.cat(organization_output['id'], dim=0)
+            organization_output['target'] = torch.cat(organization_output['target'], dim=0)
+            organization_output['id'], indices = torch.sort(organization_output['id'])
+            organization_output['target'] = organization_output['target'][indices]
+        return organization_output

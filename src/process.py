@@ -27,7 +27,7 @@ def make_controls(data_names, model_names, control_name):
 def make_control_list(model_name):
     model_names = [[model_name]]
     if model_name in ['linear', 'mlp']:
-        local_epoch = ['1', '10']
+        local_epoch = ['1', '10', '100']
         data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']]
         control_name = [[['1'], ['none'], local_epoch, ['10']]]
         control_1 = make_controls(data_names, model_names, control_name)
@@ -38,22 +38,22 @@ def make_control_list(model_name):
         control_name = [[['8'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
         control_8 = make_controls(data_names, model_names, control_name)
         controls = control_1 + control_2_4 + control_8
-    elif model_name in ['conv', 'resnet18']:
-        local_epoch = ['1', '10']
-        data_names = [['MNIST', 'CIFAR10']]
+    elif model_name in ['conv']:
+        local_epoch = ['1', '10', '100']
+        data_names = [['MNIST']]
         control_name = [[['1'], ['none'], local_epoch, ['10']]]
         control_1 = make_controls(data_names, model_names, control_name)
-        data_names = [['MNIST', 'CIFAR10']]
+        data_names = [['MNIST']]
         control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
         control_2_4_8 = make_controls(data_names, model_names, control_name)
         controls = control_1 + control_2_4_8
-    elif model_name in ['conv-linear', 'resnet18-linear']:
-        local_epoch = ['1', '10']
-        data_names = [['MNIST', 'CIFAR10']]
-        control_name = [[['1'], ['none'], local_epoch, ['50']]]
+    elif model_name in ['resnet18']:
+        local_epoch = ['1', '10', '100']
+        data_names = [['CIFAR10']]
+        control_name = [[['1'], ['none'], local_epoch, ['10']]]
         control_1 = make_controls(data_names, model_names, control_name)
-        data_names = [['MNIST', 'CIFAR10']]
-        control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['50']]]
+        data_names = [['CIFAR10']]
+        control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
         control_2_4_8 = make_controls(data_names, model_names, control_name)
         controls = control_1 + control_2_4_8
     else:
@@ -66,10 +66,7 @@ def main():
     mlp_control_list = make_control_list('mlp')
     conv_control_list = make_control_list('conv')
     resnet18_control_list = make_control_list('resnet18')
-    convlinear_control_list = make_control_list('conv-linear')
-    resnet18linear_control_list = make_control_list('resnet18-linear')
-    controls = linear_control_list + mlp_control_list + conv_control_list + resnet18_control_list + \
-               convlinear_control_list + resnet18linear_control_list
+    controls = linear_control_list + mlp_control_list + conv_control_list + resnet18_control_list
     processed_result_exp, processed_result_history = process_result(controls)
     with open('{}/processed_result_exp.json'.format(result_path), 'w') as fp:
         json.dump(processed_result_exp, fp, indent=2)
@@ -113,7 +110,7 @@ def extract_result(control, model_tag, processed_result_exp, processed_result_hi
                 processed_result_history[metric_name]['history'][exp_idx] = base_result['logger']['test'].history[k]
             if 'Assist-Rate' not in processed_result_history:
                 processed_result_history['Assist-Rate'] = {'history': [None for _ in range(num_experiments)]}
-            processed_result_history['Assist-Rate']['history'][exp_idx] = base_result['assist'].assist_rates[0][1:]
+            processed_result_history['Assist-Rate']['history'][exp_idx] = base_result['assist'].assist_rates[1:]
         else:
             print('Missing {}'.format(base_result_path_i))
     else:
@@ -225,8 +222,8 @@ def make_df_history(extracted_processed_result_history):
 def make_vis(df):
     color_dict = {'Joint': 'red', 'Separate': 'orange', 'Bag': 'dodgerblue', 'Stack': 'green'}
     linestyle = {'1': '-', '10': '--', '100': ':'}
-    marker_dict = {'Joint': {'1': 'o', '10': 's', '100': 'D'}, 'Separate': {'1': 'v', '10': '>', '100': '^'},
-                   'Bag': {'1': 'H', '10': 'p', '100': '*'}, 'Stack': {'1': '|', '10': '_', '100': 'x'}}
+    marker_dict = {'Joint': {'1': 'o', '10': 's', '100': 'D'}, 'Separate': {'1': 'v', '10': '^'},
+                   'Bag': {'1': 'p', '10': 'd'}, 'Stack': {'1': 'X', '10': '*'}}
     loc_dict = {'Loss': 'lower right', 'Accuracy': 'lower right', 'RMSE': 'lower right', 'Assist Rate': 'lower right'}
     fontsize = {'legend': 10, 'label': 16, 'ticks': 16}
     save_format = 'png'
