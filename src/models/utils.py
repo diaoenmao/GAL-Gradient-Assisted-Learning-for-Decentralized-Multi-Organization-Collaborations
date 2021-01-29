@@ -55,35 +55,3 @@ def loss_fn(output, target, reduction='mean'):
     else:
         loss = F.mse_loss(output, target, reduction=reduction)
     return loss
-
-
-# def local_loss_fn(input, output, run):
-#     if run:
-#         if input['assist'] is None:
-#             output['loss_local'] = loss_fn(output['target'], input['target'])
-#             output['loss'] = loss_fn(output['target'], input['target'])
-#         else:
-#             input['assist'].requires_grad = True
-#             loss = loss_fn(input['assist'], input['target'], reduction='sum')
-#             loss.backward()
-#             target = - copy.deepcopy(input['assist'].grad)
-#             output['loss_local'] = F.mse_loss(output['target'], target)
-#             output['target'] = (input['assist'] + output['target']).detach()
-#             output['loss'] = loss_fn(output['target'], input['target'])
-#     else:
-#         output['target'] = input['assist']
-#         output['loss'] = loss_fn(output['target'], input['target'])
-#     return output
-#
-#
-# def assist_loss_fn(input, output, run):
-#     if run:
-#         if input['assist'] is None:
-#             output['loss'] = loss_fn(output['target'], input['target'])
-#         else:
-#             input['assist'].requires_grad = True
-#             loss = loss_fn(input['assist'], input['target'], reduction='sum')
-#             loss.backward()
-#             target = - copy.deepcopy(input['assist'].grad)
-#             output['loss'] = F.mse_loss(output['target'], target)
-#     return output

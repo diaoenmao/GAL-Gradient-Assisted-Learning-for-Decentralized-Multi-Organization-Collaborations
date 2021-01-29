@@ -27,19 +27,19 @@ def make_controls(data_names, model_names, control_name):
 def make_control_list(model_name):
     model_names = [[model_name]]
     if model_name in ['linear', 'mlp']:
-        local_epoch = ['1', '10', '100']
-        data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']]
+        local_epoch = ['10']
+        data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
         control_name = [[['1'], ['none'], local_epoch, ['10']]]
         control_1 = make_controls(data_names, model_names, control_name)
-        data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']]
+        data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
         control_name = [[['2', '4'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
         control_2_4 = make_controls(data_names, model_names, control_name)
-        data_names = [['Blob', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']]
+        data_names = [['Blob', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
         control_name = [[['8'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
         control_8 = make_controls(data_names, model_names, control_name)
         controls = control_1 + control_2_4 + control_8
     elif model_name in ['conv']:
-        local_epoch = ['1', '10', '100']
+        local_epoch = ['10']
         data_names = [['MNIST']]
         control_name = [[['1'], ['none'], local_epoch, ['10']]]
         control_1 = make_controls(data_names, model_names, control_name)
@@ -48,12 +48,30 @@ def make_control_list(model_name):
         control_2_4_8 = make_controls(data_names, model_names, control_name)
         controls = control_1 + control_2_4_8
     elif model_name in ['resnet18']:
-        local_epoch = ['1', '10', '100']
+        local_epoch = ['10']
         data_names = [['CIFAR10']]
         control_name = [[['1'], ['none'], local_epoch, ['10']]]
         control_1 = make_controls(data_names, model_names, control_name)
         data_names = [['CIFAR10']]
         control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
+        control_2_4_8 = make_controls(data_names, model_names, control_name)
+        controls = control_1 + control_2_4_8
+    elif model_name in ['conv-linear']:
+        local_epoch = ['10']
+        data_names = [['MNIST']]
+        control_name = [[['1'], ['none'], local_epoch, ['10']]]
+        control_1 = make_controls(data_names, model_names, control_name)
+        data_names = [['MNIST']]
+        control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['50']]]
+        control_2_4_8 = make_controls(data_names, model_names, control_name)
+        controls = control_1 + control_2_4_8
+    elif model_name in ['resnet18-linear']:
+        local_epoch = ['10']
+        data_names = [['CIFAR10']]
+        control_name = [[['1'], ['none'], local_epoch, ['10']]]
+        control_1 = make_controls(data_names, model_names, control_name)
+        data_names = [['CIFAR10']]
+        control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['50']]]
         control_2_4_8 = make_controls(data_names, model_names, control_name)
         controls = control_1 + control_2_4_8
     else:
@@ -63,10 +81,9 @@ def make_control_list(model_name):
 
 def main():
     linear_control_list = make_control_list('linear')
-    mlp_control_list = make_control_list('mlp')
     conv_control_list = make_control_list('conv')
     resnet18_control_list = make_control_list('resnet18')
-    controls = linear_control_list + mlp_control_list + conv_control_list + resnet18_control_list
+    controls = linear_control_list + conv_control_list + resnet18_control_list
     processed_result_exp, processed_result_history = process_result(controls)
     with open('{}/processed_result_exp.json'.format(result_path), 'w') as fp:
         json.dump(processed_result_exp, fp, indent=2)
@@ -221,9 +238,9 @@ def make_df_history(extracted_processed_result_history):
 
 def make_vis(df):
     color_dict = {'Joint': 'red', 'Separate': 'orange', 'Bag': 'dodgerblue', 'Stack': 'green'}
-    linestyle = {'1': '-', '10': '--', '100': ':'}
-    marker_dict = {'Joint': {'1': 'o', '10': 's', '100': 'D'}, 'Separate': {'1': 'v', '10': '^'},
-                   'Bag': {'1': 'p', '10': 'd'}, 'Stack': {'1': 'X', '10': '*'}}
+    linestyle = {'1': '--', '10': '-', '100': ':'}
+    marker_dict = {'Joint': {'1': 'o', '10': 's', '100': 'D'}, 'Separate': {'1': 'v', '10': '^', '100': '>'},
+                   'Bag': {'1': 'p', '10': 'd', '100': 'h'}, 'Stack': {'1': 'X', '10': '*', '100': 'x'}}
     loc_dict = {'Loss': 'lower right', 'Accuracy': 'lower right', 'RMSE': 'lower right', 'Assist Rate': 'lower right'}
     fontsize = {'legend': 10, 'label': 16, 'ticks': 16}
     save_format = 'png'
@@ -235,15 +252,15 @@ def make_vis(df):
             continue
         baseline_df_name = '_'.join([data_name, model_name, '1', global_epoch, metric_name])
         if metric_name in ['Loss', 'Accuracy', 'RMSE']:
-            x = np.arange(1, int(global_epoch) + 1)
+            x = np.arange(0, int(global_epoch) + 1)
         elif metric_name in ['Assist-Rate']:
-            x = np.arange(2, int(global_epoch) + 1)
+            x = np.arange(1, int(global_epoch) + 1)
             metric_name = 'Assist Rate'
         else:
             raise ValueError('Not valid metric name')
         if global_epoch == '10':
             markevery = 1
-            xticks = np.arange(1, int(global_epoch) + 1, step=markevery)
+            xticks = np.arange(0, int(global_epoch) + 1, step=markevery)
         elif global_epoch == '50':
             markevery = 10
             xticks = np.arange(int(global_epoch) + 1, step=markevery)
@@ -256,7 +273,7 @@ def make_vis(df):
                 assist_mode = 'Joint'
             else:
                 raise ValueError('Not valid assist_mode')
-            label_name = 'E={}, {}'.format(local_epoch, assist_mode)
+            label_name = '{}'.format(assist_mode)
             y = row.to_numpy()
             fig[df_name] = plt.figure(df_name)
             plt.plot(x, y, color=color_dict[assist_mode], linestyle=linestyle[local_epoch], label=label_name,
@@ -276,7 +293,7 @@ def make_vis(df):
                 assist_mode = 'Stack'
             else:
                 raise ValueError('Not valid assist_mode')
-            label_name = 'M={}, E={}, {}'.format(num_users, local_epoch, assist_mode)
+            label_name = 'M={}, {}'.format(num_users, assist_mode)
             y = row.to_numpy()
             fig[df_name] = plt.figure(df_name)
             plt.plot(x, y, color=color_dict[assist_mode], linestyle=linestyle[local_epoch], label=label_name,
