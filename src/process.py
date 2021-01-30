@@ -242,7 +242,7 @@ def make_vis(df):
     marker_dict = {'Joint': {'1': 'o', '10': 's', '100': 'D'}, 'Separate': {'1': 'v', '10': '^', '100': '>'},
                    'Bag': {'1': 'p', '10': 'd', '100': 'h'}, 'Stack': {'1': 'X', '10': '*', '100': 'x'}}
     loc_dict = {'Loss': 'lower right', 'Accuracy': 'lower right', 'RMSE': 'lower right', 'Assist Rate': 'lower right'}
-    fontsize = {'legend': 10, 'label': 16, 'ticks': 16}
+    fontsize = {'legend': 16, 'label': 16, 'ticks': 16}
     save_format = 'png'
     fig = {}
     for df_name in df:
