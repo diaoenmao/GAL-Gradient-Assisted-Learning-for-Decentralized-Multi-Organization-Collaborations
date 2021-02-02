@@ -44,7 +44,7 @@ def make_data_loader(dataset, tag, shuffle=None):
         _shuffle = cfg[tag]['shuffle'][k] if shuffle is None else shuffle[k]
         data_loader[k] = DataLoader(dataset=dataset[k], shuffle=_shuffle, batch_size=cfg[tag]['batch_size'][k],
                                     pin_memory=True, num_workers=cfg['num_workers'], collate_fn=input_collate,
-                                    worker_init_fn=np.random.seed(0))
+                                    worker_init_fn=np.random.seed(cfg['seed']))
     return data_loader
 
 

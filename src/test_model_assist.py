@@ -44,7 +44,6 @@ def runExperiment():
     torch.cuda.manual_seed(seed)
     dataset = fetch_dataset(cfg['data_name'])
     process_dataset(dataset)
-    dataset = {'test': dataset['test']}
     last_epoch, assist, organization, _ = resume(cfg['model_tag'], load_tag='checkpoint')
     assist.reset()
     metric = Metric({'test': ['Loss']})
@@ -71,16 +70,25 @@ def runExperiment():
 
 def initialize(dataset, assist, organization, metric, logger, epoch):
     logger.safe(True)
-    data_loader = make_data_loader(dataset, assist.model_name[0][epoch])
-    organization.test(epoch, data_loader['test'], metric, logger)
-    info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
-    logger.append(info, 'test', mean=False)
-    print(logger.write('test', metric.metric_name['test']))
+    if epoch == 0:
+        initialization = organization.initialize(dataset, metric, logger)
+        info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
+        logger.append(info, 'test', mean=False)
+        print(logger.write('test', metric.metric_name['test']))
+        for split in dataset:
+            assist.organization_output[0][split] = initialization[split]
+            assist.organization_target[0][split] = torch.tensor(dataset[split].target)
+    else:
+        data_loader = make_data_loader(dataset, assist.model_name[0][epoch])
+        organization.test(epoch, data_loader['test'], metric, logger)
+        info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
+        logger.append(info, 'test', mean=False)
+        print(logger.write('test', metric.metric_name['test']))
+        for split in dataset:
+            assist.organization_output[0][split] = organization.predict(epoch, data_loader[split])['target']
+            assist.organization_target[0][split] = torch.tensor(dataset[split].target)
     logger.safe(False)
     logger.reset()
-    for split in dataset:
-        assist.organization_output[0][split] = organization.predict(epoch, data_loader[split])['target']
-        assist.organization_target[0][split] = torch.tensor(dataset[split].target)
     return
 
 

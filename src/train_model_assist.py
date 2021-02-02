@@ -45,9 +45,9 @@ def main():
 
 
 def runExperiment():
-    seed = int(cfg['model_tag'].split('_')[0])
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
+    cfg['seed'] = int(cfg['model_tag'].split('_')[0])
+    torch.manual_seed(cfg['seed'])
+    torch.cuda.manual_seed(cfg['seed'])
     dataset = fetch_dataset(cfg['data_name'])
     process_dataset(dataset)
     if cfg['resume_mode'] == 1:
@@ -92,26 +92,39 @@ def runExperiment():
 
 
 def initialize(dataset, assist, organization, metric, logger, epoch):
-    start_time = time.time()
-    data_loader = make_data_loader(dataset, assist.model_name[0][epoch])
-    organization.train(epoch, data_loader['train'], metric, logger)
-    local_time = (time.time() - start_time)
-    epoch_finished_time = datetime.timedelta(seconds=local_time)
-    exp_finished_time = epoch_finished_time + datetime.timedelta(
-        seconds=round((cfg['global']['num_epochs'] - epoch) * local_time))
-    info = {'info': ['Model: {}'.format(cfg['model_tag']),
-                     'Train Epoch: {}'.format(epoch), 'ID: 1',
-                     'Epoch Finished Time: {}'.format(epoch_finished_time),
-                     'Experiment Finished Time: {}'.format(exp_finished_time)]}
-    logger.append(info, 'train', mean=False)
-    print(logger.write('train', metric.metric_name['train']))
-    organization.test(epoch, data_loader['test'], metric, logger)
-    info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
-    logger.append(info, 'test', mean=False)
-    print(logger.write('test', metric.metric_name['test']))
-    for split in dataset:
-        assist.organization_output[0][split] = organization.predict(epoch, data_loader[split])['target']
-        assist.organization_target[0][split] = torch.tensor(dataset[split].target)
+    if epoch == 0:
+        initialization = organization.initialize(dataset, metric, logger)
+        info = {'info': ['Model: {}'.format(cfg['model_tag']),
+                         'Train Epoch: {}'.format(epoch), 'ID: 1']}
+        logger.append(info, 'train', mean=False)
+        print(logger.write('train', metric.metric_name['train']))
+        info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
+        logger.append(info, 'test', mean=False)
+        print(logger.write('test', metric.metric_name['test']))
+        for split in dataset:
+            assist.organization_output[0][split] = initialization[split]
+            assist.organization_target[0][split] = torch.tensor(dataset[split].target)
+    else:
+        start_time = time.time()
+        data_loader = make_data_loader(dataset, assist.model_name[0][epoch])
+        organization.train(epoch, data_loader['train'], metric, logger)
+        local_time = (time.time() - start_time)
+        epoch_finished_time = datetime.timedelta(seconds=local_time)
+        exp_finished_time = epoch_finished_time + datetime.timedelta(
+            seconds=round((cfg['global']['num_epochs'] - epoch) * local_time))
+        info = {'info': ['Model: {}'.format(cfg['model_tag']),
+                         'Train Epoch: {}'.format(epoch), 'ID: 1',
+                         'Epoch Finished Time: {}'.format(epoch_finished_time),
+                         'Experiment Finished Time: {}'.format(exp_finished_time)]}
+        logger.append(info, 'train', mean=False)
+        print(logger.write('train', metric.metric_name['train']))
+        organization.test(epoch, data_loader['test'], metric, logger)
+        info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
+        logger.append(info, 'test', mean=False)
+        print(logger.write('test', metric.metric_name['test']))
+        for split in dataset:
+            assist.organization_output[0][split] = organization.predict(epoch, data_loader[split])['target']
+            assist.organization_target[0][split] = torch.tensor(dataset[split].target)
     return
 
 

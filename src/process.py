@@ -28,10 +28,10 @@ def make_control_list(model_name):
     model_names = [[model_name]]
     if model_name in ['linear', 'mlp']:
         local_epoch = ['10']
-        data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
+        data_names = [['Blob', 'Diabetes', 'Iris', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
         control_name = [[['1'], ['none'], local_epoch, ['10']]]
         control_1 = make_controls(data_names, model_names, control_name)
-        data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
+        data_names = [['Blob', 'Diabetes', 'Iris', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
         control_name = [[['2', '4'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
         control_2_4 = make_controls(data_names, model_names, control_name)
         data_names = [['Blob', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
@@ -40,10 +40,10 @@ def make_control_list(model_name):
         controls = control_1 + control_2_4 + control_8
     elif model_name in ['conv']:
         local_epoch = ['10']
-        data_names = [['MNIST']]
+        data_names = [['MNIST', 'CIFAR10']]
         control_name = [[['1'], ['none'], local_epoch, ['10']]]
         control_1 = make_controls(data_names, model_names, control_name)
-        data_names = [['MNIST']]
+        data_names = [['MNIST', 'CIFAR10']]
         control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
         control_2_4_8 = make_controls(data_names, model_names, control_name)
         controls = control_1 + control_2_4_8
@@ -56,24 +56,6 @@ def make_control_list(model_name):
         control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
         control_2_4_8 = make_controls(data_names, model_names, control_name)
         controls = control_1 + control_2_4_8
-    elif model_name in ['conv-linear']:
-        local_epoch = ['10']
-        data_names = [['MNIST']]
-        control_name = [[['1'], ['none'], local_epoch, ['10']]]
-        control_1 = make_controls(data_names, model_names, control_name)
-        data_names = [['MNIST']]
-        control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['50']]]
-        control_2_4_8 = make_controls(data_names, model_names, control_name)
-        controls = control_1 + control_2_4_8
-    elif model_name in ['resnet18-linear']:
-        local_epoch = ['10']
-        data_names = [['CIFAR10']]
-        control_name = [[['1'], ['none'], local_epoch, ['10']]]
-        control_1 = make_controls(data_names, model_names, control_name)
-        data_names = [['CIFAR10']]
-        control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['50']]]
-        control_2_4_8 = make_controls(data_names, model_names, control_name)
-        controls = control_1 + control_2_4_8
     else:
         raise ValueError('Not valid model name')
     return controls
@@ -82,8 +64,7 @@ def make_control_list(model_name):
 def main():
     linear_control_list = make_control_list('linear')
     conv_control_list = make_control_list('conv')
-    resnet18_control_list = make_control_list('resnet18')
-    controls = linear_control_list + conv_control_list + resnet18_control_list
+    controls = linear_control_list + conv_control_list
     processed_result_exp, processed_result_history = process_result(controls)
     with open('{}/processed_result_exp.json'.format(result_path), 'w') as fp:
         json.dump(processed_result_exp, fp, indent=2)
@@ -128,6 +109,12 @@ def extract_result(control, model_tag, processed_result_exp, processed_result_hi
             if 'Assist-Rate' not in processed_result_history:
                 processed_result_history['Assist-Rate'] = {'history': [None for _ in range(num_experiments)]}
             processed_result_history['Assist-Rate']['history'][exp_idx] = base_result['assist'].assist_rates[1:]
+            if base_result['assist'].assist_parameters[1] is not None:
+                if 'Assist-Parameters' not in processed_result_history:
+                    processed_result_history['Assist-Parameters'] = {'history': [None for _ in range(num_experiments)]}
+                processed_result_history['Assist-Parameters']['history'][exp_idx] = [
+                    base_result['assist'].assist_parameters[i]['stack'].softmax(dim=-1).numpy() for i in
+                    range(1, len(base_result['assist'].assist_parameters))]
         else:
             print('Missing {}'.format(base_result_path_i))
     else:
@@ -225,6 +212,11 @@ def make_df_history(extracted_processed_result_history):
             df[df_name_assist_rate].append(
                 pd.DataFrame(data=extracted_processed_result_history[exp_name]['Assist-Rate_mean'].reshape(1, -1),
                              index=index_name))
+        if 'Assist-Parameters_mean' in extracted_processed_result_history[exp_name]:
+            df_name_assist_rate = '_'.join([data_name, model_name, num_users, global_epoch, 'Assist-Parameters'])
+            df[df_name_assist_rate].append(
+                pd.DataFrame(data=extracted_processed_result_history[exp_name]['Assist-Parameters_mean'].reshape(1, -1),
+                             index=index_name))
     startrow = 0
     writer = pd.ExcelWriter('{}/result_history.xlsx'.format(result_path), engine='xlsxwriter')
     for df_name in df:
@@ -237,11 +229,15 @@ def make_df_history(extracted_processed_result_history):
 
 
 def make_vis(df):
-    color_dict = {'Joint': 'red', 'Separate': 'orange', 'Bag': 'dodgerblue', 'Stack': 'green'}
+    color = {'Joint': 'red', 'Alone': 'orange', 'Bag': 'dodgerblue', 'Stack': 'green'}
     linestyle = {'1': '--', '10': '-', '100': ':'}
-    marker_dict = {'Joint': {'1': 'o', '10': 's', '100': 'D'}, 'Separate': {'1': 'v', '10': '^', '100': '>'},
-                   'Bag': {'1': 'p', '10': 'd', '100': 'h'}, 'Stack': {'1': 'X', '10': '*', '100': 'x'}}
-    loc_dict = {'Loss': 'lower right', 'Accuracy': 'lower right', 'RMSE': 'lower right', 'Assist Rate': 'lower right'}
+    marker = {'Joint': {'1': 'o', '10': 's', '100': 'D'}, 'Alone': {'1': 'v', '10': '^', '100': '>'},
+              'Bag': {'1': 'p', '10': 'd', '100': 'h'}, 'Stack': {'1': 'X', '10': '*', '100': 'x'}}
+    loc = {'Loss': 'lower right', 'Accuracy': 'lower right', 'RMSE': 'lower right',
+           'Assisting Rate': 'lower right', 'Assisting Parameters': 'lower right'}
+    color_ap = ['red', 'orange', 'orange', 'orange', 'orange', 'orange', 'orange', 'orange']
+    linestyle_ap = ['-', '--', ':', '-.', '-', '--', ':', '-.']
+    marker_ap = ['o', 's', 'v', '^', 'p', 'd', 'X', '*']
     fontsize = {'legend': 16, 'label': 16, 'ticks': 16}
     save_format = 'png'
     fig = {}
@@ -255,7 +251,10 @@ def make_vis(df):
             x = np.arange(0, int(global_epoch) + 1)
         elif metric_name in ['Assist-Rate']:
             x = np.arange(1, int(global_epoch) + 1)
-            metric_name = 'Assist Rate'
+            metric_name = 'Assisting Rate'
+        elif metric_name in ['Assist-Parameters']:
+            x = np.arange(1, int(global_epoch) + 1)
+            metric_name = 'Assisting Parameters'
         else:
             raise ValueError('Not valid metric name')
         if global_epoch == '10':
@@ -267,42 +266,56 @@ def make_vis(df):
             xticks[0] = 1
         else:
             raise ValueError('Not valid global epoch')
-        for index, row in df[baseline_df_name].iterrows():
-            local_epoch, assist_mode = index.split('_')
-            if assist_mode == 'none':
-                assist_mode = 'Joint'
-            else:
-                raise ValueError('Not valid assist_mode')
-            label_name = '{}'.format(assist_mode)
-            y = row.to_numpy()
-            fig[df_name] = plt.figure(df_name)
-            plt.plot(x, y, color=color_dict[assist_mode], linestyle=linestyle[local_epoch], label=label_name,
-                     marker=marker_dict[assist_mode][local_epoch], markevery=markevery)
-            plt.legend(loc=loc_dict[metric_name], fontsize=fontsize['legend'])
-            plt.xlabel('Assist Round (T)', fontsize=fontsize['label'])
-            plt.ylabel(metric_name, fontsize=fontsize['label'])
-            plt.xticks(xticks, fontsize=fontsize['ticks'])
-            plt.yticks(fontsize=fontsize['ticks'])
+        if baseline_df_name in df:
+            for index, row in df[baseline_df_name].iterrows():
+                local_epoch, assist_mode = index.split('_')
+                if assist_mode == 'none':
+                    assist_mode = 'Joint'
+                else:
+                    raise ValueError('Not valid assist_mode')
+                label_name = '{}'.format(assist_mode)
+                y = row.to_numpy()
+                fig[df_name] = plt.figure(df_name)
+                plt.plot(x, y, color=color[assist_mode], linestyle=linestyle[local_epoch], label=label_name,
+                         marker=marker[assist_mode][local_epoch], markevery=markevery)
+                plt.legend(loc=loc[metric_name], fontsize=fontsize['legend'])
+                plt.xlabel('Assisting Round (T)', fontsize=fontsize['label'])
+                plt.ylabel(metric_name, fontsize=fontsize['label'])
+                plt.xticks(xticks, fontsize=fontsize['ticks'])
+                plt.yticks(fontsize=fontsize['ticks'])
         for index, row in df[df_name].iterrows():
             local_epoch, assist_mode = index.split('_')
-            if assist_mode == 'none':
-                assist_mode = 'Separate'
-            elif assist_mode == 'bag':
-                assist_mode = 'Bag'
-            elif assist_mode == 'stack':
-                assist_mode = 'Stack'
+            if metric_name == 'Assisting Parameters':
+                for i in reversed(range(int(num_users))):
+                    label_name = 'm = {}'.format(i + 1)
+                    y = row.to_numpy()
+                    fig[df_name] = plt.figure(df_name)
+                    plt.plot(x, y.reshape(int(global_epoch), -1)[:, i], color=color_ap[i], linestyle=linestyle_ap[i],
+                             label=label_name, marker=marker_ap[i], markevery=markevery)
+                    plt.legend(loc=loc[metric_name], fontsize=fontsize['legend'])
+                    plt.xlabel('Assisting Round (T)', fontsize=fontsize['label'])
+                    plt.ylabel(metric_name, fontsize=fontsize['label'])
+                    plt.xticks(xticks, fontsize=fontsize['ticks'])
+                    plt.yticks(fontsize=fontsize['ticks'])
             else:
-                raise ValueError('Not valid assist_mode')
-            label_name = 'M={}, {}'.format(num_users, assist_mode)
-            y = row.to_numpy()
-            fig[df_name] = plt.figure(df_name)
-            plt.plot(x, y, color=color_dict[assist_mode], linestyle=linestyle[local_epoch], label=label_name,
-                     marker=marker_dict[assist_mode][local_epoch], markevery=markevery)
-            plt.legend(loc=loc_dict[metric_name], fontsize=fontsize['legend'])
-            plt.xlabel('Assist Round', fontsize=fontsize['label'])
-            plt.ylabel(metric_name, fontsize=fontsize['label'])
-            plt.xticks(xticks, fontsize=fontsize['ticks'])
-            plt.yticks(fontsize=fontsize['ticks'])
+                if assist_mode == 'none':
+                    assist_mode = 'Alone'
+                elif assist_mode == 'bag':
+                    assist_mode = 'Bag'
+                elif assist_mode == 'stack':
+                    assist_mode = 'Stack'
+                else:
+                    raise ValueError('Not valid assist_mode')
+                label_name = 'M={}, {}'.format(num_users, assist_mode)
+                y = row.to_numpy()
+                fig[df_name] = plt.figure(df_name)
+                plt.plot(x, y, color=color[assist_mode], linestyle=linestyle[local_epoch], label=label_name,
+                         marker=marker[assist_mode][local_epoch], markevery=markevery)
+                plt.legend(loc=loc[metric_name], fontsize=fontsize['legend'])
+                plt.xlabel('Assisting Round', fontsize=fontsize['label'])
+                plt.ylabel(metric_name, fontsize=fontsize['label'])
+                plt.xticks(xticks, fontsize=fontsize['ticks'])
+                plt.yticks(fontsize=fontsize['ticks'])
         plt.grid()
         fig_path = '{}/{}.{}'.format(vis_path, df_name, save_format)
         makedir_exist_ok(vis_path)

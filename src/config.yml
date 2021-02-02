@@ -1,14 +1,14 @@
 ---
 # control
 control:
-  num_users: '2'
+  num_users: '1'
   assist_mode: 'bag'
   local_epoch: '10'
-  global_epoch: '50'
+  global_epoch: '10'
 # data
-data_name: MNIST
+data_name: QSAR
 # MNIST
-model_name: conv-linear
+model_name: linear
 # experiment
 num_workers: 0
 init_seed: 0

@@ -15,6 +15,28 @@ class Organization:
         self.model_name = model_name
         self.model_parameters = [None for _ in range(cfg['global']['num_epochs'] + 1)]
 
+    def initialize(self, dataset, metric, logger):
+        input, output, initialization = {}, {}, {}
+        train_target = torch.tensor(dataset['train'].target)
+        test_target = torch.tensor(dataset['test'].target)
+        if train_target.dtype == torch.int64:
+            _, _, counts = torch.unique(train_target, sorted=True, return_inverse=True, return_counts=True)
+            x = (counts / counts.sum()).log()
+        else:
+            x = train_target.mean(dim=0)
+        initialization['train'] = x.view(1, -1).repeat(train_target.size(0), 1)
+        initialization['test'] = x.view(1, -1).repeat(test_target.size(0), 1)
+        if 'train' in metric.metric_name:
+            input['target'], output['target'] = train_target, initialization['train']
+            output['loss'] = models.loss_fn(output['target'], input['target'])
+            evaluation = metric.evaluate(metric.metric_name['train'], input, output)
+            logger.append(evaluation, 'train', n=train_target.size(0))
+        input['target'], output['target'] = test_target, initialization['test']
+        output['loss'] = models.loss_fn(output['target'], input['target'])
+        evaluation = metric.evaluate(metric.metric_name['test'], input, output)
+        logger.append(evaluation, 'test', n=test_target.size(0))
+        return initialization
+
     def train(self, iter, data_loader, metric, logger):
         model = eval('models.{}().to(cfg["device"])'.format(self.model_name[iter]))
         model.train(True)
@@ -50,21 +72,6 @@ class Organization:
             print(logger.write('train', metric.metric_name['train']), end='\r', flush=True)
         sys.stdout.write('\x1b[2K')
         self.model_parameters[iter] = model.to('cpu').state_dict()
-        return
-
-    def test(self, iter, data_loader, metric, logger):
-        with torch.no_grad():
-            model = eval('models.{}().to(cfg["device"])'.format(self.model_name[iter]))
-            model.load_state_dict(self.model_parameters[iter])
-            model.train(False)
-            for i, input in enumerate(data_loader):
-                input = collate(input)
-                input_size = input['data'].size(0)
-                input['feature_split'] = self.feature_split
-                input = to_device(input, cfg['device'])
-                output = model(input)
-                evaluation = metric.evaluate(metric.metric_name['test'], input, output)
-                logger.append(evaluation, 'test', n=input_size)
         return
 
     def predict(self, iter, data_loader):

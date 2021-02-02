@@ -1,7 +1,7 @@
 import argparse
 import itertools
 
-parser = argparse.ArgumentParser(description='Config')
+parser = argparse.ArgumentParser(description='config')
 parser.add_argument('--run', default='train', type=str)
 parser.add_argument('--num_gpus', default=4, type=int)
 parser.add_argument('--world_size', default=1, type=int)
@@ -64,7 +64,7 @@ def main():
         filename = '{}_{}'.format(run, model)
         model_names = [[model]]
         if model in ['linear', 'mlp']:
-            local_epoch = ['1', '10', '100']
+            local_epoch = ['100']
             data_names = [
                 ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
             control_name = [[['1'], ['none'], local_epoch, ['10']]]
@@ -82,18 +82,18 @@ def main():
                                       resume_mode, control_name)
             controls = control_1 + control_2_4 + control_8
         elif model in ['conv']:
-            local_epoch = ['1', '10', '100']
-            data_names = [['MNIST']]
+            local_epoch = ['10']
+            data_names = [['MNIST', 'CIFAR10']]
             control_name = [[['1'], ['none'], local_epoch, ['10']]]
             control_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                       resume_mode, control_name)
-            data_names = [['MNIST']]
+            data_names = [['MNIST', 'CIFAR10']]
             control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
             controls = control_1 + control_2_4_8
         elif model in ['resnet18']:
-            local_epoch = ['1', '10', '100']
+            local_epoch = ['10']
             data_names = [['CIFAR10']]
             control_name = [[['1'], ['none'], local_epoch, ['10']]]
             control_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
@@ -104,7 +104,7 @@ def main():
                                           resume_mode, control_name)
             controls = control_1 + control_2_4_8
         elif model in ['conv-linear']:
-            local_epoch = ['1', '10', '100']
+            local_epoch = ['10']
             data_names = [['MNIST']]
             control_name = [[['1'], ['none'], local_epoch, ['50']]]
             control_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
@@ -115,7 +115,7 @@ def main():
                                           resume_mode, control_name)
             controls = control_1 + control_2_4_8
         elif model in ['resnet18-linear']:
-            local_epoch = ['1', '10', '100']
+            local_epoch = ['10']
             data_names = [['CIFAR10']]
             control_name = [[['1'], ['none'], local_epoch, ['50']]]
             control_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
