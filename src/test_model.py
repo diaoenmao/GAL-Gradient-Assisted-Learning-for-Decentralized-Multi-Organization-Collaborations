@@ -38,9 +38,9 @@ def main():
 
 
 def runExperiment():
-    seed = int(cfg['model_tag'].split('_')[0])
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
+    cfg['seed'] = int(cfg['model_tag'].split('_')[0])
+    torch.manual_seed(cfg['seed'])
+    torch.cuda.manual_seed(cfg['seed'])
     dataset = fetch_dataset(cfg['data_name'])
     process_dataset(dataset)
     data_loader = make_data_loader(dataset, cfg['model_name'])
