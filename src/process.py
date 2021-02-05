@@ -3,6 +3,7 @@ import itertools
 import json
 import numpy as np
 import pandas as pd
+import math
 from utils import save, load, makedir_exist_ok
 from config import cfg
 import matplotlib.pyplot as plt
@@ -208,12 +209,12 @@ def make_df_history(extracted_processed_result_history):
 
 
 def make_vis(df):
-    color = {'Joint': 'red', 'Alone': 'orange', 'Bag': 'dodgerblue', 'Stack': 'green'}
-    linestyle = {'Joint': '-', 'Alone': '--', 'Bag': ':', 'Stack': '-.'}
+    color = {'Joint': 'red', 'Alone': 'orange', 'GAL-b': 'dodgerblue', 'GAL-s': 'green'}
+    linestyle = {'Joint': '-', 'Alone': '--', 'GAL-b': ':', 'GAL-s': '-.'}
     marker = {'Joint': {'1': 'o', '10': 's', '100': 'D'}, 'Alone': {'1': 'v', '10': '^', '100': '>'},
-              'Bag': {'1': 'p', '10': 'd', '100': 'h'}, 'Stack': {'1': 'X', '10': '*', '100': 'x'}}
+              'GAL-b': {'1': 'p', '10': 'd', '100': 'h'}, 'GAL-s': {'1': 'X', '10': '*', '100': 'x'}}
     loc = {'Loss': 'upper right', 'Accuracy': 'lower right', 'RMSE': 'upper right',
-           'Assisting Rate': 'upper right', 'Assisting Parameters': 'upper right'}
+           'Gradient assisted learning rates': 'upper right', 'Assistance weights': 'upper right'}
     color_ap = ['red', 'orange', 'orange', 'orange', 'orange', 'orange', 'orange', 'orange']
     linestyle_ap = ['-', '--', ':', '-.', '-', '--', ':', '-.']
     marker_ap = ['o', 's', 'v', '^', 'p', 'd', 'X', '*']
@@ -235,10 +236,10 @@ def make_vis(df):
             x = np.arange(0, int(global_epoch) + 1)
         elif metric_name in ['Assist-Rate']:
             x = np.arange(1, int(global_epoch) + 1)
-            metric_name = 'Assisting Rate'
+            metric_name = 'Gradient assisted learning rates'
         elif metric_name in ['Assist-Parameters']:
             x = np.arange(1, int(global_epoch) + 1)
-            metric_name = 'Assisting Parameters'
+            metric_name = 'Assistance weights'
         else:
             raise ValueError('Not valid metric name')
         if global_epoch == '10':
@@ -262,31 +263,31 @@ def make_vis(df):
                 y = row.to_numpy()
                 yerr = row_std.to_numpy()
                 fig[df_name] = plt.figure(df_name)
-                if metric_name == 'Assisting Rate':
+                if metric_name == 'Gradient assisted learning rates':
                     plt.plot(x, y, color=color[assist_mode],
-                                 linestyle=linestyle[assist_mode], label=label_name,
-                                 marker=marker[assist_mode][local_epoch], markevery=markevery)
+                             linestyle=linestyle[assist_mode], label=label_name,
+                             marker=marker[assist_mode][local_epoch], markevery=markevery)
                 else:
                     plt.errorbar(x, y, yerr=yerr, capsize=capsize, color=color[assist_mode],
                                  linestyle=linestyle[assist_mode], label=label_name,
                                  marker=marker[assist_mode][local_epoch], markevery=markevery)
                 plt.legend(loc=loc[metric_name], fontsize=fontsize['legend'])
-                plt.xlabel('Assisting Round (T)', fontsize=fontsize['label'])
+                plt.xlabel('Assistance rounds', fontsize=fontsize['label'])
                 plt.ylabel(metric_name, fontsize=fontsize['label'])
                 plt.xticks(xticks, fontsize=fontsize['ticks'])
                 plt.yticks(fontsize=fontsize['ticks'])
         for ((index, row), (_, row_std)) in zip(df[df_name].iterrows(), df[df_name_std].iterrows()):
             local_epoch, assist_mode = index.split('_')
-            if metric_name == 'Assisting Parameters':
+            if metric_name == 'Assistance weights':
                 for i in reversed(range(int(num_users))):
                     label_name = 'm = {}'.format(i + 1)
                     y = row.to_numpy().reshape(int(global_epoch), -1)[:, i]
                     yerr = row_std.to_numpy().reshape(int(global_epoch), -1)[:, i]
                     fig[df_name] = plt.figure(df_name)
                     plt.plot(x, y, color=color_ap[i], linestyle=linestyle_ap[i],
-                                 label=label_name, marker=marker_ap[i], markevery=markevery)
+                             label=label_name, marker=marker_ap[i], markevery=markevery)
                     plt.legend(loc=loc[metric_name], fontsize=fontsize['legend'])
-                    plt.xlabel('Assisting Round (T)', fontsize=fontsize['label'])
+                    plt.xlabel('Assistance rounds', fontsize=fontsize['label'])
                     plt.ylabel(metric_name, fontsize=fontsize['label'])
                     plt.xticks(xticks, fontsize=fontsize['ticks'])
                     plt.yticks(fontsize=fontsize['ticks'])
@@ -294,25 +295,26 @@ def make_vis(df):
                 if assist_mode == 'none':
                     assist_mode = 'Alone'
                 elif assist_mode == 'bag':
-                    assist_mode = 'Bag'
+                    assist_mode = 'GAL-b'
                 elif assist_mode == 'stack':
-                    assist_mode = 'Stack'
+                    assist_mode = 'GAL-s'
                 else:
                     raise ValueError('Not valid assist_mode')
                 label_name = 'M={}, {}'.format(num_users, assist_mode)
                 y = row.to_numpy()
                 yerr = row_std.to_numpy()
                 fig[df_name] = plt.figure(df_name)
-                if metric_name == 'Assisting Rate':
+                if metric_name == 'Gradient assisted learning rates':
                     plt.errorbar(x, y, color=color[assist_mode],
                                  linestyle=linestyle[assist_mode], label=label_name,
                                  marker=marker[assist_mode][local_epoch], markevery=markevery)
                 else:
-                    plt.errorbar(x, y, yerr=yerr, capsize=capsize, color=color[assist_mode],
+                    plt.errorbar(x, y, yerr=yerr / math.sqrt(num_experiments), capsize=capsize,
+                                 color=color[assist_mode],
                                  linestyle=linestyle[assist_mode], label=label_name,
                                  marker=marker[assist_mode][local_epoch], markevery=markevery)
                 plt.legend(loc=loc[metric_name], fontsize=fontsize['legend'])
-                plt.xlabel('Assisting Round', fontsize=fontsize['label'])
+                plt.xlabel('Assistance rounds', fontsize=fontsize['label'])
                 plt.ylabel(metric_name, fontsize=fontsize['label'])
                 plt.xticks(xticks, fontsize=fontsize['ticks'])
                 plt.yticks(fontsize=fontsize['ticks'])
