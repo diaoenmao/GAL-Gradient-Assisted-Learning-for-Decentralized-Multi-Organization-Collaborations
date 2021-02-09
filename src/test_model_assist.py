@@ -70,23 +70,13 @@ def runExperiment():
 
 def initialize(dataset, assist, organization, metric, logger, epoch):
     logger.safe(True)
-    if epoch == 0:
-        initialization = organization.initialize(dataset, metric, logger)
-        info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
-        logger.append(info, 'test', mean=False)
-        print(logger.write('test', metric.metric_name['test']))
-        for split in dataset:
-            assist.organization_output[0][split] = initialization[split]
-            assist.organization_target[0][split] = torch.tensor(dataset[split].target)
-    else:
-        data_loader = make_data_loader(dataset, assist.model_name[0][epoch])
-        organization.test(epoch, data_loader['test'], metric, logger)
-        info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
-        logger.append(info, 'test', mean=False)
-        print(logger.write('test', metric.metric_name['test']))
-        for split in dataset:
-            assist.organization_output[0][split] = organization.predict(epoch, data_loader[split])['target']
-            assist.organization_target[0][split] = torch.tensor(dataset[split].target)
+    initialization = organization.initialize(dataset, metric, logger)
+    info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
+    logger.append(info, 'test', mean=False)
+    print(logger.write('test', metric.metric_name['test']))
+    for split in dataset:
+        assist.organization_output[0][split] = initialization[split]
+        assist.organization_target[0][split] = torch.tensor(dataset[split].target)
     logger.safe(False)
     logger.reset()
     return

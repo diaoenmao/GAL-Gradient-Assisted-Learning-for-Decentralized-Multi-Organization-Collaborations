@@ -47,15 +47,6 @@ def make_control_list(model_name):
         control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
         control_2_4_8 = make_controls(data_names, model_names, control_name)
         controls = control_1 + control_2_4_8
-    elif model_name in ['resnet18']:
-        local_epoch = ['10']
-        data_names = [['CIFAR10']]
-        control_name = [[['1'], ['none'], local_epoch, ['10']]]
-        control_1 = make_controls(data_names, model_names, control_name)
-        data_names = [['CIFAR10']]
-        control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], local_epoch, ['10']]]
-        control_2_4_8 = make_controls(data_names, model_names, control_name)
-        controls = control_1 + control_2_4_8
     else:
         raise ValueError('Not valid model name')
     return controls

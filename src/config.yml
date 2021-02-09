@@ -1,9 +1,9 @@
 ---
 # control
 control:
-  num_users: '1'
+  num_users: '4'
   assist_mode: 'bag'
-  local_epoch: '10'
+  local_epoch: '100'
   global_epoch: '10'
 # data
 data_name: QSAR

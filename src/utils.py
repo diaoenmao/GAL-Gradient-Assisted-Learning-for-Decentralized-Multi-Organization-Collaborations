@@ -112,7 +112,6 @@ def process_control():
     cfg['linear'] = {}
     cfg['mlp'] = {'hidden_size': [512, 128]}
     cfg['conv'] = {'hidden_size': [64, 128, 256, 512]}
-    cfg['resnet18'] = {'hidden_size': [64, 128, 256, 512]}
     if 'assist_mode' in cfg['control']:
         cfg['num_users'] = int(cfg['control']['num_users'])
         cfg['assist_mode'] = cfg['control']['assist_mode']
@@ -129,7 +128,7 @@ def process_control():
         cfg['linesearch']['optimizer_name'] = 'LBFGS'
         cfg['linesearch']['lr'] = 1
         cfg['linesearch']['num_epochs'] = 10
-        for model_name in ['linear', 'mlp', 'conv', 'resnet18']:
+        for model_name in ['linear', 'mlp', 'conv']:
             cfg[model_name]['shuffle'] = {'train': True, 'test': False}
             cfg[model_name]['optimizer_name'] = 'SGD'
             cfg[model_name]['momentum'] = 0.9
@@ -148,19 +147,12 @@ def process_control():
                 cfg[model_name]['scheduler_name'] = 'MultiStepLR'
                 cfg[model_name]['factor'] = 0.1
                 cfg[model_name]['milestones'] = [50, 100]
-            elif model_name in ['resnet18']:
-                cfg[model_name]['batch_size'] = {'train': 512, 'test': 512}
-                cfg[model_name]['lr'] = 1e-1
-                cfg[model_name]['num_epochs'] = cfg['local_epoch']
-                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
-                cfg[model_name]['factor'] = 0.1
-                cfg[model_name]['milestones'] = [50, 100]
             else:
                 raise ValueError('Not valid model name')
         cfg['global'] = {}
         cfg['global']['num_epochs'] = cfg['global_epoch']
     else:
-        for model_name in ['linear', 'mlp', 'conv', 'resnet18']:
+        for model_name in ['linear', 'mlp', 'conv']:
             cfg[model_name]['shuffle'] = {'train': True, 'test': False}
             cfg[model_name]['optimizer_name'] = 'SGD'
             cfg[model_name]['momentum'] = 0.9
@@ -173,13 +165,6 @@ def process_control():
                 cfg[model_name]['factor'] = 0.1
                 cfg[model_name]['milestones'] = [50]
             elif model_name in ['conv']:
-                cfg[model_name]['batch_size'] = {'train': 512, 'test': 512}
-                cfg[model_name]['lr'] = 1e-1
-                cfg[model_name]['num_epochs'] = 200
-                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
-                cfg[model_name]['factor'] = 0.1
-                cfg[model_name]['milestones'] = [50, 100]
-            elif model_name in ['resnet18']:
                 cfg[model_name]['batch_size'] = {'train': 512, 'test': 512}
                 cfg[model_name]['lr'] = 1e-1
                 cfg[model_name]['num_epochs'] = 200
