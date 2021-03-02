@@ -23,7 +23,7 @@ class Conv(nn.Module):
         self.blocks = nn.Sequential(*blocks)
 
     def forward(self, input):
-        output = {'loss': torch.tensor(0, device=cfg['device'], dtype=torch.float32)}
+        output = {}
         x = input['data']
         x = normalize(x)
         if 'feature_split' in input:

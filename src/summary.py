@@ -28,6 +28,7 @@ cfg['control_name'] = '_'.join([cfg['control'][k] for k in cfg['control']])
 
 def main():
     process_control()
+    cfg['seed'] = 0
     cfg['batch_size'] = {'train': 1, 'test': 1}
     runExperiment()
     return
