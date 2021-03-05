@@ -52,12 +52,6 @@ def runExperiment():
     metric = Metric({'train': ['Loss'], 'test': ['Loss']})
     if cfg['resume_mode'] == 1:
         last_epoch, model, optimizer, scheduler, logger = resume(model, cfg['model_tag'], optimizer, scheduler)
-    elif cfg['resume_mode'] == 2:
-        last_epoch = 1
-        _, model, _, _, _ = resume(model, cfg['model_tag'])
-        current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')
-        logger_path = 'output/runs/{}_{}'.format(cfg['model_tag'], current_time)
-        logger = Logger(logger_path)
     else:
         last_epoch = 1
         current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')

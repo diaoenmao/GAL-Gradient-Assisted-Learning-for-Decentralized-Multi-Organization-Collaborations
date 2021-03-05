@@ -52,12 +52,6 @@ def runExperiment():
     process_dataset(dataset)
     if cfg['resume_mode'] == 1:
         last_epoch, assist, organization, logger = resume(cfg['model_tag'])
-    elif cfg['resume_mode'] == 2:
-        last_epoch = 1
-        _, assist, organization, _ = resume(cfg['model_tag'])
-        current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')
-        logger_path = 'output/runs/{}_{}'.format(cfg['model_tag'], current_time)
-        logger = Logger(logger_path)
     else:
         last_epoch = 1
         feature_split = split_dataset(cfg['num_users'])
