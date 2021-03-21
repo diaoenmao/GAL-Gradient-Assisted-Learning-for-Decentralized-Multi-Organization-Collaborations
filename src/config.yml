@@ -6,9 +6,9 @@ control:
   local_epoch: '100'
   global_epoch: '10'
 # data
-data_name: QSAR
+data_name: ModelNet40
 # MNIST
-model_name: linear
+model_name: conv
 # experiment
 num_workers: 0
 init_seed: 0

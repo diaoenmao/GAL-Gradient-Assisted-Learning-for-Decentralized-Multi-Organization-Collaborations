@@ -8,7 +8,8 @@ from .qsar import QSAR
 from .mimic import MIMIC
 from .mnist import MNIST
 from .cifar import CIFAR10
+from .modelnet import ModelNet40
 from .utils import *
 
 __all__ = ('Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MIMIC',
-           'MNIST', 'CIFAR10')
+           'MNIST', 'CIFAR10', 'ModelNet40')
