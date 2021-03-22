@@ -18,9 +18,17 @@ class Conv(nn.Module):
                            nn.MaxPool2d(2)])
         blocks = blocks[:-1]
         blocks.extend([nn.AdaptiveAvgPool2d(1),
-                       nn.Flatten(),
-                       nn.Linear(hidden_size[-1], target_size)])
+                       nn.Flatten()])
         self.blocks = nn.Sequential(*blocks)
+        self.linear = nn.Linear(hidden_size[-1], target_size)
+
+    def feature(self, input):
+        x = input['data']
+        x = normalize(x)
+        if 'feature_split' in input:
+            x = feature_split(x, input['feature_split'])
+        x = self.blocks(x)
+        return x
 
     def forward(self, input):
         output = {}
@@ -28,8 +36,8 @@ class Conv(nn.Module):
         x = normalize(x)
         if 'feature_split' in input:
             x = feature_split(x, input['feature_split'])
-        out = self.blocks(x)
-        output['target'] = out
+        x = self.blocks(x)
+        output['target'] = self.linear(x)
         output['loss'] = loss_fn(output['target'], input['target'])
         return output
 
@@ -38,6 +46,13 @@ def conv():
     data_shape = cfg['data_shape']
     hidden_size = cfg['conv']['hidden_size']
     target_size = cfg['target_size']
-    model = Conv(data_shape, hidden_size, target_size)
+    if cfg['assist_mode'] == 'interm':
+        model = Interm(Conv(data_shape, hidden_size, target_size), hidden_size[-1])
+    elif cfg['assist_mode'] == 'late':
+        model = Late(Conv(data_shape, hidden_size, target_size))
+    elif cfg['assist_mode'] in ['bag', 'stack']:
+        model = Conv(data_shape, hidden_size, target_size)
+    else:
+        raise ValueError('Not valid assist mode')
     model.apply(init_param)
     return model

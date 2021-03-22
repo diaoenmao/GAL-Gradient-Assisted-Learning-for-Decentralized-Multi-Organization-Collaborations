@@ -14,28 +14,30 @@ def init_param(m):
 
 
 def normalize(input):
-    broadcast_size = [1] * input.dim()
-    broadcast_size[1] = input.size(1)
-    m, s = cfg['stats'][cfg['data_name']]
-    m, s = torch.tensor(m, dtype=input.dtype).view(broadcast_size).to(input.device), \
-           torch.tensor(s, dtype=input.dtype).view(broadcast_size).to(input.device)
-    input = input.sub(m).div(s)
+    if cfg['data_name'] in cfg['stats']:
+        broadcast_size = [1] * input.dim()
+        broadcast_size[1] = input.size(1)
+        m, s = cfg['stats'][cfg['data_name']]
+        m, s = torch.tensor(m, dtype=input.dtype).view(broadcast_size).to(input.device), \
+               torch.tensor(s, dtype=input.dtype).view(broadcast_size).to(input.device)
+        input = input.sub(m).div(s)
     return input
 
 
 def denormalize(input):
-    broadcast_size = [1] * input.dim()
-    broadcast_size[1] = input.size(1)
-    m, s = cfg['stats'][cfg['data_name']]
-    m, s = torch.tensor(m, dtype=input.dtype).view(broadcast_size).to(input.device), \
-           torch.tensor(s, dtype=input.dtype).view(broadcast_size).to(input.device)
-    input = input.mul(s).add(m)
+    if cfg['data_name'] in cfg['stats']:
+        broadcast_size = [1] * input.dim()
+        broadcast_size[1] = input.size(1)
+        m, s = cfg['stats'][cfg['data_name']]
+        m, s = torch.tensor(m, dtype=input.dtype).view(broadcast_size).to(input.device), \
+               torch.tensor(s, dtype=input.dtype).view(broadcast_size).to(input.device)
+        input = input.mul(s).add(m)
     return input
 
 
 def feature_split(input, feature_split):
     if cfg['data_name'] in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MIMIC']:
-        mask = torch.zeros(input.size(1), device=input.device)
+        mask = torch.zeros(input.size(-1), device=input.device)
         mask[feature_split] = 1
         output = torch.masked_fill(input, mask == 0, 0)
     elif cfg['data_name'] in ['MNIST', 'CIFAR10']:
@@ -44,6 +46,9 @@ def feature_split(input, feature_split):
         mask[feature_split] = 1
         mask = mask.view(cfg['data_shape'])
         output = torch.masked_fill(input, mask == 0, 0)
+    elif cfg['data_name'] in ['ModelNet40']:
+        output = torch.index_select(input, -1, feature_split)
+        output = output.permute(4, 0, 1, 2, 3).view(-1, *output.size()[1:])
     else:
         raise ValueError('Not valid data name')
     return output
@@ -55,3 +60,9 @@ def loss_fn(output, target, reduction='mean'):
     else:
         loss = F.mse_loss(output, target, reduction=reduction)
     return loss
+
+
+def reset_parameters(m):
+    reset_parameters = getattr(m, "reset_parameters", None)
+    if callable(reset_parameters):
+        m.reset_parameters()

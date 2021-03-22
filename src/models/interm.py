@@ -1,0 +1,38 @@
+import copy
+import torch
+import torch.nn as nn
+import numpy as np
+from config import cfg
+from .utils import init_param, normalize, loss_fn, feature_split, reset_parameters
+
+
+class Interm(nn.Module):
+    def __init__(self, num_users, block, hidden_size, target_size):
+        super().__init__()
+        blocks = []
+        for i in range(num_users):
+            block = copy.deepcopy(block)
+            block.apply(reset_parameters)
+            blocks.append(block)
+        self.blocks = nn.ModuleList(blocks)
+        self.linear = nn.Linear(hidden_size * num_users, target_size)
+
+    def forward(self, input):
+        output = {}
+        x = []
+        for i in range(len(self.blocks)):
+            x_i = {'data': input['data'], 'feature_split': input['feature_split'][i], 'target': input['target']}
+            x_i = self.blocks[i].feature(x_i)
+            x.append(x_i)
+        x = torch.stack(x, dim=-1)
+        output['target'] = self.linear(x)
+        output['loss'] = loss_fn(output['target'], input['target'])
+        return output
+
+
+def interm(block, hidden_size):
+    num_users = cfg['num_users']
+    target_size = cfg['target_size']
+    model = Interm(num_users, block, hidden_size, target_size)
+    model.apply(init_param)
+    return model

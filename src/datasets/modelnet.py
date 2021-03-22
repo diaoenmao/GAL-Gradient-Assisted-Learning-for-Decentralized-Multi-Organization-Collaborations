@@ -28,7 +28,7 @@ class ModelNet40(Dataset):
         data = []
         for i in range(len(self.data[index])):
             data.append(self.transform(Image.open(self.data[index][i]).convert('RGB')))
-        id, data, target = torch.tensor(self.id[index]), torch.stack(data, dim=0), torch.tensor(self.target[index])
+        id, data, target = torch.tensor(self.id[index]), torch.stack(data, dim=-1), torch.tensor(self.target[index])
         input = {'id': id, 'data': data, 'target': target}
         return input
 

@@ -5,6 +5,8 @@ control:
   assist_mode: 'bag'
   local_epoch: '100'
   global_epoch: '10'
+  assist_rate_mode: 'search'
+  noise: '0'
 # data
 data_name: ModelNet40
 # MNIST

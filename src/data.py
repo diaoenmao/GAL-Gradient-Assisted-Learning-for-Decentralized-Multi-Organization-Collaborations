@@ -50,8 +50,9 @@ def make_data_loader(dataset, tag, shuffle=None):
 
 
 def split_dataset(num_users):
-    if cfg['data_name'] in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MIMIC']:
-        num_features = cfg['data_shape'][0]
+    if cfg['data_name'] in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MIMIC',
+                            'ModelNet40']:
+        num_features = cfg['data_shape'][-1]
         feature_split = list(torch.randperm(num_features).split(num_features // num_users))
         feature_split = feature_split[:num_users - 1] + [torch.cat(feature_split[num_users - 1:])]
     elif cfg['data_name'] in ['MNIST', 'CIFAR10']:

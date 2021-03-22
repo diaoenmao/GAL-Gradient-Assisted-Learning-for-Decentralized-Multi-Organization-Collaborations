@@ -25,6 +25,11 @@ class Linear(nn.Module):
 def linear():
     data_shape = cfg['data_shape']
     target_size = cfg['target_size']
-    model = Linear(data_shape, target_size)
+    if cfg['assist_mode'] == 'late':
+        model = Late(Linear(data_shape, target_size))
+    elif cfg['assist_mode'] in ['bag', 'stack']:
+        model = Linear(data_shape, target_size)
+    else:
+        raise ValueError('Not valid assist mode')
     model.apply(init_param)
     return model

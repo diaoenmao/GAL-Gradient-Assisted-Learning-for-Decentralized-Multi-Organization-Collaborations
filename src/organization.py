@@ -86,7 +86,11 @@ class Organization:
                 input = to_device(input, cfg['device'])
                 output = model(input)
                 organization_output['id'].append(input['id'].cpu())
-                organization_output['target'].append(output['target'].cpu())
+                output_target = output['target'].cpu()
+                if cfg['noise'] > 0 and self.organization_id in cfg['noised_organization_id']:
+                    noise = torch.normal(0, cfg['noise'], size=output_target.size()).to(cfg['device'])
+                    output_target = output_target + noise
+                organization_output['target'].append(output_target)
             organization_output['id'] = torch.cat(organization_output['id'], dim=0)
             organization_output['target'] = torch.cat(organization_output['target'], dim=0)
             organization_output['id'], indices = torch.sort(organization_output['id'])
