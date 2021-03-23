@@ -15,12 +15,13 @@ class LSTM(nn.Module):
         self.linear = nn.Linear(hidden_size, target_size)
 
     def feature(self, input):
-        x = input['data']
+        x = input['data'][0]
         x = normalize(x)
         if 'feature_split' in input:
             x = feature_split(x, input['feature_split'])
         x, _ = self.lstm(x)
         x = x[:, -1]
+        x = self.dropout(x)
         return x
 
     def forward(self, input):
@@ -32,7 +33,9 @@ class LSTM(nn.Module):
         x, _ = self.lstm(x)
         x = x[:, -1]
         x = self.dropout(x)
-        output['target'] = self.linear(x).unsqueeze(0)
+        x = self.linear(x)
+        if cfg['data_name'] == 'MIMIC':
+            output['target'] = x.unsqueeze(0)
         if 'target' in input:
             output['loss'] = loss_fn(output['target'], input['target'])
         return output

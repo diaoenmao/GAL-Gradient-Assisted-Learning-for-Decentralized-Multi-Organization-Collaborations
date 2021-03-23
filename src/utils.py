@@ -145,16 +145,19 @@ def process_control():
         cfg[model_name]['factor'] = 0.1
         cfg[model_name]['milestones'] = [50, 100]
     elif model_name in ['conv']:
-        cfg[model_name]['optimizer_name'] = 'SGD'
-        cfg[model_name]['momentum'] = 0.9
-        cfg[model_name]['weight_decay'] = 5e-4
         if cfg['data_name'] in ['MNIST', 'CIFAR10']:
+            cfg[model_name]['optimizer_name'] = 'SGD'
+            cfg[model_name]['momentum'] = 0.9
+            cfg[model_name]['weight_decay'] = 5e-4
             cfg[model_name]['batch_size'] = {'train': 512, 'test': 512}
+            cfg[model_name]['lr'] = 1e-1
         elif cfg['data_name'] in ['ModelNet40']:
+            cfg[model_name]['optimizer_name'] = 'Adam'
+            cfg[model_name]['weight_decay'] = 5e-4
             cfg[model_name]['batch_size'] = {'train': 8, 'test': 16}
+            cfg[model_name]['lr'] = 3e-4
         else:
             raise ValueError('Not valid data name')
-        cfg[model_name]['lr'] = 1e-1
         cfg[model_name]['num_epochs'] = cfg['local_epoch']
         cfg[model_name]['scheduler_name'] = 'MultiStepLR'
         cfg[model_name]['factor'] = 0.1

@@ -110,27 +110,5 @@ def test(assist, metric, logger, epoch):
     return
 
 
-def resume(model_tag, load_tag='checkpoint', verbose=True):
-    if os.path.exists('./output/model/{}_{}.pt'.format(model_tag, load_tag)):
-        checkpoint = load('./output/model/{}_{}.pt'.format(model_tag, load_tag))
-        last_epoch = checkpoint['epoch']
-        assist = checkpoint['assist']
-        organization = checkpoint['organization']
-        logger = checkpoint['logger']
-        if verbose:
-            print('Resume from {}'.format(last_epoch))
-    else:
-        print('Not exists model tag: {}, start from scratch'.format(model_tag))
-        from datetime import datetime
-        from logger import Logger
-        last_epoch = 1
-        feature_split = split_dataset(cfg['num_users'])
-        assist = Assist(feature_split)
-        organization = None
-        logger_path = 'output/runs/train_{}_{}'.format(cfg['model_tag'], datetime.now().strftime('%b%d_%H-%M-%S'))
-        logger = Logger(logger_path)
-    return last_epoch, assist, organization, logger
-
-
 if __name__ == "__main__":
     main()

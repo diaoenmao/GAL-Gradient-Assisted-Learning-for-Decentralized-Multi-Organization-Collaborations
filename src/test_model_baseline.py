@@ -49,6 +49,7 @@ def runExperiment():
     result = resume(cfg['model_tag'], load_tag='best')
     last_epoch = result['epoch']
     feature_split = result['feature_split']
+    model.load_state_dict(result['model_state_dict'])
     current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')
     logger_path = 'output/runs/test_{}_{}'.format(cfg['model_tag'], current_time)
     test_logger = Logger(logger_path)

@@ -26,6 +26,8 @@ class Interm(nn.Module):
             x.append(x_i)
         x = torch.stack(x, dim=0).mean(dim=0)
         output['target'] = self.linear(x)
+        if cfg['data_name'] == 'MIMIC':
+            output['target'] = output['target'].unsqueeze(0)
         if cfg['data_name'] == 'ModelNet40':
             input['target'] = input['target'].repeat(12 // cfg['num_users'])
         output['loss'] = loss_fn(output['target'], input['target'])
