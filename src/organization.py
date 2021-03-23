@@ -22,10 +22,12 @@ class Organization:
         if train_target.dtype == torch.int64:
             _, _, counts = torch.unique(train_target, sorted=True, return_inverse=True, return_counts=True)
             x = (counts / counts.sum()).log()
+            initialization['train'] = x.view(1, -1).repeat(train_target.size(0), 1)
+            initialization['test'] = x.view(1, -1).repeat(test_target.size(0), 1)
         else:
-            x = train_target.mean(dim=0)
-        initialization['train'] = x.view(1, -1).repeat(train_target.size(0), 1)
-        initialization['test'] = x.view(1, -1).repeat(test_target.size(0), 1)
+            x = train_target.mean()
+            initialization['train'] = x.expand_as(train_target).detach().clone()
+            initialization['test'] = x.expand_as(test_target).detach().clone()
         if 'train' in metric.metric_name:
             input['target'], output['target'] = train_target, initialization['train']
             output['loss'] = models.loss_fn(output['target'], input['target'])
@@ -56,9 +58,6 @@ class Organization:
                 optimizer.step()
                 evaluation = metric.evaluate(metric.metric_name['train'], input, output)
                 logger.append(evaluation, 'train', n=input_size)
-            if cfg[self.model_name[iter]]['scheduler_name'] == 'ReduceLROnPlateau':
-                scheduler.step(metrics=logger.mean['train/{}'.format(metric.pivot_name)])
-            else:
                 scheduler.step()
             local_time = (time.time() - start_time)
             local_finished_time = datetime.timedelta(
@@ -88,7 +87,7 @@ class Organization:
                 organization_output['id'].append(input['id'].cpu())
                 output_target = output['target'].cpu()
                 if cfg['noise'] > 0 and self.organization_id in cfg['noised_organization_id']:
-                    noise = torch.normal(0, cfg['noise'], size=output_target.size()).to(cfg['device'])
+                    noise = torch.normal(0, cfg['noise'], size=output_target.size())
                     output_target = output_target + noise
                 organization_output['target'].append(output_target)
             organization_output['id'] = torch.cat(organization_output['id'], dim=0)

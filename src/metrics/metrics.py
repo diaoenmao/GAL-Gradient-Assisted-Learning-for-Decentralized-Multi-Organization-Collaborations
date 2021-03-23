@@ -13,9 +13,9 @@ def Accuracy(output, target, topk=1):
     return acc
 
 
-def RMSE(output, target):
+def MAD(output, target):
     with torch.no_grad():
-        mse = F.mse_loss(output, target).sqrt().item()
+        mse = F.l1_loss(output, target).item()
     return mse
 
 
@@ -25,27 +25,28 @@ class Metric(object):
         self.pivot, self.pivot_name, self.pivot_direction = self.make_pivot()
         self.metric = {'Loss': (lambda input, output: output['loss'].item()),
                        'Accuracy': (lambda input, output: recur(Accuracy, output['target'], input['target'])),
-                       'RMSE': (lambda input, output: recur(RMSE, output['target'], input['target']))}
+                       'MAD': (lambda input, output: recur(MAD, output['target'], input['target']))}
 
     def make_metric_name(self, metric_name):
         for split in metric_name:
             if split == 'test':
-                if cfg['data_name'] in ['Blob', 'Iris', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']:
+                if cfg['data_name'] in ['Blob', 'Iris', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10',
+                                        'ModelNet40']:
                     metric_name[split] += ['Accuracy']
-                elif cfg['data_name'] in ['Diabetes', 'BostonHousing']:
-                    metric_name[split] += ['RMSE']
+                elif cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMIC']:
+                    metric_name[split] += ['MAD']
                 else:
                     raise ValueError('Not valid data name')
         return metric_name
 
     def make_pivot(self):
-        if cfg['data_name'] in ['Blob', 'Iris', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10']:
+        if cfg['data_name'] in ['Blob', 'Iris', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10', 'ModelNet40']:
             pivot = -float('inf')
             pivot_name = 'Accuracy'
             pivot_direction = 'up'
-        elif cfg['data_name'] in ['Diabetes', 'BostonHousing']:
+        elif cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMIC']:
             pivot = float('inf')
-            pivot_name = 'RMSE'
+            pivot_name = 'MAD'
             pivot_direction = 'down'
         else:
             raise ValueError('Not valid data name')

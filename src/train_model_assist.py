@@ -8,13 +8,12 @@ import time
 import torch
 import torch.backends.cudnn as cudnn
 from itertools import repeat
-# from pathos.multiprocessing import ProcessingPool as Pool
 from multiprocessing import Pool
 from config import cfg
 from data import fetch_dataset, make_data_loader, split_dataset
 from metrics import Metric
 from assist import Assist
-from utils import save, load, process_control, process_dataset
+from utils import save, load, process_control, process_dataset, resume
 from logger import Logger
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -51,7 +50,11 @@ def runExperiment():
     dataset = fetch_dataset(cfg['data_name'])
     process_dataset(dataset)
     if cfg['resume_mode'] == 1:
-        last_epoch, assist, organization, logger = resume(cfg['model_tag'])
+         result = resume(cfg['model_tag'])
+         last_epoch = result['epoch']
+         assist = result['assist']
+         organization = result['organization']
+         logger = result['logger']
     else:
         last_epoch = 1
         feature_split = split_dataset(cfg['num_users'])
@@ -73,8 +76,7 @@ def runExperiment():
         assist.update(organization_outputs, epoch)
         test(assist, metric, logger, epoch)
         logger.safe(False)
-        save_result = {
-            'cfg': cfg, 'epoch': epoch + 1, 'assist': assist, 'organization': organization, 'logger': logger}
+        save_result = {'cfg': cfg, 'epoch': epoch + 1, 'assist': assist, 'organization': organization, 'logger': logger}
         save(save_result, './output/model/{}_checkpoint.pt'.format(cfg['model_tag']))
         if metric.compare(logger.mean['test/{}'.format(metric.pivot_name)]):
             metric.update(logger.mean['test/{}'.format(metric.pivot_name)])
@@ -145,28 +147,6 @@ def test(assist, metric, logger, epoch):
         logger.append(info, 'test', mean=False)
         print(logger.write('test', metric.metric_name['test']))
     return
-
-
-def resume(model_tag, load_tag='checkpoint', verbose=True):
-    if os.path.exists('./output/model/{}_{}.pt'.format(model_tag, load_tag)):
-        checkpoint = load('./output/model/{}_{}.pt'.format(model_tag, load_tag))
-        last_epoch = checkpoint['epoch']
-        assist = checkpoint['assist']
-        organization = checkpoint['organization']
-        logger = checkpoint['logger']
-        if verbose:
-            print('Resume from {}'.format(last_epoch))
-    else:
-        print('Not exists model tag: {}, start from scratch'.format(model_tag))
-        from datetime import datetime
-        from logger import Logger
-        last_epoch = 1
-        feature_split = split_dataset(cfg['num_users'])
-        assist = Assist(feature_split)
-        organization = None
-        logger_path = 'output/runs/train_{}_{}'.format(cfg['model_tag'], datetime.now().strftime('%b%d_%H-%M-%S'))
-        logger = Logger(logger_path)
-    return last_epoch, assist, organization, logger
 
 
 if __name__ == "__main__":

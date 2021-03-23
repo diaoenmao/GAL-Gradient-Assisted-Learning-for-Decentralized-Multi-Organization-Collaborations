@@ -20,11 +20,13 @@ class Late(nn.Module):
         output = {}
         x = []
         output['loss'] = 0
+        if cfg['data_name'] == 'ModelNet40':
+            input['target'] = input['target'].repeat(12 // cfg['num_users'])
         for i in range(len(self.blocks)):
-            x_i = {'data': input['data'], 'feature_split': input['feature_split'][i], 'target': input['target']}
+            x_i = {'data': input['data'], 'feature_split': input['feature_split'][i]}
             x_i = self.blocks[i](x_i)
             output['loss'] += loss_fn(x_i['target'], input['target'])
-            x.append(x_i)
+            x.append(x_i['target'])
         output['target'] = torch.stack(x, dim=0).mean(dim=0)
         return output
 

@@ -83,13 +83,13 @@ class MIMIC(Dataset):
         for i in range(train_data_gen.steps):
             x, y_processed, y = train_data_gen.next(return_y_true=True)
             train_data.append(x.astype(np.float32))
-            train_target.append(y.astype(np.float32))
-        train_target = np.concatenate(train_target, axis=0)
+            train_target.append(y.reshape(-1, 1).astype(np.float32))
+        train_target = np.stack(train_target, axis=0)
         for i in range(test_data_gen.steps):
             x, y_processed, y = test_data_gen.next(return_y_true=True)
             test_data.append(x.astype(np.float32))
-            test_target.append(y.astype(np.float32))
-        test_target = np.concatenate(test_target, axis=0)
+            test_target.append(y.reshape(-1, 1).astype(np.float32))
+        test_target = np.stack(test_target, axis=0)
         train_id, test_id = np.arange(len(train_data)).astype(np.int64), np.arange(len(test_data)).astype(np.int64)
         target_size = 1
         return (train_id, train_data, train_target), (test_id, test_data, test_target), target_size

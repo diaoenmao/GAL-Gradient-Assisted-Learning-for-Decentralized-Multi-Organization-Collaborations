@@ -3,6 +3,7 @@ import torch.nn as nn
 import numpy as np
 from config import cfg
 from .utils import init_param, normalize, loss_fn, feature_split
+from .late import late
 
 
 class Linear(nn.Module):
@@ -18,7 +19,8 @@ class Linear(nn.Module):
             x = feature_split(x, input['feature_split'])
         x = x.view(x.size(0), -1)
         output['target'] = self.linear(x)
-        output['loss'] = loss_fn(output['target'], input['target'])
+        if 'target' in input:
+            output['loss'] = loss_fn(output['target'], input['target'])
         return output
 
 
@@ -26,8 +28,8 @@ def linear():
     data_shape = cfg['data_shape']
     target_size = cfg['target_size']
     if cfg['assist_mode'] == 'late':
-        model = Late(Linear(data_shape, target_size))
-    elif cfg['assist_mode'] in ['bag', 'stack']:
+        model = late(Linear(data_shape, target_size))
+    elif cfg['assist_mode'] in ['none', 'bag', 'stack']:
         model = Linear(data_shape, target_size)
     else:
         raise ValueError('Not valid assist mode')

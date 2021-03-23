@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 from config import cfg
 from .utils import init_param, normalize, loss_fn, feature_split
+from .interm import interm
+from .late import late
 
 
 class Conv(nn.Module):
@@ -38,7 +40,10 @@ class Conv(nn.Module):
             x = feature_split(x, input['feature_split'])
         x = self.blocks(x)
         output['target'] = self.linear(x)
-        output['loss'] = loss_fn(output['target'], input['target'])
+        if 'target' in input:
+            if cfg['data_name'] == 'ModelNet40':
+                input['target'] = input['target'].repeat(12 // cfg['num_users'], 1)
+            output['loss'] = loss_fn(output['target'], input['target'])
         return output
 
 
@@ -47,10 +52,10 @@ def conv():
     hidden_size = cfg['conv']['hidden_size']
     target_size = cfg['target_size']
     if cfg['assist_mode'] == 'interm':
-        model = Interm(Conv(data_shape, hidden_size, target_size), hidden_size[-1])
+        model = interm(Conv(data_shape, hidden_size, target_size), hidden_size[-1])
     elif cfg['assist_mode'] == 'late':
-        model = Late(Conv(data_shape, hidden_size, target_size))
-    elif cfg['assist_mode'] in ['bag', 'stack']:
+        model = late(Conv(data_shape, hidden_size, target_size))
+    elif cfg['assist_mode'] in ['none', 'bag', 'stack']:
         model = Conv(data_shape, hidden_size, target_size)
     else:
         raise ValueError('Not valid assist mode')

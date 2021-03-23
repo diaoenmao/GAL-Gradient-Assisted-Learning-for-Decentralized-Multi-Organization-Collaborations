@@ -48,7 +48,7 @@ def feature_split(input, feature_split):
         output = torch.masked_fill(input, mask == 0, 0)
     elif cfg['data_name'] in ['ModelNet40']:
         output = torch.index_select(input, -1, feature_split)
-        output = output.permute(4, 0, 1, 2, 3).view(-1, *output.size()[1:])
+        output = output.permute(4, 0, 1, 2, 3).reshape(-1, *output.size()[1:-1])
     else:
         raise ValueError('Not valid data name')
     return output
@@ -58,7 +58,7 @@ def loss_fn(output, target, reduction='mean'):
     if target.dtype == torch.int64:
         loss = F.cross_entropy(output, target, reduction=reduction)
     else:
-        loss = F.mse_loss(output, target, reduction=reduction)
+        loss = F.l1_loss(output, target, reduction=reduction)
     return loss
 
 

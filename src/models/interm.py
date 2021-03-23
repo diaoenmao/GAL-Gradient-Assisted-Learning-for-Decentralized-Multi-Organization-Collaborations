@@ -15,17 +15,19 @@ class Interm(nn.Module):
             block.apply(reset_parameters)
             blocks.append(block)
         self.blocks = nn.ModuleList(blocks)
-        self.linear = nn.Linear(hidden_size * num_users, target_size)
+        self.linear = nn.Linear(hidden_size, target_size)
 
     def forward(self, input):
         output = {}
         x = []
         for i in range(len(self.blocks)):
-            x_i = {'data': input['data'], 'feature_split': input['feature_split'][i], 'target': input['target']}
+            x_i = {'data': input['data'], 'feature_split': input['feature_split'][i]}
             x_i = self.blocks[i].feature(x_i)
             x.append(x_i)
-        x = torch.stack(x, dim=-1)
+        x = torch.stack(x, dim=0).mean(dim=0)
         output['target'] = self.linear(x)
+        if cfg['data_name'] == 'ModelNet40':
+            input['target'] = input['target'].repeat(12 // cfg['num_users'])
         output['loss'] = loss_fn(output['target'], input['target'])
         return output
 

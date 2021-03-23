@@ -46,25 +46,29 @@ def runExperiment():
     data_loader = make_data_loader(dataset, cfg['model_name'])
     model = eval('models.{}().to(cfg["device"])'.format(cfg['model_name']))
     metric = Metric({'test': ['Loss']})
-    last_epoch, model, _, _, _ = resume(model, cfg['model_tag'], load_tag='best')
+    result = resume(cfg['model_tag'], load_tag='best')
+    last_epoch = result['epoch']
+    feature_split = result['feature_split']
     current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')
     logger_path = 'output/runs/test_{}_{}'.format(cfg['model_tag'], current_time)
     test_logger = Logger(logger_path)
     test_logger.safe(True)
-    test(data_loader['test'], model, metric, test_logger, last_epoch)
+    test(data_loader['test'], feature_split, model, metric, test_logger, last_epoch)
     test_logger.safe(False)
-    _, _, _, _, train_logger = resume(model, cfg['model_tag'], load_tag='checkpoint')
+    result = resume(cfg['model_tag'], load_tag='checkpoint')
+    train_logger = result['logger']
     save_result = {'cfg': cfg, 'epoch': last_epoch, 'logger': {'train': train_logger, 'test': test_logger}}
     save(save_result, './output/result/{}.pt'.format(cfg['model_tag']))
     return
 
 
-def test(data_loader, model, metric, logger, epoch):
+def test(data_loader, feature_split, model, metric, logger, epoch):
     with torch.no_grad():
         model.train(False)
         for i, input in enumerate(data_loader):
             input = collate(input)
             input_size = input['data'].size(0)
+            input['feature_split'] = feature_split
             input = to_device(input, cfg['device'])
             output = model(input)
             output['loss'] = output['loss'].mean() if cfg['world_size'] > 1 else output['loss']

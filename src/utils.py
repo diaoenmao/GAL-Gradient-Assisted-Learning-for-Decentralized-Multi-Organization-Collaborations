@@ -112,105 +112,66 @@ def process_control():
     cfg['data_shape'] = data_shape[cfg['data_name']]
     cfg['linear'] = {}
     cfg['conv'] = {'hidden_size': [64, 128, 256, 512]}
-    cfg['lstm'] = {'hidden_size': 128}
-    if 'assist_mode' in cfg['control']:
-        cfg['num_users'] = int(cfg['control']['num_users'])
-        cfg['assist_mode'] = cfg['control']['assist_mode']
-        cfg['local_epoch'] = int(cfg['control']['local_epoch'])
-        cfg['global_epoch'] = int(cfg['control']['global_epoch'])
-        cfg['assist_rate_mode'] = cfg['control']['assist_rate_mode']
-        cfg['noise'] = float(cfg['control']['noise'])
-        cfg['noised_organization_id'] = list(range(cfg['num_users'] // 2, cfg['num_users']))
-        cfg['assist'] = {}
-        cfg['assist']['batch_size'] = {'train': 1024, 'test': 1024}
-        cfg['assist']['optimizer_name'] = 'Adam'
-        cfg['assist']['lr'] = 1e-1
-        cfg['assist']['momentum'] = 0.9
-        cfg['assist']['weight_decay'] = 5e-4
-        cfg['assist']['num_epochs'] = 100
-        cfg['linesearch'] = {}
-        cfg['linesearch']['optimizer_name'] = 'LBFGS'
-        cfg['linesearch']['lr'] = 1
-        cfg['linesearch']['num_epochs'] = 10
-        for model_name in ['linear', 'conv', 'lstm']:
-            cfg[model_name]['shuffle'] = {'train': True, 'test': False}
-            if model_name in ['linear']:
-                cfg[model_name]['optimizer_name'] = 'SGD'
-                cfg[model_name]['momentum'] = 0.9
-                cfg[model_name]['weight_decay'] = 5e-4
-                cfg[model_name]['batch_size'] = {'train': 1024, 'test': 1024}
-                cfg[model_name]['lr'] = 1e-1
-                cfg[model_name]['num_epochs'] = cfg['local_epoch']
-                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
-                cfg[model_name]['factor'] = 0.1
-                cfg[model_name]['milestones'] = [50, 100]
-            elif model_name in ['conv']:
-                cfg[model_name]['optimizer_name'] = 'SGD'
-                cfg[model_name]['momentum'] = 0.9
-                cfg[model_name]['weight_decay'] = 5e-4
-                if cfg['data_name'] in ['MNIST', 'CIFAR10']:
-                    cfg[model_name]['batch_size'] = {'train': 512, 'test': 512}
-                elif cfg['data_name'] in ['ModelNet40']:
-                    cfg[model_name]['batch_size'] = {'train': 32, 'test': 32}
-                else:
-                    raise ValueError('Not valid data name')
-                cfg[model_name]['lr'] = 1e-1
-                cfg[model_name]['num_epochs'] = cfg['local_epoch']
-                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
-                cfg[model_name]['factor'] = 0.1
-                cfg[model_name]['milestones'] = [50, 100]
-            elif model_name in ['lstm']:
-                cfg[model_name]['optimizer_name'] = 'Adam'
-                cfg[model_name]['weight_decay'] = 5e-4
-                cfg[model_name]['batch_size'] = {'train': 1, 'test': 1}
-                cfg[model_name]['lr'] = 1e-3
-                cfg[model_name]['num_epochs'] = cfg['local_epoch']
-                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
-                cfg[model_name]['factor'] = 0.1
-                cfg[model_name]['milestones'] = [50, 100]
-            else:
-                raise ValueError('Not valid model name')
-        cfg['global'] = {}
-        cfg['global']['num_epochs'] = cfg['global_epoch']
+    cfg['lstm'] = {'hidden_size': 128, 'num_layers': 1}
+    cfg['num_users'] = int(cfg['control']['num_users'])
+    cfg['assist_mode'] = cfg['control']['assist_mode']
+    cfg['local_epoch'] = int(cfg['control']['local_epoch']) if cfg['control']['local_epoch'] != 'none' else 'none'
+    cfg['global_epoch'] = int(cfg['control']['global_epoch']) if cfg['control'][
+                                                                     'global_epoch'] != 'none' else 'none'
+    cfg['assist_rate_mode'] = cfg['control']['assist_rate_mode']
+    cfg['noise'] = float(cfg['control']['noise']) if cfg['control']['noise'] != 'none' else 'none'
+    cfg['noised_organization_id'] = list(range(cfg['num_users'] // 2, cfg['num_users']))
+    cfg['assist'] = {}
+    cfg['assist']['batch_size'] = {'train': 1024, 'test': 1024}
+    cfg['assist']['optimizer_name'] = 'Adam'
+    cfg['assist']['lr'] = 1e-1
+    cfg['assist']['momentum'] = 0.9
+    cfg['assist']['weight_decay'] = 5e-4
+    cfg['assist']['num_epochs'] = 100
+    cfg['linesearch'] = {}
+    cfg['linesearch']['optimizer_name'] = 'LBFGS'
+    cfg['linesearch']['lr'] = 1
+    cfg['linesearch']['num_epochs'] = 10
+    model_name = cfg['model_name']
+    cfg[model_name]['shuffle'] = {'train': True, 'test': False}
+    if model_name in ['linear']:
+        cfg[model_name]['optimizer_name'] = 'SGD'
+        cfg[model_name]['momentum'] = 0.9
+        cfg[model_name]['weight_decay'] = 5e-4
+        cfg[model_name]['batch_size'] = {'train': 1024, 'test': 1024}
+        cfg[model_name]['lr'] = 1e-1
+        cfg[model_name]['num_epochs'] = cfg['local_epoch']
+        cfg[model_name]['scheduler_name'] = 'MultiStepLR'
+        cfg[model_name]['factor'] = 0.1
+        cfg[model_name]['milestones'] = [50, 100]
+    elif model_name in ['conv']:
+        cfg[model_name]['optimizer_name'] = 'SGD'
+        cfg[model_name]['momentum'] = 0.9
+        cfg[model_name]['weight_decay'] = 5e-4
+        if cfg['data_name'] in ['MNIST', 'CIFAR10']:
+            cfg[model_name]['batch_size'] = {'train': 512, 'test': 512}
+        elif cfg['data_name'] in ['ModelNet40']:
+            cfg[model_name]['batch_size'] = {'train': 8, 'test': 16}
+        else:
+            raise ValueError('Not valid data name')
+        cfg[model_name]['lr'] = 1e-1
+        cfg[model_name]['num_epochs'] = cfg['local_epoch']
+        cfg[model_name]['scheduler_name'] = 'MultiStepLR'
+        cfg[model_name]['factor'] = 0.1
+        cfg[model_name]['milestones'] = [50, 100]
+    elif model_name in ['lstm']:
+        cfg[model_name]['optimizer_name'] = 'Adam'
+        cfg[model_name]['weight_decay'] = 5e-4
+        cfg[model_name]['batch_size'] = {'train': 1, 'test': 1}
+        cfg[model_name]['lr'] = 1e-3
+        cfg[model_name]['num_epochs'] = cfg['local_epoch']
+        cfg[model_name]['scheduler_name'] = 'MultiStepLR'
+        cfg[model_name]['factor'] = 0.1
+        cfg[model_name]['milestones'] = [50, 100]
     else:
-        for model_name in ['linear', 'conv', 'lstm']:
-            cfg[model_name]['shuffle'] = {'train': True, 'test': False}
-            if model_name in ['linear']:
-                cfg[model_name]['optimizer_name'] = 'SGD'
-                cfg[model_name]['momentum'] = 0.9
-                cfg[model_name]['weight_decay'] = 5e-4
-                cfg[model_name]['batch_size'] = {'train': 1024, 'test': 1024}
-                cfg[model_name]['lr'] = 1e-1
-                cfg[model_name]['num_epochs'] = 100
-                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
-                cfg[model_name]['factor'] = 0.1
-                cfg[model_name]['milestones'] = [50]
-            elif model_name in ['conv']:
-                cfg[model_name]['optimizer_name'] = 'SGD'
-                cfg[model_name]['momentum'] = 0.9
-                cfg[model_name]['weight_decay'] = 5e-4
-                if cfg['data_name'] in ['MNIST', 'CIFAR10']:
-                    cfg[model_name]['batch_size'] = {'train': 512, 'test': 512}
-                elif cfg['data_name'] in ['ModelNet40']:
-                    cfg[model_name]['batch_size'] = {'train': 32, 'test': 32}
-                else:
-                    raise ValueError('Not valid data name')
-                cfg[model_name]['lr'] = 1e-1
-                cfg[model_name]['num_epochs'] = 200
-                cfg[model_name]['scheduler_name'] = 'MultiStepLR'
-                cfg[model_name]['factor'] = 0.1
-                cfg[model_name]['milestones'] = [50, 100]
-            elif model_name in ['lstm']:
-                cfg[model_name]['optimizer_name'] = 'Adam'
-                cfg[model_name]['weight_decay'] = 5e-4
-                cfg[model_name]['batch_size'] = {'train': 1, 'test': 1}
-                cfg[model_name]['lr'] = 1e-3
-                cfg[model_name]['num_epochs'] = cfg['local_epoch']
-                cfg[model_name]['scheduler_name'] = 'None'
-                cfg[model_name]['factor'] = 0.1
-                cfg[model_name]['milestones'] = [50, 100]
-            else:
-                raise ValueError('Not valid model name')
+        raise ValueError('Not valid model name')
+    cfg['global'] = {}
+    cfg['global']['num_epochs'] = cfg['global_epoch']
     cfg['stats'] = make_stats()
     return
 
@@ -293,18 +254,9 @@ def make_scheduler(optimizer, tag):
     return scheduler
 
 
-def resume(model, model_tag, optimizer=None, scheduler=None, load_tag='checkpoint', verbose=True):
+def resume(model_tag, load_tag='checkpoint', verbose=True):
     if os.path.exists('./output/model/{}_{}.pt'.format(model_tag, load_tag)):
-        checkpoint = load('./output/model/{}_{}.pt'.format(model_tag, load_tag))
-        last_epoch = checkpoint['epoch']
-        model.load_state_dict(checkpoint['model_dict'])
-        if optimizer is not None:
-            optimizer.load_state_dict(checkpoint['optimizer_dict'])
-        if scheduler is not None:
-            scheduler.load_state_dict(checkpoint['scheduler_dict'])
-        logger = checkpoint['logger']
-        if verbose:
-            print('Resume from {}'.format(last_epoch))
+        result = load('./output/model/{}_{}.pt'.format(model_tag, load_tag))
     else:
         print('Not exists model tag: {}, start from scratch'.format(model_tag))
         from datetime import datetime
@@ -312,7 +264,10 @@ def resume(model, model_tag, optimizer=None, scheduler=None, load_tag='checkpoin
         last_epoch = 1
         logger_path = 'output/runs/train_{}_{}'.format(cfg['model_tag'], datetime.now().strftime('%b%d_%H-%M-%S'))
         logger = Logger(logger_path)
-    return last_epoch, model, optimizer, scheduler, logger
+        result = {'epoch': last_epoch, 'logger': logger}
+    if verbose:
+        print('Resume from {}'.format(result['epoch']))
+    return result
 
 
 def collate(input):

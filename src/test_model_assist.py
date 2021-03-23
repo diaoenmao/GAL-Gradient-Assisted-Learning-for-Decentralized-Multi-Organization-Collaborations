@@ -44,7 +44,10 @@ def runExperiment():
     torch.cuda.manual_seed(cfg['seed'])
     dataset = fetch_dataset(cfg['data_name'])
     process_dataset(dataset)
-    last_epoch, assist, organization, _ = resume(cfg['model_tag'], load_tag='checkpoint')
+    result = resume(cfg['model_tag'], load_tag='checkpoint')
+    last_epoch = result['epoch']
+    assist = result['assist']
+    organization = result['organization']
     assist.reset()
     metric = Metric({'test': ['Loss']})
     current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')
@@ -61,7 +64,8 @@ def runExperiment():
         test_logger.reset()
     test_logger.safe(False)
     assist.reset()
-    _, _, _, train_logger = resume(cfg['model_tag'], load_tag='checkpoint')
+    result = resume(cfg['model_tag'], load_tag='checkpoint')
+    train_logger = result['logger']
     save_result = {'cfg': cfg, 'epoch': last_epoch, 'assist': assist,
                    'logger': {'train': train_logger, 'test': test_logger}}
     save(save_result, './output/result/{}.pt'.format(cfg['model_tag']))
