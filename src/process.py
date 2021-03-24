@@ -92,7 +92,7 @@ def extract_result(control, model_tag, processed_result_exp, processed_result_hi
                 if metric_name not in processed_result_exp:
                     processed_result_exp[metric_name] = {'exp': [None for _ in range(num_experiments)]}
                     processed_result_history[metric_name] = {'history': [None for _ in range(num_experiments)]}
-                if metric_name in ['Loss', 'RMSE']:
+                if metric_name in ['Loss', 'MAD']:
                     processed_result_exp[metric_name]['exp'][exp_idx] = min(base_result['logger']['test'].history[k])
                 else:
                     processed_result_exp[metric_name]['exp'][exp_idx] = max(base_result['logger']['test'].history[k])
@@ -204,7 +204,7 @@ def make_vis(df):
     linestyle = {'Joint': '-', 'Alone': '--', 'GAL-b': ':', 'GAL-s': '-.'}
     marker = {'Joint': {'1': 'o', '10': 's', '100': 'D'}, 'Alone': {'1': 'v', '10': '^', '100': '>'},
               'GAL-b': {'1': 'p', '10': 'd', '100': 'h'}, 'GAL-s': {'1': 'X', '10': '*', '100': 'x'}}
-    loc = {'Loss': 'upper right', 'Accuracy': 'lower right', 'RMSE': 'upper right',
+    loc = {'Loss': 'upper right', 'Accuracy': 'lower right', 'MAD': 'upper right',
            'Gradient assisted learning rates': 'upper right', 'Assistance weights': 'upper right'}
     color_ap = ['red', 'orange', 'orange', 'orange', 'orange', 'orange', 'orange', 'orange']
     linestyle_ap = ['-', '--', ':', '-.', '-', '--', ':', '-.']
@@ -223,7 +223,7 @@ def make_vis(df):
         df_name_std = '_'.join([data_name, model_name, num_users, global_epoch, metric_name, 'std'])
         baseline_df_name = '_'.join([data_name, model_name, '1', global_epoch, metric_name, stat])
         baseline_df_name_std = '_'.join([data_name, model_name, '1', global_epoch, metric_name, 'std'])
-        if metric_name in ['Loss', 'Accuracy', 'RMSE']:
+        if metric_name in ['Loss', 'Accuracy', 'MAD']:
             x = np.arange(0, int(global_epoch) + 1)
         elif metric_name in ['Assist-Rate']:
             x = np.arange(1, int(global_epoch) + 1)

@@ -103,7 +103,8 @@ class Assist:
         if 'train' in organization_outputs[0]:
             if cfg['assist_rate_mode'] == 'search':
                 input = {'history': self.organization_output[iter - 1]['train'],
-                         'output': self.organization_output[iter]['train'], 'target': self.organization_target[0]['train']}
+                         'output': self.organization_output[iter]['train'],
+                         'target': self.organization_target[0]['train']}
                 input = to_device(input, cfg['device'])
                 model = models.linesearch().to(cfg['device'])
                 model.train(True)

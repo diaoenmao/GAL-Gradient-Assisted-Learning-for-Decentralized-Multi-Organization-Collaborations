@@ -58,7 +58,7 @@ class Organization:
                 optimizer.step()
                 evaluation = metric.evaluate(metric.metric_name['train'], input, output)
                 logger.append(evaluation, 'train', n=input_size)
-                scheduler.step()
+            scheduler.step()
             local_time = (time.time() - start_time)
             local_finished_time = datetime.timedelta(
                 seconds=round((cfg[self.model_name[iter]]['num_epochs'] - local_epoch) * local_time))
