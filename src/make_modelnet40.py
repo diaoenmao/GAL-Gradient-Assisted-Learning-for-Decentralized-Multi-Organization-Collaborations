@@ -44,139 +44,50 @@ def main():
     num_experiments = [[experiment_step]]
     resume_mode = [[resume_mode]]
     if file in ['interm']:
-        filename = '{}_{}_{}'.format(run, file, model)
+        filename = '{}_{}_{}'.format(run, file, 'ModelNet40')
         script_name = [['{}_model_baseline.py'.format(run)]]
         model_names = [[model]]
-        if model in ['conv']:
-            data_names = [['ModelNet40']]
-            control_name = [[['2', '4', '8'], [file], ['200'], ['none'], ['none'], ['none']]]
-            control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                          resume_mode, control_name)
-            controls = control_2_4_8
-        elif model in ['lstm']:
-            data_names = [['MIMIC']]
-            control_name = [[['2', '4', '8'], [file], ['200'], ['none'], ['none'], ['none']]]
-            control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                          resume_mode, control_name)
-            controls = control_2_4_8
-        else:
-            raise ValueError('Not valid model')
+        data_names = [['ModelNet40']]
+        control_name = [[['12'], [file], ['200'], ['none'], ['none'], ['none']]]
+        controls = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                      resume_mode, control_name)
     elif file in ['late']:
-        filename = '{}_{}_{}'.format(run, file, model)
+        filename = '{}_{}_{}'.format(run, file, 'ModelNet40')
         script_name = [['{}_model_baseline.py'.format(run)]]
         model_names = [[model]]
-        if model in ['linear']:
-            data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
-            control_name = [[['2', '4'], [file], ['100'], ['none'], ['none'], ['none']]]
-            control_2_4 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                        resume_mode, control_name)
-            data_names = [['Blob', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
-            control_name = [[['8'], [file], ['100'], ['none'], ['none'], ['none']]]
-            control_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+        data_names = [['ModelNet40']]
+        control_name = [[['12'], [file], ['200'], ['none'], ['none'], ['none']]]
+        controls = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                       resume_mode, control_name)
-            controls = control_2_4 + control_8
-        elif model in ['conv']:
-            data_names = [['ModelNet40']]
-            control_name = [[['2', '4', '8'], [file], ['200'], ['none'], ['none'], ['none']]]
-            control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                          resume_mode, control_name)
-            controls = control_2_4_8
-        elif model in ['lstm']:
-            data_names = [['MIMIC']]
-            control_name = [[['2', '4', '8'], [file], ['200'], ['none'], ['none'], ['none']]]
-            control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                          resume_mode, control_name)
-            controls = control_2_4_8
-        else:
-            raise ValueError('Not valid model')
     elif file == 'noise':
-        filename = '{}_{}_{}'.format(run, file, model)
+        filename = '{}_{}_{}'.format(run, file, 'ModelNet40')
         script_name = [['{}_model_assist.py'.format(run)]]
         model_names = [[model]]
-        if model in ['linear']:
-            data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
-            control_name = [[['4'], ['bag', 'stack'], ['100'], ['10'], ['search'], ['1', '5']]]
-            control_4 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                      resume_mode, control_name)
-            controls = control_4
-        elif model in ['conv']:
-            data_names = [['ModelNet40']]
-            control_name = [[['4'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['1', '5']]]
-            control_4 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                      resume_mode, control_name)
-            controls = control_4
-        elif model in ['lstm']:
-            data_names = [['MIMIC']]
-            control_name = [[['4'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['1', '5']]]
-            control_4 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                      resume_mode, control_name)
-            controls = control_4
-        else:
-            raise ValueError('Not valid model')
+        data_names = [['ModelNet40']]
+        control_name = [[['12'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['1', '5']]]
+        controls = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                  resume_mode, control_name)
     elif file == 'rate':
-        filename = '{}_{}_{}'.format(run, file, model)
+        filename = '{}_{}_{}'.format(run, file, 'ModelNet40')
         script_name = [['{}_model_assist.py'.format(run)]]
         model_names = [[model]]
-        if model in ['linear']:
-            data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
-            control_name = [[['4'], ['stack'], ['100'], ['10'], ['fix'], ['0']]]
-            control_4 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                      resume_mode, control_name)
-            controls = control_4
-        elif model in ['conv']:
-            data_names = [['ModelNet40']]
-            control_name = [[['4'], ['stack'], ['10'], ['10'], ['fix'], ['0']]]
-            control_4 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                      resume_mode, control_name)
-            controls = control_4
-        elif model in ['lstm']:
-            data_names = [['MIMIC']]
-            control_name = [[['4'], ['stack'], ['10'], ['10'], ['fix'], ['0']]]
-            control_4 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                      resume_mode, control_name)
-            controls = control_4
-        else:
-            raise ValueError('Not valid model')
+        data_names = [['ModelNet40']]
+        control_name = [[['12'], ['stack'], ['10'], ['10'], ['fix'], ['0']]]
+        controls = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                  resume_mode, control_name)
     elif file == 'assist':
-        filename = '{}_{}_{}'.format(run, file, model)
+        filename = '{}_{}_{}'.format(run, file, 'ModelNet40')
         script_name = [['{}_model_assist.py'.format(run)]]
         model_names = [[model]]
-        if model in ['linear']:
-            data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
-            control_name = [[['1'], ['none'], ['100'], ['10'], ['search'], ['0']]]
-            control_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+        data_names = [['ModelNet40']]
+        control_name = [[['1'], ['none'], ['10'], ['10'], ['search'], ['0']]]
+        control_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                  resume_mode, control_name)
+        data_names = [['ModelNet40']]
+        control_name = [[['12'], ['none', 'bag', 'stack'], ['10'], ['10'], ['search'], ['0']]]
+        control_12 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                       resume_mode, control_name)
-            data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
-            control_name = [[['2', '4'], ['none', 'bag', 'stack'], ['100'], ['10'], ['search'], ['0']]]
-            control_2_4 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                        resume_mode, control_name)
-            data_names = [['Blob', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
-            control_name = [[['8'], ['none', 'bag', 'stack'], ['100'], ['10'], ['search'], ['0']]]
-            control_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                      resume_mode, control_name)
-            controls = control_1 + control_2_4 + control_8
-        elif model in ['conv']:
-            data_names = [['ModelNet40']]
-            control_name = [[['1'], ['none'], ['10'], ['10'], ['search'], ['0']]]
-            control_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                      resume_mode, control_name)
-            data_names = [['ModelNet40']]
-            control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], ['10'], ['10'], ['search'], ['0']]]
-            control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                          resume_mode, control_name)
-            controls = control_1 + control_2_4_8
-        elif model in ['lstm']:
-            data_names = [['MIMIC']]
-            control_name = [[['1'], ['none'], ['10'], ['10'], ['search'], ['0']]]
-            control_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                      resume_mode, control_name)
-            data_names = [['MIMIC']]
-            control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], ['10'], ['10'], ['search'], ['0']]]
-            control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                          resume_mode, control_name)
-            controls = control_1 + control_2_4_8
-        else:
-            raise ValueError('Not valid model')
+        controls = control_1 + control_12
     else:
         raise ValueError('Not valid file')
     s = '#!/bin/bash\n'

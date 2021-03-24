@@ -12,8 +12,7 @@ def fetch_dataset(data_name, verbose=True):
     if verbose:
         print('fetching data {}...'.format(data_name))
     root = './data/{}'.format(data_name)
-    if data_name in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MIMIC',
-                     'ModelNet40']:
+    if data_name in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MIMIC']:
         dataset['train'] = eval('datasets.{}(root=root, split=\'train\')'.format(data_name))
         dataset['test'] = eval('datasets.{}(root=root, split=\'test\')'.format(data_name))
     elif data_name in ['MNIST', 'CIFAR10']:
@@ -21,6 +20,13 @@ def fetch_dataset(data_name, verbose=True):
                                 'transform=datasets.Compose([transforms.ToTensor()]))'.format(data_name))
         dataset['test'] = eval('datasets.{}(root=root, split=\'test\', '
                                'transform=datasets.Compose([transforms.ToTensor()]))'.format(data_name))
+    elif data_name in ['ModelNet40']:
+        dataset['train'] = eval('datasets.{}(root=root, split=\'train\', '
+                                'transform=datasets.Compose([transforms.Resize((32, 32)), '
+                                'transforms.ToTensor()]))'.format(data_name))
+        dataset['test'] = eval('datasets.{}(root=root, split=\'test\', '
+                               'transform=datasets.Compose([transforms.Resize((32, 32)), '
+                               'transforms.ToTensor()]))'.format(data_name))
     else:
         raise ValueError('Not valid dataset name')
     if verbose:

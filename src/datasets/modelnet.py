@@ -17,7 +17,7 @@ class ModelNet40(Dataset):
     def __init__(self, root, split, transform=None):
         self.root = os.path.expanduser(root)
         self.split = split
-        self.transform = transforms.ToTensor()
+        self.transform = transform
         if not check_exists(self.processed_folder):
             self.process()
         self.id, self.data, self.target = load(os.path.join(self.processed_folder, '{}.pt'.format(self.split)))
@@ -27,7 +27,7 @@ class ModelNet40(Dataset):
     def __getitem__(self, index):
         data = []
         for i in range(len(self.data[index])):
-            data.append(self.transform(Image.open(self.data[index][i]).convert('RGB')))
+            data.append(self.transform({'data': Image.open(self.data[index][i]).convert('RGB')})['data'])
         id, data, target = torch.tensor(self.id[index]), torch.stack(data, dim=-1), torch.tensor(self.target[index])
         input = {'id': id, 'data': data, 'target': target}
         return input
