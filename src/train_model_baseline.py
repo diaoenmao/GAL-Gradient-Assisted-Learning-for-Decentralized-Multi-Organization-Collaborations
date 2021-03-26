@@ -54,9 +54,9 @@ def runExperiment():
     if cfg['resume_mode'] == 1:
         result = resume(cfg['model_tag'])
         last_epoch = result['epoch']
-        feature_split = result['feature_split']
         logger = result['logger']
         if last_epoch > 1:
+            feature_split = result['feature_split']
             model.load_state_dict(result['model_state_dict'])
             optimizer.load_state_dict(result['optimizer_state_dict'])
             scheduler.load_state_dict(result['scheduler_state_dict'])

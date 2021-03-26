@@ -49,17 +49,18 @@ def runExperiment():
     torch.cuda.manual_seed(cfg['seed'])
     dataset = fetch_dataset(cfg['data_name'])
     process_dataset(dataset)
+    feature_split = split_dataset(cfg['num_users'])
+    assist = Assist(feature_split)
+    organization = assist.make_organization()
     if cfg['resume_mode'] == 1:
          result = resume(cfg['model_tag'])
          last_epoch = result['epoch']
-         assist = result['assist']
-         organization = result['organization']
          logger = result['logger']
+         if last_epoch > 1:
+             assist = result['assist']
+             organization = result['organization']
     else:
         last_epoch = 1
-        feature_split = split_dataset(cfg['num_users'])
-        assist = Assist(feature_split)
-        organization = assist.make_organization()
         current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')
         logger_path = 'output/runs/train_{}_{}'.format(cfg['model_tag'], current_time)
         logger = Logger(logger_path)
