@@ -120,33 +120,35 @@ from logger import Logger
 #     exit()
 
 
-if __name__ == "__main__":
-    cfg['seed'] = 0
-    torch.manual_seed(cfg['seed'])
-    torch.cuda.manual_seed(cfg['seed'])
-    cfg['data_name'] = 'ModelNet40'
-    cfg['model_name'] = 'conv'
-    process_control()
-    dataset = fetch_dataset(cfg['data_name'])
-    process_dataset(dataset)
-    data_loader = make_data_loader(dataset, cfg['model_name'])
-    for i, input in enumerate(data_loader['train']):
-        input = collate(input)
-        print(input['data'].shape)
-        print(input['target'].shape)
-        break
-
-    cfg['seed'] = 0
-    torch.manual_seed(cfg['seed'])
-    torch.cuda.manual_seed(cfg['seed'])
-    cfg['data_name'] = 'MIMIC'
-    cfg['model_name'] = 'lstm'
-    process_control()
-    dataset = fetch_dataset(cfg['data_name'])
-    process_dataset(dataset)
-    data_loader = make_data_loader(dataset, cfg['model_name'])
-    for i, input in enumerate(data_loader['train']):
-        input = collate(input)
-        print(input['data'].shape)
-        print(input['target'].shape)
-        break
+# if __name__ == "__main__":
+#     cfg['seed'] = 0
+#     torch.manual_seed(cfg['seed'])
+#     torch.cuda.manual_seed(cfg['seed'])
+#     cfg['data_name'] = 'ModelNet40'
+#     cfg['model_name'] = 'conv'
+#     process_control()
+#     dataset = fetch_dataset(cfg['data_name'])
+#     print(len(dataset['train']), len(dataset['test']))
+#     process_dataset(dataset)
+#     data_loader = make_data_loader(dataset, cfg['model_name'])
+#     for i, input in enumerate(data_loader['train']):
+#         input = collate(input)
+#         print(input['data'].shape)
+#         print(input['target'].shape)
+#         break
+#
+#     cfg['seed'] = 0
+#     torch.manual_seed(cfg['seed'])
+#     torch.cuda.manual_seed(cfg['seed'])
+#     cfg['data_name'] = 'MIMIC'
+#     cfg['model_name'] = 'lstm'
+#     process_control()
+#     dataset = fetch_dataset(cfg['data_name'])
+#     print(len(dataset['train']), len(dataset['test']))
+#     process_dataset(dataset)
+#     data_loader = make_data_loader(dataset, cfg['model_name'])
+#     for i, input in enumerate(data_loader['train']):
+#         input = collate(input)
+#         print(input['data'].shape)
+#         print(input['target'].shape)
+#         break

@@ -11,7 +11,7 @@ from collections import defaultdict
 
 result_path = './output/result'
 vis_path = './output/vis'
-num_experiments = 1
+num_experiments = 4
 exp = [str(x) for x in list(range(num_experiments))]
 
 
@@ -19,7 +19,7 @@ def make_controls(data_names, model_names, control_name):
     control_names = []
     for i in range(len(control_name)):
         control_names.extend(list('_'.join(x) for x in itertools.product(*control_name[i])))
-    controls = exp + data_names + model_names + [control_names]
+    controls = [exp] + data_names + model_names + [control_names]
     controls = list(itertools.product(*controls))
     return controls
 
