@@ -8,7 +8,7 @@ from config import cfg
 from data import fetch_dataset, make_data_loader
 from metrics import Metric
 from utils import save, to_device, process_control, process_dataset, resume, collate
-from logger import Logger
+from logger import make_logger
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 cudnn.benchmark = True
@@ -50,14 +50,12 @@ def runExperiment():
     last_epoch = result['epoch']
     feature_split = result['feature_split']
     model.load_state_dict(result['model_state_dict'])
-    current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')
-    logger_path = 'output/runs/test_{}_{}'.format(cfg['model_tag'], current_time)
-    test_logger = Logger(logger_path)
+    test_logger = make_logger('output/runs/test_{}'.format(cfg['model_tag']))
     test_logger.safe(True)
     test(data_loader['test'], feature_split, model, metric, test_logger, last_epoch)
     test_logger.safe(False)
     result = resume(cfg['model_tag'], load_tag='checkpoint')
-    train_logger = result['logger']
+    train_logger = result['logger'] if 'logger' in result else None
     save_result = {'cfg': cfg, 'epoch': last_epoch, 'logger': {'train': train_logger, 'test': test_logger}}
     save(save_result, './output/result/{}.pt'.format(cfg['model_tag']))
     return

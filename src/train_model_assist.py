@@ -14,7 +14,7 @@ from data import fetch_dataset, make_data_loader, split_dataset
 from metrics import Metric
 from assist import Assist
 from utils import save, load, process_control, process_dataset, resume
-from logger import Logger
+from logger import make_logger
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 cudnn.benchmark = True
@@ -59,11 +59,11 @@ def runExperiment():
          if last_epoch > 1:
              assist = result['assist']
              organization = result['organization']
+         else:
+             logger = make_logger('output/runs/train_{}'.format(cfg['model_tag']))
     else:
         last_epoch = 1
-        current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')
-        logger_path = 'output/runs/train_{}_{}'.format(cfg['model_tag'], current_time)
-        logger = Logger(logger_path)
+        logger = make_logger('output/runs/train_{}'.format(cfg['model_tag']))
     if organization is None:
         organization = assist.make_organization()
     metric = Metric({'train': ['Loss'], 'test': ['Loss']})

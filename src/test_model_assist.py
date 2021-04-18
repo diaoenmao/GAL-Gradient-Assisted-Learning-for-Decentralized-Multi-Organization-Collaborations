@@ -9,7 +9,7 @@ from data import fetch_dataset, make_data_loader, split_dataset
 from metrics import Metric
 from assist import Assist
 from utils import save, load, process_control, process_dataset, resume
-from logger import Logger
+from logger import make_logger
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 cudnn.benchmark = True
@@ -50,9 +50,7 @@ def runExperiment():
     organization = result['organization']
     assist.reset()
     metric = Metric({'test': ['Loss']})
-    current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')
-    logger_path = 'output/runs/test_{}_{}'.format(cfg['model_tag'], current_time)
-    test_logger = Logger(logger_path)
+    test_logger = make_logger('output/runs/test_{}'.format(cfg['model_tag']))
     initialize(dataset, assist, organization[0], metric, test_logger, 0)
     for epoch in range(1, last_epoch):
         test_logger.safe(True)
@@ -65,7 +63,7 @@ def runExperiment():
     test_logger.safe(False)
     assist.reset()
     result = resume(cfg['model_tag'], load_tag='checkpoint')
-    train_logger = result['logger']
+    train_logger = result['logger'] if 'logger' in train else None
     save_result = {'cfg': cfg, 'epoch': last_epoch, 'assist': assist,
                    'logger': {'train': train_logger, 'test': test_logger}}
     save(save_result, './output/result/{}.pt'.format(cfg['model_tag']))
