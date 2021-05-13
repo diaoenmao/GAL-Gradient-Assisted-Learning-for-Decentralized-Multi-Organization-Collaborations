@@ -2,6 +2,7 @@ import collections.abc as container_abcs
 import errno
 import numpy as np
 import os
+import pickle
 import torch
 import torch.optim as optim
 from itertools import repeat
@@ -24,13 +25,15 @@ def makedir_exist_ok(path):
     return
 
 
-def save(input, path, protocol=2, mode='torch'):
+def save(input, path, mode='torch'):
     dirname = os.path.dirname(path)
     makedir_exist_ok(dirname)
     if mode == 'torch':
-        torch.save(input, path, pickle_protocol=protocol)
-    elif mode == 'numpy':
+        torch.save(input, path)
+    elif mode == 'np':
         np.save(path, input, allow_pickle=True)
+    elif mode == 'pickle':
+        pickle.dump(input, open(path, 'wb'))
     else:
         raise ValueError('Not valid save mode')
     return
@@ -39,8 +42,10 @@ def save(input, path, protocol=2, mode='torch'):
 def load(path, mode='torch'):
     if mode == 'torch':
         return torch.load(path, map_location=lambda storage, loc: storage)
-    elif mode == 'numpy':
+    elif mode == 'np':
         return np.load(path, allow_pickle=True)
+    elif mode == 'pickle':
+        return pickle.load(open(path, 'rb'))
     else:
         raise ValueError('Not valid save mode')
     return
@@ -122,17 +127,15 @@ def process_control():
     cfg['noise'] = float(cfg['control']['noise']) if cfg['control']['noise'] != 'none' else 'none'
     cfg['noised_organization_id'] = list(range(cfg['num_users'] // 2, cfg['num_users']))
     cfg['assist'] = {}
-    cfg['assist']['batch_size'] = {'train': 1024, 'test': 1024}
+    model_name = cfg['model_name']
     cfg['assist']['optimizer_name'] = 'Adam'
-    cfg['assist']['lr'] = 1e-1
-    cfg['assist']['momentum'] = 0.9
-    cfg['assist']['weight_decay'] = 5e-4
+    cfg['assist']['lr'] = 1e-3
+    cfg['assist']['weight_decay'] = 0
     cfg['assist']['num_epochs'] = 100
     cfg['linesearch'] = {}
     cfg['linesearch']['optimizer_name'] = 'LBFGS'
     cfg['linesearch']['lr'] = 1
     cfg['linesearch']['num_epochs'] = 10
-    model_name = cfg['model_name']
     cfg[model_name]['shuffle'] = {'train': True, 'test': False}
     if model_name in ['linear']:
         cfg[model_name]['optimizer_name'] = 'SGD'
@@ -144,6 +147,7 @@ def process_control():
         cfg[model_name]['scheduler_name'] = 'MultiStepLR'
         cfg[model_name]['factor'] = 0.1
         cfg[model_name]['milestones'] = [50, 100]
+        cfg['assist']['batch_size'] = {'train': 1024, 'test': 1024}
     elif model_name in ['conv']:
         if cfg['data_name'] in ['MNIST', 'CIFAR10']:
             cfg[model_name]['optimizer_name'] = 'SGD'
@@ -151,12 +155,14 @@ def process_control():
             cfg[model_name]['weight_decay'] = 5e-4
             cfg[model_name]['batch_size'] = {'train': 512, 'test': 512}
             cfg[model_name]['lr'] = 1e-1
+            cfg['assist']['batch_size'] = {'train': 512, 'test': 512}
         elif cfg['data_name'] in ['ModelNet40']:
             cfg[model_name]['optimizer_name'] = 'SGD'
             cfg[model_name]['momentum'] = 0.9
             cfg[model_name]['weight_decay'] = 5e-4
             cfg[model_name]['batch_size'] = {'train': 64, 'test': 512}
             cfg[model_name]['lr'] = 1e-1
+            cfg['assist']['batch_size'] = {'train': 64, 'test': 512}
         else:
             raise ValueError('Not valid data name')
         cfg[model_name]['num_epochs'] = cfg['local_epoch']
@@ -172,6 +178,7 @@ def process_control():
         cfg[model_name]['scheduler_name'] = 'MultiStepLR'
         cfg[model_name]['factor'] = 0.1
         cfg[model_name]['milestones'] = [50, 100]
+        cfg['assist']['batch_size'] = {'train': 1, 'test': 1}
     else:
         raise ValueError('Not valid model name')
     cfg['global'] = {}

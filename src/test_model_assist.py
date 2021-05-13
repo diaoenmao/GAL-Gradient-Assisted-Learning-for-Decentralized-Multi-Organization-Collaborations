@@ -63,7 +63,7 @@ def runExperiment():
     test_logger.safe(False)
     assist.reset()
     result = resume(cfg['model_tag'], load_tag='checkpoint')
-    train_logger = result['logger'] if 'logger' in train else None
+    train_logger = result['logger'] if 'logger' in result else None
     save_result = {'cfg': cfg, 'epoch': last_epoch, 'assist': assist,
                    'logger': {'train': train_logger, 'test': test_logger}}
     save(save_result, './output/result/{}.pt'.format(cfg['model_tag']))
