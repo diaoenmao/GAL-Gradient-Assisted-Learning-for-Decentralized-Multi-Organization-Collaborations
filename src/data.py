@@ -56,11 +56,13 @@ def make_data_loader(dataset, tag, shuffle=None):
 
 
 def split_dataset(num_users):
-    if cfg['data_name'] in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MIMIC',
-                            'ModelNet40']:
+    if cfg['data_name'] in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'ModelNet40']:
         num_features = cfg['data_shape'][-1]
         feature_split = list(torch.randperm(num_features).split(num_features // num_users))
         feature_split = feature_split[:num_users - 1] + [torch.cat(feature_split[num_users - 1:])]
+    elif cfg['data_name'] in ['MIMIC']:
+        num_features = cfg['data_shape'][-1]
+        feature_split = list(torch.chunk(torch.arange(num_features), num_users))
     elif cfg['data_name'] in ['MNIST', 'CIFAR10']:
         num_features = np.prod(cfg['data_shape']).item()
         idx = torch.arange(num_features).view(*cfg['data_shape'])

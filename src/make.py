@@ -59,7 +59,7 @@ def main():
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
             data_names = [['MIMIC']]
-            control_name = [[['2', '4', '8'], [file], ['100'], ['none'], ['none'], ['none']]]
+            control_name = [[['4'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
             controls = control_2_4_8
@@ -91,7 +91,7 @@ def main():
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
             data_names = [['MIMIC']]
-            control_name = [[['2', '4', '8'], [file], ['100'], ['none'], ['none'], ['none']]]
+            control_name = [[['4'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
             controls = control_2_4_8
@@ -113,7 +113,7 @@ def main():
             controls = control_2_4 + control_8
         elif model in ['conv']:
             data_names = [['MNIST', 'CIFAR10']]
-            control_name = [[['2', '8'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['1', '5']]]
+            control_name = [[['2', '4', '8'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['1', '5']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                       resume_mode, control_name)
             data_names = [['ModelNet40']]
@@ -123,7 +123,7 @@ def main():
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
             data_names = [['MIMIC']]
-            control_name = [[['2', '4', '8'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['1', '5']]]
+            control_name = [[['4'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['1', '5']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                       resume_mode, control_name)
             controls = control_2_4_8
@@ -155,7 +155,7 @@ def main():
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
             data_names = [['MIMIC']]
-            control_name = [[['2', '4', '8'], ['stack'], ['10'], ['10'], ['fix'], ['0']]]
+            control_name = [[['4'], ['stack'], ['10'], ['10'], ['fix'], ['0']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                       resume_mode, control_name)
             controls = control_2_4_8
@@ -171,11 +171,11 @@ def main():
             control_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                       resume_mode, control_name)
             data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
-            control_name = [[['2', '4'], ['none', 'bag', 'stack'], ['100'], ['10'], ['search'], ['0']]]
+            control_name = [[['2', '4'], ['none', 'stack'], ['100'], ['10'], ['search'], ['0']]]
             control_2_4 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                         resume_mode, control_name)
             data_names = [['Blob', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
-            control_name = [[['8'], ['none', 'bag', 'stack'], ['100'], ['10'], ['search'], ['0']]]
+            control_name = [[['8'], ['none', 'stack'], ['100'], ['10'], ['search'], ['0']]]
             control_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                       resume_mode, control_name)
             controls = control_1 + control_2_4 + control_8
@@ -185,7 +185,7 @@ def main():
             control_1_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                         resume_mode, control_name)
             data_names = [['MNIST', 'CIFAR10']]
-            control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], ['10'], ['10'], ['search'], ['0']]]
+            control_name = [[['2', '4', '8'], ['none', 'stack'], ['10'], ['10'], ['search'], ['0']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
             data_names = [['ModelNet40']]
@@ -193,7 +193,7 @@ def main():
             control_1_2 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                         resume_mode, control_name)
             data_names = [['ModelNet40']]
-            control_name = [[['12'], ['none', 'bag', 'stack'], ['10'], ['10'], ['search'], ['0']]]
+            control_name = [[['12'], ['none', 'stack'], ['10'], ['10'], ['search'], ['0']]]
             control_12 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                        resume_mode, control_name)
             controls = control_1_1 + control_2_4_8 + control_1_2 + control_12
@@ -203,7 +203,7 @@ def main():
             control_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                       resume_mode, control_name)
             data_names = [['MIMIC']]
-            control_name = [[['2', '4', '8'], ['none', 'bag', 'stack'], ['10'], ['10'], ['search'], ['0']]]
+            control_name = [[['4'], ['none', 'stack'], ['10'], ['10'], ['search'], ['0']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
             controls = control_1 + control_2_4_8

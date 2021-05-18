@@ -127,15 +127,17 @@ def process_control():
     cfg['noise'] = float(cfg['control']['noise']) if cfg['control']['noise'] != 'none' else 'none'
     cfg['noised_organization_id'] = list(range(cfg['num_users'] // 2, cfg['num_users']))
     cfg['assist'] = {}
-    model_name = cfg['model_name']
+    cfg['assist']['batch_size'] = {'train': 1024, 'test': 1024}
     cfg['assist']['optimizer_name'] = 'Adam'
-    cfg['assist']['lr'] = 1e-3
-    cfg['assist']['weight_decay'] = 0
+    cfg['assist']['lr'] = 1e-1
+    cfg['assist']['momentum'] = 0.9
+    cfg['assist']['weight_decay'] = 5e-4
     cfg['assist']['num_epochs'] = 100
     cfg['linesearch'] = {}
     cfg['linesearch']['optimizer_name'] = 'LBFGS'
     cfg['linesearch']['lr'] = 1
     cfg['linesearch']['num_epochs'] = 10
+    model_name = cfg['model_name']
     cfg[model_name]['shuffle'] = {'train': True, 'test': False}
     if model_name in ['linear']:
         cfg[model_name]['optimizer_name'] = 'SGD'
@@ -147,7 +149,6 @@ def process_control():
         cfg[model_name]['scheduler_name'] = 'MultiStepLR'
         cfg[model_name]['factor'] = 0.1
         cfg[model_name]['milestones'] = [50, 100]
-        cfg['assist']['batch_size'] = {'train': 1024, 'test': 1024}
     elif model_name in ['conv']:
         if cfg['data_name'] in ['MNIST', 'CIFAR10']:
             cfg[model_name]['optimizer_name'] = 'SGD'
@@ -155,14 +156,12 @@ def process_control():
             cfg[model_name]['weight_decay'] = 5e-4
             cfg[model_name]['batch_size'] = {'train': 512, 'test': 512}
             cfg[model_name]['lr'] = 1e-1
-            cfg['assist']['batch_size'] = {'train': 512, 'test': 512}
         elif cfg['data_name'] in ['ModelNet40']:
             cfg[model_name]['optimizer_name'] = 'SGD'
             cfg[model_name]['momentum'] = 0.9
             cfg[model_name]['weight_decay'] = 5e-4
             cfg[model_name]['batch_size'] = {'train': 64, 'test': 512}
             cfg[model_name]['lr'] = 1e-1
-            cfg['assist']['batch_size'] = {'train': 64, 'test': 512}
         else:
             raise ValueError('Not valid data name')
         cfg[model_name]['num_epochs'] = cfg['local_epoch']
@@ -173,12 +172,9 @@ def process_control():
         cfg[model_name]['optimizer_name'] = 'Adam'
         cfg[model_name]['weight_decay'] = 5e-4
         cfg[model_name]['batch_size'] = {'train': 1, 'test': 1}
-        cfg[model_name]['lr'] = 1e-3
+        cfg[model_name]['lr'] = 1e-4
         cfg[model_name]['num_epochs'] = cfg['local_epoch']
-        cfg[model_name]['scheduler_name'] = 'MultiStepLR'
-        cfg[model_name]['factor'] = 0.1
-        cfg[model_name]['milestones'] = [50, 100]
-        cfg['assist']['batch_size'] = {'train': 1, 'test': 1}
+        cfg[model_name]['scheduler_name'] = 'None'
     else:
         raise ValueError('Not valid model name')
     cfg['global'] = {}
