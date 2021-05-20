@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 
 result_path = './output/result'
-vis_path = './output/vis'
+save_format = 'pdf'
+vis_path = './output/vis/{}'.format(save_format)
 num_experiments = 4
 exp = [str(x) for x in list(range(num_experiments))]
 
@@ -177,7 +178,7 @@ def main():
     extract_processed_result(extracted_processed_result_history, processed_result_history, [])
     df_exp = make_df_exp(extracted_processed_result_exp)
     df_history = make_df_history(extracted_processed_result_history)
-    # make_vis(df_history)
+    make_vis(df_history)
     return
 
 
@@ -309,20 +310,19 @@ def make_df_history(extracted_processed_result_history):
 
 
 def make_vis(df):
-    color = {'Joint': 'red', 'Alone': 'orange', 'GAL-b': 'dodgerblue', 'GAL-s': 'green'}
-    linestyle = {'Joint': '-', 'Alone': '--', 'GAL-b': ':', 'GAL-s': '-.'}
-    marker = {'Joint': 's', 'Alone': '^', 'GAL-b': 'd', 'GAL-s': '*'}
+    color = {'GAL': 'red', 'GAL($w=1/M$)': 'orange', 'Alone': 'dodgerblue', 'Joint': 'black'}
+    linestyle = {'GAL': '--', 'GAL($w=1/M$)': '-.', 'Alone': ':', 'Joint': '-'}
+    marker = {'GAL': 's', 'GAL($w=1/M$)': '^', 'Alone': 'd', 'Joint': '*'}
     loc = {'Loss': 'upper right', 'Accuracy': 'lower right', 'MAD': 'upper right',
-           'Gradient assisted learning rates': 'upper right', 'Assistance weights': 'upper right'}
+           'Gradient assisted learning rate': 'upper right', 'Gradient assistance weight': 'upper right'}
     marker_noise_mp = {'1': 'v', '5': '^'}
-    assist_mode_map = {'bag': 'GAL-b', 'stack': 'GAL-s', 'none': 'Alone'}
+    assist_mode_map = {'bag': 'GAL($w=1/M$)', 'stack': 'GAL', 'none': 'Alone'}
     color_ap = ['red', 'orange']
     linestyle_ap = ['-', '--', ':', '-.', '-', '--', ':', '-.', '-', '--', ':', '-.']
     marker_ap = ['o', 'o', 'o', 'o', 's', 's', 's', 's', 'v', 'v', 'v', 'v', '^', '^', '^', '^']
     fontsize = {'legend': 16, 'label': 16, 'ticks': 16}
-    capsize = 5
-    save_format = 'png'
     markevery = 1
+    capsize = 5
     fig = {}
     for df_name in df:
         data_name, model_name, num_users, metric_name, stat = df_name.split('_')
@@ -333,68 +333,89 @@ def make_vis(df):
         df_name_std = '_'.join([data_name, model_name, num_users, metric_name, 'std'])
         if metric_name in ['Loss', 'Accuracy', 'MAD', 'Assist-Rate']:
             joint_df_name = '_'.join([data_name, model_name, '1', metric_name, stat])
-            joint_df_name_df_name_std = '_'.join([data_name, model_name, '1', metric_name, 'std'])
-            for ((index, row), (_, row_std)) in zip(df[joint_df_name].iterrows(),
-                                                    df[joint_df_name_df_name_std].iterrows()):
+            joint_df_name_std = '_'.join([data_name, model_name, '1', metric_name, 'std'])
+            index, row = list(df[joint_df_name].iterrows())[0]
+            _, row_std = list(df[joint_df_name_std].iterrows())[0]
+            assist_mode, local_epoch, global_epoch, assist_rate_mode, noise = index.split('_')
+            _metric_name = 'Gradient assisted learning rate' if metric_name == 'Assist-Rate' else metric_name
+            xticks = np.arange(0, int(global_epoch) + 1, step=markevery)
+            _assist_rate_mode = assist_rate_mode
+            tag = 'assist'
+            fig_name = '{}_{}'.format(df_name, tag)
+            fig[fig_name] = plt.figure(fig_name)
+            if metric_name in ['Loss', 'Accuracy', 'MAD']:
+                x = np.arange(0, int(global_epoch) + 1)
+            else:
+                x = np.arange(1, int(global_epoch) + 1)
+            y = row.to_numpy()
+            yerr = row_std.to_numpy()
+            label_name = 'Joint'
+            index_name = 'Joint'
+            _color = color[index_name]
+            _marker = marker[index_name]
+            plt.plot(x, y, color=_color, linestyle=linestyle[index_name], label=label_name, marker=_marker,
+                     markevery=markevery)
+            plt.legend(loc=loc[_metric_name], fontsize=fontsize['legend'])
+            plt.xlabel('Assistance rounds', fontsize=fontsize['label'])
+            plt.ylabel(_metric_name, fontsize=fontsize['label'])
+            plt.xticks(xticks, fontsize=fontsize['ticks'])
+            plt.yticks(fontsize=fontsize['ticks'])
+            _df = list(df[df_name].iterrows())
+            _df_std = list(df[df_name_std].iterrows())
+            _df_noise, _df_noise_std = _df[-7:-3], _df_std[-7:-3]
+            _df_assist, _df_assist_std = _df[-3:], _df_std[-3:]
+            _df_assist[-3], _df_assist[-2] = _df_assist[-2], _df_assist[-3]
+            _df_assist_std[-3], _df_assist_std[-2] = _df_assist_std[-2], _df_assist_std[-3]
+            for i in range(len(_df_noise)):
+                index, row = _df_noise[i]
+                _, row_std = _df_noise_std[i]
                 assist_mode, local_epoch, global_epoch, assist_rate_mode, noise = index.split('_')
-                _metric_name = 'Gradient assisted learning rates' if metric_name == 'Assist-Rate' else metric_name
+                _metric_name = 'Gradient assisted learning rate' if metric_name == 'Assist-Rate' else metric_name
                 xticks = np.arange(0, int(global_epoch) + 1, step=markevery)
-                _assist_rate_mode = assist_rate_mode
-                tag = 'assist'
+                _assist_mode = assist_mode_map[assist_mode]
+                tag = 'noise'
                 fig_name = '{}_{}'.format(df_name, tag)
                 fig[fig_name] = plt.figure(fig_name)
-                if metric_name in ['Loss', 'Accuracy', 'MAD']:
-                    x = np.arange(0, int(global_epoch) + 1)
-                else:
-                    x = np.arange(1, int(global_epoch) + 1)
+                x = np.arange(0, int(global_epoch) + 1) if metric_name in ['Loss', 'Accuracy', 'MAD'] \
+                    else np.arange(1, int(global_epoch) + 1)
                 y = row.to_numpy()
-                label_name = 'Joint'
-                index_name = 'Joint'
-                plt.plot(x, y, color=color[index_name], linestyle=linestyle[index_name], label=label_name,
-                         marker=marker[index_name], markevery=markevery)
+                yerr = row_std.to_numpy()
+                index_name = _assist_mode
+                _color = color[index_name]
+                _marker = marker_noise_mp[noise]
+                label_name = '{}, $\sigma={}$'.format(_assist_mode, noise)
+                plt.plot(x, y, color=_color, linestyle=linestyle[index_name], label=label_name, marker=_marker,
+                         markevery=markevery)
                 plt.legend(loc=loc[_metric_name], fontsize=fontsize['legend'])
                 plt.xlabel('Assistance rounds', fontsize=fontsize['label'])
                 plt.ylabel(_metric_name, fontsize=fontsize['label'])
                 plt.xticks(xticks, fontsize=fontsize['ticks'])
                 plt.yticks(fontsize=fontsize['ticks'])
-            for ((index, row), (_, row_std)) in zip(df[df_name].iterrows(), df[df_name_std].iterrows()):
+            for i in range(len(_df_assist)):
+                index, row = _df_assist[i]
+                _, row_std = _df_assist_std[i]
                 assist_mode, local_epoch, global_epoch, assist_rate_mode, noise = index.split('_')
-                if assist_mode in ['interm', 'late']:
-                    continue
-                _metric_name = 'Gradient assisted learning rates' if metric_name == 'Assist-Rate' else metric_name
+                _metric_name = 'Gradient assisted learning rate' if metric_name == 'Assist-Rate' else metric_name
                 xticks = np.arange(0, int(global_epoch) + 1, step=markevery)
                 _assist_mode = assist_mode_map[assist_mode]
-                if int(noise) == 0:
-                    tag = 'assist'
-                    fig_name = '{}_{}'.format(df_name, tag)
-                    label_name = '$M={}$, {}, {}'.format(num_users, _assist_mode, assist_rate_mode)
-                else:
-                    tag = 'noise'
-                    fig_name = '{}_{}'.format(df_name, tag)
-                    label_name = '$M={}$, {}, $\sigma={}$'.format(num_users, _assist_mode, noise)
+                tag = 'assist'
+                fig_name = '{}_{}'.format(df_name, tag)
                 fig[fig_name] = plt.figure(fig_name)
-                if metric_name in ['Loss', 'Accuracy', 'MAD']:
-                    x = np.arange(0, int(global_epoch) + 1)
-                else:
-                    x = np.arange(1, int(global_epoch) + 1)
+                x = np.arange(0, int(global_epoch) + 1) if metric_name in ['Loss', 'Accuracy', 'MAD'] \
+                    else np.arange(1, int(global_epoch) + 1)
                 y = row.to_numpy()
                 yerr = row_std.to_numpy()
                 index_name = _assist_mode
                 if assist_rate_mode == 'fix':
-                    _color = 'olive'
+                    _color = 'orange'
+                    _marker = 'v'
+                    label_name = '{}($\eta=1$)'.format(_assist_mode)
                 else:
                     _color = color[index_name]
-                if int(noise) == 0:
                     _marker = marker[index_name]
-                else:
-                    _marker = marker_noise_mp[noise]
-                if _metric_name == 'Gradient assisted learning rates':
-                    plt.plot(x, y, color=_color, linestyle=linestyle[index_name], label=label_name,
-                             marker=_marker, markevery=markevery)
-                else:
-                    plt.errorbar(x, y, yerr=yerr, capsize=capsize, color=_color,
-                                 linestyle=linestyle[index_name], label=label_name, marker=_marker,
-                                 markevery=markevery)
+                    label_name = _assist_mode
+                plt.plot(x, y, color=_color, linestyle=linestyle[index_name], label=label_name, marker=_marker,
+                         markevery=markevery)
                 plt.legend(loc=loc[_metric_name], fontsize=fontsize['legend'])
                 plt.xlabel('Assistance rounds', fontsize=fontsize['label'])
                 plt.ylabel(_metric_name, fontsize=fontsize['label'])
@@ -404,15 +425,20 @@ def make_vis(df):
             for ((index, row), (_, row_std)) in zip(df[df_name].iterrows(), df[df_name].iterrows()):
                 assist_mode, local_epoch, global_epoch, assist_rate_mode, noise = index.split('_')
                 x = np.arange(1, int(global_epoch) + 1)
-                _metric_name = 'Assistance weights'
+                _metric_name = 'Gradient assistance weight'
                 xticks = np.arange(0, int(global_epoch) + 1, step=markevery)
                 tag = '_'.join([assist_rate_mode, noise])
                 fig_name = '{}_{}'.format(df_name, tag)
-                for i in reversed(range(int(num_users))):
+                for i in range(int(num_users)):
                     label_name = '$m={}$'.format(i + 1)
                     y = row.to_numpy().reshape(int(global_epoch), -1)[:, i]
                     fig[fig_name] = plt.figure(fig_name)
-                    _color_ap = color_ap[int(i // (int(num_users) // 2))]
+                    if noise == '0' and data_name in ['MNIST', 'CIFAR10']:
+                        _color_ap = color_ap[0] if (i + 1) in [2, 3, 6, 7] else color_ap[1]
+                    elif noise in ['1', '5']:
+                        _color_ap = color_ap[int(i // (int(num_users) // 2))]
+                    else:
+                        _color_ap = color_ap[1]
                     plt.plot(x, y, color=_color_ap, linestyle=linestyle_ap[i], label=label_name, marker=marker_ap[i],
                              markevery=1)
                     plt.legend(loc=loc[_metric_name], fontsize=fontsize['legend'])
