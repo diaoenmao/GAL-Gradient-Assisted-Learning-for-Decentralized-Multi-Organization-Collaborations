@@ -15,11 +15,11 @@ See requirements.txt
 
 ## Examples
  - Run make_stats.py to make normalization statistics for each dataset
- - Train GAL for CIFAR10 dataset (CNN, $$M=8$$, with gradient assistance weights, $$E=10$$, $$T=10$$, with gradient assisted learning rate, noise free)
+ - Train GAL for CIFAR10 dataset (CNN, <img src="https://latex.codecogs.com/gif.latex?M=8"/>, with gradient assistance weights, <img src="https://latex.codecogs.com/gif.latex?E=10"/>, <img src="https://latex.codecogs.com/gif.latex?T=10"/>, with gradient assisted learning rate, noise free)
     ```ruby
     python train_model_assist.py --data_name CIFAR10 --model_name conv --control_name 8_stack_10_10_search_0
     ```
- - Test GAL for ModelNet40 dataset (CNN, $$M=12$$, no gradient assistance weights, $$E=10$$, $$T=10$$, no gradient assisted learning rate, $$\sigma=1$$)
+ - Test GAL for ModelNet40 dataset (CNN, <img src="https://latex.codecogs.com/gif.latex?M=12"/>, no gradient assistance weights, <img src="https://latex.codecogs.com/gif.latex?E=10"/>, <img src="https://latex.codecogs.com/gif.latex?T=10"/>, no gradient assisted learning rate, <img src="https://latex.codecogs.com/gif.latex?\sigma=1"/>)
     ```ruby
     python test_model_assist.py --data_name ModelNet40 --model_name conv --control_name 12_bag_10_10_fix_1
     ```
