@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 
 result_path = './output/result'
-save_format = 'pdf'
+save_format = 'png'
 vis_path = './output/vis/{}'.format(save_format)
 num_experiments = 4
 exp = [str(x) for x in list(range(num_experiments))]
@@ -433,7 +433,7 @@ def make_vis(df):
                     label_name = '$m={}$'.format(i + 1)
                     y = row.to_numpy().reshape(int(global_epoch), -1)[:, i]
                     fig[fig_name] = plt.figure(fig_name)
-                    if noise == '0' and data_name in ['MNIST', 'CIFAR10']:
+                    if noise == '0' and data_name in ['MNIST', 'CIFAR10'] and num_users == '8':
                         _color_ap = color_ap[0] if (i + 1) in [2, 3, 6, 7] else color_ap[1]
                     elif noise in ['1', '5']:
                         _color_ap = color_ap[int(i // (int(num_users) // 2))]

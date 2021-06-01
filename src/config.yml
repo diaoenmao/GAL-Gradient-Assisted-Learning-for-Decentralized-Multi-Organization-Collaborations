@@ -3,7 +3,7 @@
 control:
   num_users: '4'
   assist_mode: 'bag'
-  local_epoch: '100'
+  local_epoch: '10'
   global_epoch: '10'
   assist_rate_mode: 'search'
   noise: '0'
