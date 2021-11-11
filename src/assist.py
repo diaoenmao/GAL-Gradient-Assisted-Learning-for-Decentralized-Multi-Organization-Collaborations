@@ -125,3 +125,36 @@ class Assist:
                 self.organization_output[iter][split] = self.organization_output[iter - 1][split] + self.assist_rates[
                     iter] * self.organization_output[iter][split]
         return
+
+
+    def update_al(self, organization_outputs, iter):
+        if cfg['assist_mode'] == 'none':
+            for split in organization_outputs[0]:
+                self.organization_output[iter][split] = organization_outputs[0][split]
+        else:
+            raise ValueError('Not valid assist mode')
+        if 'train' in organization_outputs[0]:
+            if cfg['assist_rate_mode'] == 'search':
+                input = {'history': self.organization_output[iter - 1]['train'],
+                         'output': self.organization_output[iter]['train'],
+                         'target': self.organization_target[0]['train']}
+                input = to_device(input, cfg['device'])
+                model = models.linesearch().to(cfg['device'])
+                model.train(True)
+                optimizer = make_optimizer(model, 'linesearch')
+                for linearsearch_epoch in range(1, cfg['linesearch']['num_epochs'] + 1):
+                    def closure():
+                        output = model(input)
+                        optimizer.zero_grad()
+                        output['loss'].backward()
+                        return output['loss']
+
+                    optimizer.step(closure)
+                self.assist_rates[iter] = model.assist_rate.item()
+            else:
+                self.assist_rates[iter] = cfg['linesearch']['lr']
+        with torch.no_grad():
+            for split in organization_outputs[0]:
+                self.organization_output[iter][split] = self.organization_output[iter - 1][split] + self.assist_rates[
+                    iter] * self.organization_output[iter][split]
+        return

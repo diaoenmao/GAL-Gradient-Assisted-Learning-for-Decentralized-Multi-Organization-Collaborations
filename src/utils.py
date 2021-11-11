@@ -125,6 +125,8 @@ def process_control():
                                                                      'global_epoch'] != 'none' else 'none'
     cfg['assist_rate_mode'] = cfg['control']['assist_rate_mode']
     cfg['noise'] = float(cfg['control']['noise']) if cfg['control']['noise'] != 'none' else 'none'
+    if 'al' in cfg['control']:
+        cfg['al'] = cfg['control']['al']
     cfg['noised_organization_id'] = list(range(cfg['num_users'] // 2, cfg['num_users']))
     cfg['assist'] = {}
     cfg['assist']['batch_size'] = {'train': 1024, 'test': 1024}

@@ -7,6 +7,7 @@ control:
   global_epoch: '10'
   assist_rate_mode: 'search'
   noise: '0'
+  al: '0'
 # data
 data_name: CIFAR10
 # MNIST
