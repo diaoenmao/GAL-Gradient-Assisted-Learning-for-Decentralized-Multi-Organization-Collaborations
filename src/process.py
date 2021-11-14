@@ -153,13 +153,38 @@ def make_control_list(file, model):
             controls = control_1 + control_2_4_8
         else:
             raise ValueError('Not valid model')
+    elif file == 'al':
+        model_names = [[model]]
+        if model in ['linear']:
+            data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
+            control_name = [[['2', '4'], ['none'], ['100'], ['10'], ['search', 'fix'], ['0'], ['1']]]
+            control_2_4 = make_controls(data_names, model_names, control_name)
+            data_names = [['Blob', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
+            control_name = [[['8'], ['none'], ['100'], ['10'], ['search', 'fix'], ['0'], ['1']]]
+            control_8 = make_controls(data_names, model_names, control_name)
+            controls = control_2_4 + control_8
+        elif model in ['conv']:
+            data_names = [['MNIST', 'CIFAR10']]
+            control_name = [[['2', '4', '8'], ['none'], ['10'], ['10'], ['search', 'fix'], ['0'], ['1']]]
+            control_2_4_8 = make_controls(data_names, model_names, control_name)
+            data_names = [['ModelNet40']]
+            control_name = [[['12'], ['none'], ['10'], ['10'], ['search', 'fix'], ['0'], ['1']]]
+            control_12 = make_controls(data_names, model_names, control_name)
+            controls = control_2_4_8 + control_12
+        elif model in ['lstm']:
+            data_names = [['MIMIC']]
+            control_name = [[['4'], ['none'], ['10'], ['10'], ['search', 'fix'], ['0'], ['1']]]
+            control_2_4_8 = make_controls(data_names, model_names, control_name)
+            controls = control_2_4_8
+        else:
+            raise ValueError('Not valid model')
     else:
         raise ValueError('Not valid file')
     return controls
 
 
 def main():
-    files = ['interm', 'late', 'noise', 'rate', 'assist']
+    files = ['interm', 'late', 'noise', 'rate', 'assist', 'al']
     models = ['linear', 'conv', 'lstm']
     controls = []
     for file in files:
@@ -287,8 +312,14 @@ def make_df_exp(extracted_processed_result_exp):
     df = defaultdict(list)
     for exp_name in extracted_processed_result_exp:
         control = exp_name.split('_')
-        data_name, model_name, num_users, assist_mode, local_epoch, global_epoch, assist_rate_mode, noise = control
-        index_name = ['_'.join([assist_mode, local_epoch, global_epoch, assist_rate_mode, noise])]
+        if len(control) == 8:
+            data_name, model_name, num_users, assist_mode, local_epoch, global_epoch, assist_rate_mode, noise = control
+            index_name = ['_'.join([assist_mode, local_epoch, global_epoch, assist_rate_mode, noise])]
+        elif len(control) == 9:
+            data_name, model_name, num_users, assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al = control
+            index_name = ['_'.join([assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al])]
+        else:
+            raise ValueError('Not valid control')
         df_name = '_'.join([data_name, model_name, num_users])
         df[df_name].append(pd.DataFrame(data=extracted_processed_result_exp[exp_name], index=index_name))
     write_xlsx('{}/result_exp.xlsx'.format(result_path), df)
@@ -299,8 +330,14 @@ def make_df_history(extracted_processed_result_history):
     df = defaultdict(list)
     for exp_name in extracted_processed_result_history:
         control = exp_name.split('_')
-        data_name, model_name, num_users, assist_mode, local_epoch, global_epoch, assist_rate_mode, noise = control
-        index_name = ['_'.join([assist_mode, local_epoch, global_epoch, assist_rate_mode, noise])]
+        if len(control) == 8:
+            data_name, model_name, num_users, assist_mode, local_epoch, global_epoch, assist_rate_mode, noise = control
+            index_name = ['_'.join([assist_mode, local_epoch, global_epoch, assist_rate_mode, noise])]
+        elif len(control) == 9:
+            data_name, model_name, num_users, assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al = control
+            index_name = ['_'.join([assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al])]
+        else:
+            raise ValueError('Not valid control')
         for k in extracted_processed_result_history[exp_name]:
             df_name = '_'.join([data_name, model_name, num_users, k])
             df[df_name].append(
@@ -310,13 +347,17 @@ def make_df_history(extracted_processed_result_history):
 
 
 def make_vis(df):
-    color = {'GAL': 'red', 'GAL($w=1/M$)': 'orange', 'Alone': 'dodgerblue', 'Joint': 'black'}
-    linestyle = {'GAL': '--', 'GAL($w=1/M$)': '-.', 'Alone': ':', 'Joint': '-'}
-    marker = {'GAL': 's', 'GAL($w=1/M$)': '^', 'Alone': 'd', 'Joint': '*'}
+    color = {'GAL($\eta=\hat{\eta}$)': 'red', 'GAL($w=\hat{w}$)': 'red', 'GAL($w=1/M$)': 'orange',
+             'Alone': 'dodgerblue', 'Joint': 'black', 'AL($\eta=\hat{\eta}$)': 'green'}
+    linestyle = {'GAL($\eta=\hat{\eta}$)': '--', 'GAL($w=\hat{w}$)': '--', 'GAL($w=1/M$)': '-.', 'Alone': ':',
+                 'Joint': '-', 'AL($\eta=\hat{\eta}$)': (0, (1, 5))}
+    marker = {'GAL($\eta=\hat{\eta}$)': 's', 'GAL($w=\hat{w}$)': 's', 'GAL($w=1/M$)': '^', 'Alone': 'd', 'Joint': '*',
+              'AL($\eta=\hat{\eta}$)': 'X'}
     loc = {'Loss': 'upper right', 'Accuracy': 'lower right', 'MAD': 'upper right',
            'Gradient assisted learning rate': 'upper right', 'Gradient assistance weight': 'upper right'}
     marker_noise_mp = {'1': 'v', '5': '^'}
-    assist_mode_map = {'bag': 'GAL($w=1/M$)', 'stack': 'GAL', 'none': 'Alone'}
+    assist_mode_map = {'bag': 'GAL($w=1/M$)', 'stack': 'GAL($\eta=\hat{\eta}$)', 'none': 'Alone'}
+    al_mode_map = {'none': 'AL($\eta=\hat{\eta}$)'}
     color_ap = ['red', 'orange']
     linestyle_ap = ['-', '--', ':', '-.', '-', '--', ':', '-.', '-', '--', ':', '-.']
     marker_ap = ['o', 'o', 'o', 'o', 's', 's', 's', 's', 'v', 'v', 'v', 'v', '^', '^', '^', '^']
@@ -362,17 +403,23 @@ def make_vis(df):
             plt.yticks(fontsize=fontsize['ticks'])
             _df = list(df[df_name].iterrows())
             _df_std = list(df[df_name_std].iterrows())
-            _df_noise, _df_noise_std = _df[-7:-3], _df_std[-7:-3]
-            _df_assist, _df_assist_std = _df[-3:], _df_std[-3:]
+            _df_noise, _df_noise_std = _df[-9:-5], _df_std[-9:-5]
+            _df_assist, _df_assist_std = _df[-5:-2], _df_std[-5:-2]
             _df_assist[-3], _df_assist[-2] = _df_assist[-2], _df_assist[-3]
             _df_assist_std[-3], _df_assist_std[-2] = _df_assist_std[-2], _df_assist_std[-3]
+            _df_al, _df_al_std = _df[-2:], _df_std[-2:]
+            _df_al[-2], _df_al[-1] = _df_al[-1], _df_al[-2]
+            _df_al_std[-2], _df_al_std[-1] = _df_al_std[-1], _df_al_std[-2]
             for i in range(len(_df_noise)):
                 index, row = _df_noise[i]
                 _, row_std = _df_noise_std[i]
                 assist_mode, local_epoch, global_epoch, assist_rate_mode, noise = index.split('_')
                 _metric_name = 'Gradient assisted learning rate' if metric_name == 'Assist-Rate' else metric_name
                 xticks = np.arange(0, int(global_epoch) + 1, step=markevery)
-                _assist_mode = assist_mode_map[assist_mode]
+                if assist_mode == 'stack':
+                    _assist_mode = 'GAL($w=\hat{w}$)'
+                else:
+                    _assist_mode = assist_mode_map[assist_mode]
                 tag = 'noise'
                 fig_name = '{}_{}'.format(df_name, tag)
                 fig[fig_name] = plt.figure(fig_name)
@@ -391,7 +438,7 @@ def make_vis(df):
                 plt.ylabel(_metric_name, fontsize=fontsize['label'])
                 plt.xticks(xticks, fontsize=fontsize['ticks'])
                 plt.yticks(fontsize=fontsize['ticks'])
-            for i in range(len(_df_assist)):
+            for i in range(len([_df_assist[0]])):
                 index, row = _df_assist[i]
                 _, row_std = _df_assist_std[i]
                 assist_mode, local_epoch, global_epoch, assist_rate_mode, noise = index.split('_')
@@ -410,6 +457,66 @@ def make_vis(df):
                     _color = 'orange'
                     _marker = 'v'
                     label_name = '{}($\eta=1$)'.format(_assist_mode)
+                else:
+                    _color = color[index_name]
+                    _marker = marker[index_name]
+                    label_name = _assist_mode
+                plt.plot(x, y, color=_color, linestyle=linestyle[index_name], label=label_name, marker=_marker,
+                         markevery=markevery)
+                plt.legend(loc=loc[_metric_name], fontsize=fontsize['legend'])
+                plt.xlabel('Assistance rounds', fontsize=fontsize['label'])
+                plt.ylabel(_metric_name, fontsize=fontsize['label'])
+                plt.xticks(xticks, fontsize=fontsize['ticks'])
+                plt.yticks(fontsize=fontsize['ticks'])
+            for i in range(len(_df_al)):
+                index, row = _df_al[i]
+                _, row_std = _df_al_std[i]
+                assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al = index.split('_')
+                _metric_name = 'Gradient assisted learning rate' if metric_name == 'Assist-Rate' else metric_name
+                xticks = np.arange(0, int(global_epoch) + 1, step=markevery)
+                _assist_mode = al_mode_map[assist_mode]
+                tag = 'assist'
+                fig_name = '{}_{}'.format(df_name, tag)
+                fig[fig_name] = plt.figure(fig_name)
+                x = np.arange(0, int(global_epoch) + 1) if metric_name in ['Loss', 'Accuracy', 'MAD'] \
+                    else np.arange(1, int(global_epoch) + 1)
+                y = row.to_numpy()
+                yerr = row_std.to_numpy()
+                index_name = _assist_mode
+                if assist_rate_mode == 'fix':
+                    _color = 'purple'
+                    _marker = '^'
+                    label_name = 'AL($\eta=1$)'
+                else:
+                    _color = color[index_name]
+                    _marker = marker[index_name]
+                    label_name = _assist_mode
+                plt.plot(x, y, color=_color, linestyle=linestyle[index_name], label=label_name, marker=_marker,
+                         markevery=markevery)
+                plt.legend(loc=loc[_metric_name], fontsize=fontsize['legend'])
+                plt.xlabel('Assistance rounds', fontsize=fontsize['label'])
+                plt.ylabel(_metric_name, fontsize=fontsize['label'])
+                plt.xticks(xticks, fontsize=fontsize['ticks'])
+                plt.yticks(fontsize=fontsize['ticks'])
+            for i in range(1, len(_df_assist)):
+                index, row = _df_assist[i]
+                _, row_std = _df_assist_std[i]
+                assist_mode, local_epoch, global_epoch, assist_rate_mode, noise = index.split('_')
+                _metric_name = 'Gradient assisted learning rate' if metric_name == 'Assist-Rate' else metric_name
+                xticks = np.arange(0, int(global_epoch) + 1, step=markevery)
+                _assist_mode = assist_mode_map[assist_mode]
+                tag = 'assist'
+                fig_name = '{}_{}'.format(df_name, tag)
+                fig[fig_name] = plt.figure(fig_name)
+                x = np.arange(0, int(global_epoch) + 1) if metric_name in ['Loss', 'Accuracy', 'MAD'] \
+                    else np.arange(1, int(global_epoch) + 1)
+                y = row.to_numpy()
+                yerr = row_std.to_numpy()
+                index_name = _assist_mode
+                if assist_rate_mode == 'fix':
+                    _color = 'orange'
+                    _marker = 'v'
+                    label_name = 'GAL($\eta=1$)'
                 else:
                     _color = color[index_name]
                     _marker = marker[index_name]
