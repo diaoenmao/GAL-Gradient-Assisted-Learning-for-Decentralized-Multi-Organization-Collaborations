@@ -43,7 +43,10 @@ class Conv(nn.Module):
         if 'target' in input:
             if cfg['data_name'] == 'ModelNet40':
                 input['target'] = input['target'].repeat(12 // cfg['num_users'], 1)
-            output['loss'] = loss_fn(output['target'], input['target'])
+            if 'loss_mode' in input:
+                output['loss'] = loss_fn(output['target'], input['target'], loss_mode=input['loss_mode'])
+            else:
+                output['loss'] = loss_fn(output['target'], input['target'])
         return output
 
 

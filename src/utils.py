@@ -127,6 +127,20 @@ def process_control():
     cfg['noise'] = float(cfg['control']['noise']) if cfg['control']['noise'] != 'none' else 'none'
     if 'al' in cfg['control']:
         cfg['al'] = cfg['control']['al']
+    if 'rl' in cfg['control']:
+        rl_list = cfg['control']['rl'].split('-')
+        num_rl = cfg['num_users'] // len(rl_list)
+        rm_rl = cfg['num_users'] - num_rl * len(rl_list)
+        cfg['rl'] = []
+        for i in range(len(rl_list)):
+            cfg['rl'].extend([rl_list[i] for _ in range(num_rl)])
+            if i == len(rl_list) - 1:
+                cfg['rl'].extend([rl_list[i] for _ in range(rm_rl)])
+    else:
+        if cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMIC']:
+            cfg['rl'] = ['l1' for _ in range(cfg['num_users'])]
+        else:
+            cfg['rl'] = ['l2' for _ in range(cfg['num_users'])]
     cfg['noised_organization_id'] = list(range(cfg['num_users'] // 2, cfg['num_users']))
     cfg['assist'] = {}
     cfg['assist']['batch_size'] = {'train': 1024, 'test': 1024}

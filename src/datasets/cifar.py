@@ -117,6 +117,7 @@ def read_pickle_file(path, filenames):
             label.extend(entry['labels']) if 'labels' in entry else label.extend(entry['fine_labels'])
     img = np.vstack(img).reshape(-1, 3, 32, 32)
     img = img.transpose((0, 2, 3, 1))
+    label = np.array(label).astype(np.int64)
     return img, label
 
 

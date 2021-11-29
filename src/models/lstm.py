@@ -37,7 +37,10 @@ class LSTM(nn.Module):
         if cfg['data_name'] == 'MIMIC':
             output['target'] = x.unsqueeze(0)
         if 'target' in input:
-            output['loss'] = loss_fn(output['target'], input['target'])
+            if 'loss_mode' in input:
+                output['loss'] = loss_fn(output['target'], input['target'], loss_mode=input['loss_mode'])
+            else:
+                output['loss'] = loss_fn(output['target'], input['target'])
         return output
 
 

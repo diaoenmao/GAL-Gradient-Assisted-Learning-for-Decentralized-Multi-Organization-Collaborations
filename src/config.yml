@@ -8,6 +8,7 @@ control:
   assist_rate_mode: 'search'
   noise: '0'
   al: '0'
+  rl: 'l1'
 # data
 data_name: CIFAR10
 # MNIST

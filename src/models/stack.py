@@ -13,7 +13,10 @@ class Stack(nn.Module):
         output = {}
         x = input['output']
         output['target'] = (x * self.stack.softmax(-1)).sum(-1)
-        output['loss'] = loss_fn(output['target'], input['target'])
+        if 'loss_mode' in input:
+            output['loss'] = loss_fn(output['target'], input['target'], loss_mode=input['loss_mode'])
+        else:
+            output['loss'] = loss_fn(output['target'], input['target'])
         return output
 
 

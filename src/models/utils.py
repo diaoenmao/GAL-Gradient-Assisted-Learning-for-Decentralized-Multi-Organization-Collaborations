@@ -54,14 +54,22 @@ def feature_split(input, feature_split):
     return output
 
 
-def loss_fn(output, target, reduction='mean'):
+def loss_fn(output, target, reduction='mean', loss_mode=None):
     if target.dtype == torch.int64:
         loss = F.cross_entropy(output, target, reduction=reduction)
     else:
-        if cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMIC']:
-            loss = F.l1_loss(output, target, reduction=reduction)
+        if loss_mode is None:
+            if cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMIC']:
+                loss = F.l1_loss(output, target, reduction=reduction)
+            else:
+                loss = F.mse_loss(output, target, reduction=reduction)
         else:
-            loss = F.mse_loss(output, target, reduction=reduction)
+            if loss_mode == 'l1':
+                loss = F.l1_loss(output, target, reduction=reduction)
+            elif loss_mode == 'l2':
+                loss = F.mse_loss(output, target, reduction=reduction)
+            else:
+                raise ValueError('Not valid loss mode')
     return loss
 
 

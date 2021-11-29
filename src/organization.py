@@ -51,6 +51,7 @@ class Organization:
                 input_size = input['data'].size(0)
                 input['feature_split'] = self.feature_split
                 input = to_device(input, cfg['device'])
+                input['loss_mode'] = cfg['rl'][self.organization_id]
                 optimizer.zero_grad()
                 output = model(input)
                 output['loss'].backward()

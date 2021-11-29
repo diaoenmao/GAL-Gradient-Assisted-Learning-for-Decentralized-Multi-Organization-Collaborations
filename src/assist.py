@@ -106,6 +106,7 @@ class Assist:
                          'output': self.organization_output[iter]['train'],
                          'target': self.organization_target[0]['train']}
                 input = to_device(input, cfg['device'])
+                input['loss_mode'] = cfg['rl'][0]
                 model = models.linesearch().to(cfg['device'])
                 model.train(True)
                 optimizer = make_optimizer(model, 'linesearch')
