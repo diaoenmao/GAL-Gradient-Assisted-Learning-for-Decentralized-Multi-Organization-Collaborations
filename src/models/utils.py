@@ -66,8 +66,18 @@ def loss_fn(output, target, reduction='mean', loss_mode=None):
         else:
             if loss_mode == 'l1':
                 loss = F.l1_loss(output, target, reduction=reduction)
+            elif loss_mode == 'l1.5':
+                if reduction == 'sum':
+                    loss = (x - y).abs().pow(1.5).sum()
+                else:
+                    loss = (x - y).abs().pow(1.5).mean()
             elif loss_mode == 'l2':
                 loss = F.mse_loss(output, target, reduction=reduction)
+            elif loss_mode == 'l4':
+                if reduction == 'sum':
+                    loss = (x - y).abs().pow(4).sum()
+                else:
+                    loss = (x - y).abs().pow(4).mean()
             else:
                 raise ValueError('Not valid loss mode')
     return loss

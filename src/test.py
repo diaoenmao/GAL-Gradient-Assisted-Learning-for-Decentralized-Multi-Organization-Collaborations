@@ -152,3 +152,14 @@ from logger import Logger
 #         print(input['data'].shape)
 #         print(input['target'].shape)
 #         break
+
+
+# if __name__ == "__main__":
+#     x = torch.randn(10, 5)
+#     y = torch.randn(10, 5)
+#     mae = torch.nn.L1Loss()(x, y)
+#     mse = torch.nn.MSELoss()(x, y)
+#     p1 = torch.norm((x - y).abs(), 1, dim=-1).pow(1).sum().div(x.numel())
+#     p1_5 = torch.norm((x - y).abs(), 1.5, dim=-1).pow(1.5).sum().div(x.numel())
+#     p2 = torch.norm((x - y).abs(), 2, dim=-1).pow(2).sum().div(x.numel())
+#     print(mae, p1, mse, p2, p1_5, (x - y).abs().pow(1.5).mean())

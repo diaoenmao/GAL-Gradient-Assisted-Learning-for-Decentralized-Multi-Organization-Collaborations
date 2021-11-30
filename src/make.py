@@ -115,7 +115,7 @@ def main():
             data_names = [['MNIST', 'CIFAR10']]
             control_name = [[['2', '4', '8'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['1', '5']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                      resume_mode, control_name)
+                                          resume_mode, control_name)
             data_names = [['ModelNet40']]
             control_name = [[['12'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['1', '5']]]
             control_12 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
@@ -125,7 +125,7 @@ def main():
             data_names = [['MIMIC']]
             control_name = [[['4'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['1', '5']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                      resume_mode, control_name)
+                                          resume_mode, control_name)
             controls = control_2_4_8
         else:
             raise ValueError('Not valid model')
@@ -147,7 +147,7 @@ def main():
             data_names = [['MNIST', 'CIFAR10']]
             control_name = [[['2', '4', '8'], ['stack'], ['10'], ['10'], ['fix'], ['0']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                      resume_mode, control_name)
+                                          resume_mode, control_name)
             data_names = [['ModelNet40']]
             control_name = [[['12'], ['stack'], ['10'], ['10'], ['fix'], ['0']]]
             control_12 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
@@ -157,7 +157,7 @@ def main():
             data_names = [['MIMIC']]
             control_name = [[['4'], ['stack'], ['10'], ['10'], ['fix'], ['0']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                      resume_mode, control_name)
+                                          resume_mode, control_name)
             controls = control_2_4_8
         else:
             raise ValueError('Not valid model')
@@ -247,27 +247,32 @@ def main():
         model_names = [[model]]
         if model in ['linear']:
             data_names = [['Diabetes', 'BostonHousing']]
-            control_name = [[['8'], ['stack'], ['100'], ['10'], ['search'], ['0'], ['0'], ['l1-l2', 'l2']]]
+            control_name = [[['8'], ['stack'], ['100'], ['10'], ['search'], ['0'], ['0'],
+                             ['l1.5', 'l2', 'l4', 'l1-l1.5', 'l1-l2', 'l1-l4']]]
             control_8_r = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                      resume_mode, control_name)
+                                        resume_mode, control_name)
             data_names = [['Blob', 'Wine', 'BreastCancer', 'QSAR']]
-            control_name = [[['8'], ['stack'], ['100'], ['10'], ['search'], ['0'], ['0'], ['l1', 'l1-l2']]]
+            control_name = [[['8'], ['stack'], ['100'], ['10'], ['search'], ['0'], ['0'],
+                             ['l1.5', 'l1', 'l4', 'l2-l1.5', 'l2-l1', 'l2-l4']]]
             control_8_c = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                      resume_mode, control_name)
+                                        resume_mode, control_name)
             controls = control_8_r + control_8_c
         elif model in ['conv']:
             data_names = [['MNIST', 'CIFAR10']]
-            control_name = [[['8'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'], ['l1', 'l1-l2']]]
+            control_name = [[['8'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'],
+                             ['l1.5', 'l1', 'l4', 'l2-l1.5', 'l2-l1', 'l2-l4']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
             data_names = [['ModelNet40']]
-            control_name = [[['12'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'], ['l1', 'l1-l2']]]
+            control_name = [[['12'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'],
+                             ['l1.5', 'l1', 'l4', 'l2-l1.5', 'l2-l1', 'l2-l4']]]
             control_12 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                        resume_mode, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
             data_names = [['MIMIC']]
-            control_name = [[['4'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'], ['l1-l2', 'l2']]]
+            control_name = [[['4'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'],
+                             ['l1.5', 'l2', 'l4', 'l1-l1.5', 'l1-l2', 'l1-l4']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
             controls = control_2_4_8
