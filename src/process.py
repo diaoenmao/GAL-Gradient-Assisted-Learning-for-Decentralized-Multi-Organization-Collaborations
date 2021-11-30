@@ -178,13 +178,43 @@ def make_control_list(file, model):
             controls = control_2_4_8
         else:
             raise ValueError('Not valid model')
+    elif file == 'rl':
+        model_names = [[model]]
+        if model in ['linear']:
+            data_names = [['Diabetes', 'BostonHousing']]
+            control_name = [[['8'], ['stack'], ['100'], ['10'], ['search'], ['0'], ['0'],
+                             ['l1.5', 'l2', 'l4', 'l1-l1.5', 'l1-l2', 'l1-l4']]]
+            control_8_r = make_controls(data_names, model_names, control_name)
+            data_names = [['Blob', 'Wine', 'BreastCancer', 'QSAR']]
+            control_name = [[['8'], ['stack'], ['100'], ['10'], ['search'], ['0'], ['0'],
+                             ['l1.5', 'l1', 'l4', 'l2-l1.5', 'l2-l1', 'l2-l4']]]
+            control_8_c = make_controls(data_names, model_names, control_name)
+            controls = control_8_r + control_8_c
+        elif model in ['conv']:
+            data_names = [['MNIST', 'CIFAR10']]
+            control_name = [[['8'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'],
+                             ['l1.5', 'l1', 'l4', 'l2-l1.5', 'l2-l1', 'l2-l4']]]
+            control_2_4_8 = make_controls(data_names, model_names, control_name)
+            data_names = [['ModelNet40']]
+            control_name = [[['12'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'],
+                             ['l1.5', 'l1', 'l4', 'l2-l1.5', 'l2-l1', 'l2-l4']]]
+            control_12 = make_controls(data_names, model_names, control_name)
+            controls = control_2_4_8 + control_12
+        elif model in ['lstm']:
+            data_names = [['MIMIC']]
+            control_name = [[['4'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'],
+                             ['l1.5', 'l2', 'l4', 'l1-l1.5', 'l1-l2', 'l1-l4']]]
+            control_2_4_8 = make_controls(data_names, model_names, control_name)
+            controls = control_2_4_8
+        else:
+            raise ValueError('Not valid model')
     else:
         raise ValueError('Not valid file')
     return controls
 
 
 def main():
-    files = ['interm', 'late', 'noise', 'rate', 'assist', 'al']
+    files = ['interm', 'late', 'noise', 'rate', 'assist', 'al', 'rl']
     models = ['linear', 'conv', 'lstm']
     controls = []
     for file in files:
@@ -318,6 +348,9 @@ def make_df_exp(extracted_processed_result_exp):
         elif len(control) == 9:
             data_name, model_name, num_users, assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al = control
             index_name = ['_'.join([assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al])]
+        elif len(control) == 10:
+            data_name, model_name, num_users, assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al, rl = control
+            index_name = ['_'.join([assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al, rl])]
         else:
             raise ValueError('Not valid control')
         df_name = '_'.join([data_name, model_name, num_users])
@@ -336,6 +369,9 @@ def make_df_history(extracted_processed_result_history):
         elif len(control) == 9:
             data_name, model_name, num_users, assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al = control
             index_name = ['_'.join([assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al])]
+        elif len(control) == 10:
+            data_name, model_name, num_users, assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al, rl = control
+            index_name = ['_'.join([assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al, rl])]
         else:
             raise ValueError('Not valid control')
         for k in extracted_processed_result_history[exp_name]:
@@ -403,11 +439,18 @@ def make_vis(df):
             plt.yticks(fontsize=fontsize['ticks'])
             _df = list(df[df_name].iterrows())
             _df_std = list(df[df_name_std].iterrows())
-            _df_noise, _df_noise_std = _df[-9:-5], _df_std[-9:-5]
-            _df_assist, _df_assist_std = _df[-5:-2], _df_std[-5:-2]
+            if metric_name == 'Assist-Rate':
+                start_idx = 0
+            else:
+                if data_name in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']:
+                    start_idx = 1
+                else:
+                    start_idx = 2
+            _df_noise, _df_noise_std = _df[start_idx:start_idx + 4], _df_std[start_idx:start_idx + 4]
+            _df_assist, _df_assist_std = _df[start_idx + 4:start_idx + 7], _df_std[start_idx + 4:start_idx + 7]
+            _df_al, _df_al_std = _df[start_idx + 7:start_idx + 9], _df_std[start_idx + 7:start_idx + 9]
             _df_assist[-3], _df_assist[-2] = _df_assist[-2], _df_assist[-3]
             _df_assist_std[-3], _df_assist_std[-2] = _df_assist_std[-2], _df_assist_std[-3]
-            _df_al, _df_al_std = _df[-2:], _df_std[-2:]
             _df_al[-2], _df_al[-1] = _df_al[-1], _df_al[-2]
             _df_al_std[-2], _df_al_std[-1] = _df_al_std[-1], _df_al_std[-2]
             for i in range(len(_df_noise)):
@@ -530,7 +573,10 @@ def make_vis(df):
                 plt.yticks(fontsize=fontsize['ticks'])
         elif metric_name == 'Assist-Parameters':
             for ((index, row), (_, row_std)) in zip(df[df_name].iterrows(), df[df_name].iterrows()):
-                assist_mode, local_epoch, global_epoch, assist_rate_mode, noise = index.split('_')
+                index_list = index.split('_')
+                if len(index_list) > 5:
+                    continue
+                assist_mode, local_epoch, global_epoch, assist_rate_mode, noise = index_list
                 x = np.arange(1, int(global_epoch) + 1)
                 _metric_name = 'Gradient assistance weight'
                 xticks = np.arange(0, int(global_epoch) + 1, step=markevery)

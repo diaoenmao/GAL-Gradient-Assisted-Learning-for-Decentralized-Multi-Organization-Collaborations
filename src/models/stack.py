@@ -7,7 +7,7 @@ from .utils import loss_fn
 class Stack(nn.Module):
     def __init__(self, num_users):
         super().__init__()
-        self.stack = nn.Parameter(torch.zeros(num_users))
+        self.stack = nn.Parameter(torch.ones(num_users))
 
     def forward(self, input):
         output = {}

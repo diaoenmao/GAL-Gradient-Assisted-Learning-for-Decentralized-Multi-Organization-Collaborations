@@ -80,6 +80,7 @@ class Assist:
                 input = {'output': _organization_outputs['train'],
                          'target': self.organization_target[iter]['train']}
                 input = to_device(input, cfg['device'])
+                input['loss_mode'] = cfg['rl'][0]
                 model = eval('models.{}().to(cfg["device"])'.format(cfg['assist_mode']))
                 model.train(True)
                 optimizer = make_optimizer(model, 'assist')
@@ -106,7 +107,6 @@ class Assist:
                          'output': self.organization_output[iter]['train'],
                          'target': self.organization_target[0]['train']}
                 input = to_device(input, cfg['device'])
-                input['loss_mode'] = cfg['rl'][0]
                 model = models.linesearch().to(cfg['device'])
                 model.train(True)
                 optimizer = make_optimizer(model, 'linesearch')
@@ -118,7 +118,7 @@ class Assist:
                         return output['loss']
 
                     optimizer.step(closure)
-                self.assist_rates[iter] = model.assist_rate.item()
+                self.assist_rates[iter] = min(abs(model.assist_rate.item()), 300)
             else:
                 self.assist_rates[iter] = cfg['linesearch']['lr']
         with torch.no_grad():
