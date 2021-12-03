@@ -50,7 +50,7 @@ def runExperiment():
     last_epoch = result['epoch']
     feature_split = result['feature_split']
     model.load_state_dict(result['model_state_dict'])
-    test_logger = make_logger('output/runs/test_{}'.format(cfg['model_tag']))
+    test_logger = make_logger(os.path.join('output', 'runs', 'test_{}'.format(cfg['model_tag'])))
     test_logger.safe(True)
     test(data_loader['test'], feature_split, model, metric, test_logger, last_epoch)
     test_logger.safe(False)

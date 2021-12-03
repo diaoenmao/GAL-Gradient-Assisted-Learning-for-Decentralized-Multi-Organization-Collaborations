@@ -50,7 +50,7 @@ def runExperiment():
     organization = result['organization']
     assist.reset()
     metric = Metric({'test': ['Loss']})
-    test_logger = make_logger('output/runs/test_{}'.format(cfg['model_tag']))
+    test_logger = make_logger(os.path.join('output', 'runs', 'test_{}'.format(cfg['model_tag'])))
     initialize(dataset, assist, organization[0], metric, test_logger, 0)
     for epoch in range(1, last_epoch):
         test_logger.safe(True)

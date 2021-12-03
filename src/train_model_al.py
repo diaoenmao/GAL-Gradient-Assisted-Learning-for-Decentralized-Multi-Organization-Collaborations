@@ -52,6 +52,7 @@ def runExperiment():
     feature_split = split_dataset(cfg['num_users'])
     assist = Assist(feature_split)
     organization = assist.make_organization()
+    metric = Metric({'train': ['Loss'], 'test': ['Loss']})
     if cfg['resume_mode'] == 1:
          result = resume(cfg['model_tag'])
          last_epoch = result['epoch']
@@ -60,13 +61,12 @@ def runExperiment():
              assist = result['assist']
              organization = result['organization']
          else:
-             logger = make_logger('output/runs/train_{}'.format(cfg['model_tag']))
+             logger = make_logger(os.path.join('output', 'runs', 'train_{}'.format(cfg['model_tag'])))
     else:
         last_epoch = 1
-        logger = make_logger('output/runs/train_{}'.format(cfg['model_tag']))
+        logger = make_logger(os.path.join('output', 'runs', 'train_{}'.format(cfg['model_tag'])))
     if organization is None:
         organization = assist.make_organization()
-    metric = Metric({'train': ['Loss'], 'test': ['Loss']})
     if last_epoch == 1:
         initialize(dataset, assist, organization[0], metric, logger, 0)
     for epoch in range(last_epoch, cfg['global']['num_epochs'] + 1):

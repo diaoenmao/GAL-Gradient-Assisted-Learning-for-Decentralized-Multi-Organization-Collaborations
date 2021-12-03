@@ -58,6 +58,10 @@ def conv():
         model = interm(Conv(data_shape, hidden_size, target_size), hidden_size[-1])
     elif cfg['assist_mode'] == 'late':
         model = late(Conv(data_shape, hidden_size, target_size))
+    elif cfg['assist_mode'] == 'vafl':
+        model = vafl(Conv(data_shape, hidden_size, target_size), hidden_size[-1])
+    elif cfg['assist_mode'] == 'late':
+        model = late(Conv(data_shape, hidden_size, target_size))
     elif cfg['assist_mode'] in ['none', 'bag', 'stack']:
         model = Conv(data_shape, hidden_size, target_size)
     else:

@@ -53,6 +53,8 @@ def lstm():
         model = interm(LSTM(data_shape, hidden_size, num_layers, target_size), hidden_size)
     elif cfg['assist_mode'] == 'late':
         model = late(LSTM(data_shape, hidden_size, num_layers, target_size))
+    elif cfg['assist_mode'] == 'vafl':
+        model = vafl(Conv(data_shape, hidden_size, target_size), hidden_size)
     elif cfg['assist_mode'] in ['none', 'bag', 'stack']:
         model = LSTM(data_shape, hidden_size, num_layers, target_size)
     else:
