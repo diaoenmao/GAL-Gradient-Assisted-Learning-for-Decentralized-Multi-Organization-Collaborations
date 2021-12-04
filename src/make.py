@@ -298,7 +298,7 @@ def main():
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
             data_names = [['ModelNet40']]
-            control_name = [['12'], [file], ['100'], ['none'], ['none'], ['none']]
+            control_name = [[['12'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_12 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                        resume_mode, control_name)
             controls = control_2_4_8 + control_12

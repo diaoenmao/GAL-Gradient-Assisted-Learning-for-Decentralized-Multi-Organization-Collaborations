@@ -5,6 +5,7 @@ from config import cfg
 from .utils import init_param, normalize, loss_fn, feature_split
 from .interm import interm
 from .late import late
+from .vafl import vafl
 
 
 class LSTM(nn.Module):
@@ -54,7 +55,7 @@ def lstm():
     elif cfg['assist_mode'] == 'late':
         model = late(LSTM(data_shape, hidden_size, num_layers, target_size))
     elif cfg['assist_mode'] == 'vafl':
-        model = vafl(Conv(data_shape, hidden_size, target_size), hidden_size)
+        model = vafl(LSTM(data_shape, hidden_size, num_layers, target_size), hidden_size)
     elif cfg['assist_mode'] in ['none', 'bag', 'stack']:
         model = LSTM(data_shape, hidden_size, num_layers, target_size)
     else:

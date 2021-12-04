@@ -4,6 +4,7 @@ from config import cfg
 from .utils import init_param, normalize, loss_fn, feature_split
 from .interm import interm
 from .late import late
+from .vafl import vafl
 
 
 class Conv(nn.Module):

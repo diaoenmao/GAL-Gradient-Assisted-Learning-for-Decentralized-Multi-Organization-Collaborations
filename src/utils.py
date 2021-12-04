@@ -97,6 +97,8 @@ def recur(fn, input, *args):
         output = {}
         for key in input:
             output[key] = recur(fn, input[key], *args)
+    elif isinstance(input, str):
+        output = input
     elif input is None:
         output = None
     else:
@@ -125,6 +127,7 @@ def process_control():
                                                                      'global_epoch'] != 'none' else 'none'
     cfg['assist_rate_mode'] = cfg['control']['assist_rate_mode']
     cfg['noise'] = float(cfg['control']['noise']) if cfg['control']['noise'] != 'none' else 'none'
+    cfg['active_rate'] = 0.25
     if 'al' in cfg['control']:
         cfg['al'] = cfg['control']['al']
     if 'rl' in cfg['control']:
@@ -177,7 +180,7 @@ def process_control():
             cfg[model_name]['momentum'] = 0.9
             cfg[model_name]['weight_decay'] = 5e-4
             cfg[model_name]['batch_size'] = {'train': 64, 'test': 512}
-            cfg[model_name]['lr'] = 1e-1
+            cfg[model_name]['lr'] = 1e-2
         else:
             raise ValueError('Not valid data name')
         cfg[model_name]['num_epochs'] = cfg['local_epoch']
