@@ -130,7 +130,7 @@ def process_control():
     cfg['active_rate'] = 0.25
     if 'al' in cfg['control']:
         cfg['al'] = cfg['control']['al']
-    if 'rl' in cfg['control']:
+    if 'rl' in cfg['control'] and cfg['control']['rl'] != 'none':
         rl_list = cfg['control']['rl'].split('-')
         num_rl = cfg['num_users'] // len(rl_list)
         rm_rl = cfg['num_users'] - num_rl * len(rl_list)
@@ -144,6 +144,8 @@ def process_control():
             cfg['rl'] = ['l1' for _ in range(cfg['num_users'])]
         else:
             cfg['rl'] = ['l2' for _ in range(cfg['num_users'])]
+    if 'dl' in cfg['control']:
+        cfg['dl'] = cfg['control']['dl']
     cfg['noised_organization_id'] = list(range(cfg['num_users'] // 2, cfg['num_users']))
     cfg['assist'] = {}
     cfg['assist']['batch_size'] = {'train': 1024, 'test': 1024}

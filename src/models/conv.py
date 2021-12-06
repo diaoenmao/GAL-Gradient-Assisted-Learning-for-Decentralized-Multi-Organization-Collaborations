@@ -5,6 +5,7 @@ from .utils import init_param, normalize, loss_fn, feature_split
 from .interm import interm
 from .late import late
 from .vafl import vafl
+from .dl import dl
 
 
 class Conv(nn.Module):
@@ -64,7 +65,10 @@ def conv():
     elif cfg['assist_mode'] == 'late':
         model = late(Conv(data_shape, hidden_size, target_size))
     elif cfg['assist_mode'] in ['none', 'bag', 'stack']:
-        model = Conv(data_shape, hidden_size, target_size)
+        if cfg['dl'] == '1':
+            model = dl(Conv(data_shape, hidden_size, target_size), hidden_size[-1])
+        else:
+            model = Conv(data_shape, hidden_size, target_size)
     else:
         raise ValueError('Not valid assist mode')
     model.apply(init_param)

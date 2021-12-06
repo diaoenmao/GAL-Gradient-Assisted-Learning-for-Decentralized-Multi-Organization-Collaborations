@@ -6,6 +6,7 @@ from .utils import init_param, normalize, loss_fn, feature_split
 from .interm import interm
 from .late import late
 from .vafl import vafl
+from .dl import dl
 
 
 class LSTM(nn.Module):
@@ -57,7 +58,10 @@ def lstm():
     elif cfg['assist_mode'] == 'vafl':
         model = vafl(LSTM(data_shape, hidden_size, num_layers, target_size), hidden_size)
     elif cfg['assist_mode'] in ['none', 'bag', 'stack']:
-        model = LSTM(data_shape, hidden_size, num_layers, target_size)
+        if cfg['dl'] == '1':
+            model = dl(LSTM(data_shape, hidden_size, num_layers, target_size), hidden_size)
+        else:
+            model = LSTM(data_shape, hidden_size, num_layers, target_size)
     else:
         raise ValueError('Not valid assist mode')
     model.apply(init_param)

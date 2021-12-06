@@ -310,6 +310,28 @@ def main():
             controls = control_2_4_8
         else:
             raise ValueError('Not valid model')
+    elif file == 'dl':
+        filename = '{}_{}_{}'.format(run, file, model)
+        script_name = [['{}_model_assist.py'.format(run)]]
+        model_names = [[model]]
+        if model in ['conv']:
+            data_names = [['MNIST', 'CIFAR10']]
+            control_name = [[['2', '4', '8'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['0'], ['none'], ['1']]]
+            control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                          resume_mode, control_name)
+            data_names = [['ModelNet40']]
+            control_name = [[['12'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['0'], ['none'], ['1']]]
+            control_12 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                       resume_mode, control_name)
+            controls = control_2_4_8 + control_12
+        elif model in ['lstm']:
+            data_names = [['MIMIC']]
+            control_name = [[['4'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['0'], ['none'], ['1']]]
+            control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                          resume_mode, control_name)
+            controls = control_2_4_8
+        else:
+            raise ValueError('Not valid model')
     else:
         raise ValueError('Not valid file')
     s = '#!/bin/bash\n'

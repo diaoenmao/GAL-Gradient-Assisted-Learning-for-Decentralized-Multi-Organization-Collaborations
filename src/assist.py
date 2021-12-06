@@ -1,4 +1,5 @@
 import copy
+import numpy as np
 import torch
 import models
 from config import cfg
@@ -51,7 +52,14 @@ class Assist:
                                   self.organization_target[0][split], reduction='sum')
             loss.backward()
             self.organization_target[iter][split] = - copy.deepcopy(self.organization_output[iter - 1][split].grad)
-            dataset[split].target = self.organization_target[iter][split].numpy()
+            if cfg['dl'] == '1':
+                target = self.organization_target[iter][split].unsqueeze(1).numpy()
+                if iter == 1:
+                    dataset[split].target = target
+                else:
+                    dataset[split].target = np.concatenate([dataset[split].target, target], axis=1)
+            else:
+                dataset[split].target = self.organization_target[iter][split].numpy()
             self.organization_output[iter - 1][split].detach_()
         data_loader = [None for _ in range(len(self.feature_split))]
         for i in range(len(self.feature_split)):

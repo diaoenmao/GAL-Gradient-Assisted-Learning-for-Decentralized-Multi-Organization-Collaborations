@@ -41,6 +41,8 @@ class Organization:
 
     def train(self, iter, data_loader, metric, logger):
         model = eval('models.{}().to(cfg["device"])'.format(self.model_name[iter]))
+        if cfg['dl'] == '1' and iter > 1:
+            model.load_state_dict(self.model_parameters[iter - 1])
         model.train(True)
         optimizer = make_optimizer(model, self.model_name[iter])
         scheduler = make_scheduler(optimizer, self.model_name[iter])
@@ -77,7 +79,13 @@ class Organization:
     def predict(self, iter, data_loader):
         with torch.no_grad():
             model = eval('models.{}().to(cfg["device"])'.format(self.model_name[iter]))
-            model.load_state_dict(self.model_parameters[iter])
+            if cfg['dl'] == '1' and iter > 1:
+                for i in range(len(self.model_parameters)):
+                    if self.model_parameters[i] is not None:
+                        last_iter = i
+                model.load_state_dict(self.model_parameters[last_iter])
+            else:
+                model.load_state_dict(self.model_parameters[iter])
             model.train(False)
             organization_output = {'id': [], 'target': []}
             for i, input in enumerate(data_loader):
@@ -86,7 +94,10 @@ class Organization:
                 input = to_device(input, cfg['device'])
                 output = model(input)
                 organization_output['id'].append(input['id'].cpu())
-                output_target = output['target'].cpu()
+                if cfg['dl'] == '1':
+                    output_target = output['target'][:, iter - 1].cpu()
+                else:
+                    output_target = output['target'].cpu()
                 if cfg['noise'] > 0 and self.organization_id in cfg['noised_organization_id']:
                     noise = torch.normal(0, cfg['noise'], size=output_target.size())
                     output_target = output_target + noise

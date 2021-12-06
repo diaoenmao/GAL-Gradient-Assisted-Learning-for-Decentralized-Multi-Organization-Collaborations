@@ -233,13 +233,30 @@ def make_control_list(file, model):
             controls = control_2_4_8
         else:
             raise ValueError('Not valid model')
+    elif file == 'dl':
+        model_names = [[model]]
+        if model in ['conv']:
+            data_names = [['MNIST', 'CIFAR10']]
+            control_name = [[['2', '4', '8'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'], ['l2'], ['1']]]
+            control_2_4_8 = make_controls(data_names, model_names, control_name)
+            data_names = [['ModelNet40']]
+            control_name = [[['12'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'], ['l2'], ['1']]]
+            control_12 = make_controls(data_names, model_names, control_name)
+            controls = control_2_4_8 + control_12
+        elif model in ['lstm']:
+            data_names = [['MIMIC']]
+            control_name = [[['4'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'], ['l1'], ['1']]]
+            control_2_4_8 = make_controls(data_names, model_names, control_name)
+            controls = control_2_4_8
+        else:
+            raise ValueError('Not valid model')
     else:
         raise ValueError('Not valid file')
     return controls
 
 
 def main():
-    files = ['interm', 'late', 'noise', 'rate', 'assist', 'al', 'rl', 'vafl']
+    files = ['interm', 'late', 'noise', 'rate', 'assist', 'al', 'rl', 'vafl', 'dl']
     models = ['linear', 'conv', 'lstm']
     controls = []
     for file in files:
