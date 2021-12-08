@@ -83,7 +83,8 @@ class Organization:
                 for i in range(len(self.model_parameters)):
                     if self.model_parameters[i] is not None:
                         last_iter = i
-                model.load_state_dict(self.model_parameters[last_iter])
+                # model.load_state_dict(self.model_parameters[last_iter])
+                model.load_state_dict(self.model_parameters[iter])
             else:
                 model.load_state_dict(self.model_parameters[iter])
             model.train(False)

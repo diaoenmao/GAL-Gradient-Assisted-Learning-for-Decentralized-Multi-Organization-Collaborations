@@ -182,7 +182,7 @@ def process_control():
             cfg[model_name]['momentum'] = 0.9
             cfg[model_name]['weight_decay'] = 5e-4
             cfg[model_name]['batch_size'] = {'train': 64, 'test': 512}
-            cfg[model_name]['lr'] = 1e-2
+            cfg[model_name]['lr'] = 1e-1
         else:
             raise ValueError('Not valid data name')
         cfg[model_name]['num_epochs'] = cfg['local_epoch']
