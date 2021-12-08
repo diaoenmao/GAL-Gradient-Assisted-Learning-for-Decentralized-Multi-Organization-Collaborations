@@ -5,6 +5,7 @@ from config import cfg
 from .utils import init_param, normalize, loss_fn, feature_split
 from .late import late
 from .vafl import vafl
+from .dl import dl
 
 
 class Linear(nn.Module):
@@ -45,7 +46,10 @@ def linear():
     elif cfg['assist_mode'] == 'vafl':
         model = vafl(Linear(data_shape, target_size), target_size)
     elif cfg['assist_mode'] in ['none', 'bag', 'stack']:
-        model = Linear(data_shape, target_size)
+        if cfg['dl'] == '1':
+            model = dl(Linear(data_shape, target_size), target_size)
+        else:
+            model = Linear(data_shape, target_size)
     else:
         raise ValueError('Not valid assist mode')
     model.apply(init_param)
