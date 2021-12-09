@@ -25,14 +25,15 @@ class Assist:
 
     def make_model_name(self):
         model_name_list = cfg['model_name'].split('-')
-        if len(model_name_list) == 1:
-            model_name = [model_name_list[0] for _ in range(cfg['global']['num_epochs'] + 1)]
-            model_name = [model_name for _ in range(len(self.feature_split))]
-        elif len(model_name_list) == 2:
-            model_name = [model_name_list[0]] + [model_name_list[1] for _ in range(cfg['global']['num_epochs'])]
-            model_name = [model_name for _ in range(len(self.feature_split))]
-        else:
-            raise ValueError('Not valid model name')
+        num_split = cfg['num_users'] // len(model_name_list)
+        rm_split = cfg['num_users'] - num_split * len(model_name_list)
+        model_name = []
+        for i in range(len(model_name_list)):
+            model_name.extend([model_name_list[i] for _ in range(num_split)])
+            if i == len(model_name_list) - 1:
+                model_name.extend([model_name_list[i] for _ in range(rm_split)])
+        for i in range(len(model_name)):
+            model_name[i] = [model_name[i] for _ in range(cfg['global']['num_epochs'] + 1)]
         return model_name
 
     def make_organization(self):
@@ -52,7 +53,7 @@ class Assist:
                                   self.organization_target[0][split], reduction='sum')
             loss.backward()
             self.organization_target[iter][split] = - copy.deepcopy(self.organization_output[iter - 1][split].grad)
-            if cfg['dl'] == '1':
+            if 'dl' in cfg and cfg['dl'] == '1':
                 target = self.organization_target[iter][split].unsqueeze(1).numpy()
                 if iter == 1:
                     dataset[split].target = target

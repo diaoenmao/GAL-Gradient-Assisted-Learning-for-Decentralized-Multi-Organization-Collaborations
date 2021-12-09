@@ -40,64 +40,94 @@ class Organization:
         return initialization
 
     def train(self, iter, data_loader, metric, logger):
-        model = eval('models.{}().to(cfg["device"])'.format(self.model_name[iter]))
-        if cfg['dl'] == '1' and iter > 1:
-            model.load_state_dict(self.model_parameters[iter - 1])
-        model.train(True)
-        optimizer = make_optimizer(model, self.model_name[iter])
-        scheduler = make_scheduler(optimizer, self.model_name[iter])
-        for local_epoch in range(1, cfg[self.model_name[iter]]['num_epochs'] + 1):
-            start_time = time.time()
-            for i, input in enumerate(data_loader):
-                input = collate(input)
-                input_size = input['data'].size(0)
-                input['feature_split'] = self.feature_split
-                input = to_device(input, cfg['device'])
-                input['loss_mode'] = cfg['rl'][self.organization_id]
-                optimizer.zero_grad()
-                output = model(input)
-                output['loss'].backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), 1)
-                optimizer.step()
-                evaluation = metric.evaluate(metric.metric_name['train'], input, output)
-                logger.append(evaluation, 'train', n=input_size)
-            scheduler.step()
-            local_time = (time.time() - start_time)
-            local_finished_time = datetime.timedelta(
-                seconds=round((cfg[self.model_name[iter]]['num_epochs'] - local_epoch) * local_time))
-            info = {'info': ['Model: {}'.format(cfg['model_tag']),
-                             'Train Local Epoch: {}({:.0f}%)'.format(local_epoch, 100. * local_epoch /
-                                                                     cfg[self.model_name[iter]]['num_epochs']),
-                             'ID: {}'.format(self.organization_id),
-                             'Local Finished Time: {}'.format(local_finished_time)]}
+        if self.model_name[iter] in ['gb', 'svm']:
+            model = eval('models.{}().to(cfg["device"])'.format(self.model_name[iter]))
+            data, target = data_loader.dataset.data, data_loader.dataset.target
+            input = {'data': torch.tensor(data), 'target': torch.tensor(target), 'feature_split':self.feature_split}
+            input_size = len(input['data'])
+            output = model.fit(input)
+            evaluation = metric.evaluate(metric.metric_name['train'], input, output)
+            logger.append(evaluation, 'train', n=input_size)
+            info = {'info': ['Model: {}'.format(cfg['model_tag']), 'ID: {}'.format(self.organization_id)]}
             logger.append(info, 'train', mean=False)
             print(logger.write('train', metric.metric_name['train']), end='\r', flush=True)
-        sys.stdout.write('\x1b[2K')
-        self.model_parameters[iter] = model.to('cpu').state_dict()
+            self.model_parameters[iter] = model
+        else:
+            model = eval('models.{}().to(cfg["device"])'.format(self.model_name[iter]))
+            if 'dl' in cfg and ['dl'] == '1' and iter > 1:
+                model.load_state_dict(self.model_parameters[iter - 1])
+            model.train(True)
+            optimizer = make_optimizer(model, self.model_name[iter])
+            scheduler = make_scheduler(optimizer, self.model_name[iter])
+            for local_epoch in range(1, cfg[self.model_name[iter]]['num_epochs'] + 1):
+                start_time = time.time()
+                for i, input in enumerate(data_loader):
+                    input = collate(input)
+                    input_size = input['data'].size(0)
+                    input['feature_split'] = self.feature_split
+                    input = to_device(input, cfg['device'])
+                    input['loss_mode'] = cfg['rl'][self.organization_id]
+                    optimizer.zero_grad()
+                    output = model(input)
+                    output['loss'].backward()
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), 1)
+                    optimizer.step()
+                    evaluation = metric.evaluate(metric.metric_name['train'], input, output)
+                    logger.append(evaluation, 'train', n=input_size)
+                scheduler.step()
+                local_time = (time.time() - start_time)
+                local_finished_time = datetime.timedelta(
+                    seconds=round((cfg[self.model_name[iter]]['num_epochs'] - local_epoch) * local_time))
+                info = {'info': ['Model: {}'.format(cfg['model_tag']),
+                                 'Train Local Epoch: {}({:.0f}%)'.format(local_epoch, 100. * local_epoch /
+                                                                         cfg[self.model_name[iter]]['num_epochs']),
+                                 'ID: {}'.format(self.organization_id),
+                                 'Local Finished Time: {}'.format(local_finished_time)]}
+                logger.append(info, 'train', mean=False)
+                print(logger.write('train', metric.metric_name['train']), end='\r', flush=True)
+            sys.stdout.write('\x1b[2K')
+            self.model_parameters[iter] = model.to('cpu').state_dict()
         return
 
     def predict(self, iter, data_loader):
-        with torch.no_grad():
-            model = eval('models.{}().to(cfg["device"])'.format(self.model_name[iter]))
-            model.load_state_dict(self.model_parameters[iter])
-            model.train(False)
+        if self.model_name[iter] in ['gb', 'svm']:
+            model = self.model_parameters[iter]
+            data, target = data_loader.dataset.data, data_loader.dataset.target
+            input = {'data': torch.tensor(data), 'target': torch.tensor(target), 'feature_split':self.feature_split}
+            output = model.predict(input)
             organization_output = {'id': [], 'target': []}
-            for i, input in enumerate(data_loader):
-                input = collate(input)
-                input['feature_split'] = self.feature_split
-                input = to_device(input, cfg['device'])
-                output = model(input)
-                organization_output['id'].append(input['id'].cpu())
-                if cfg['dl'] == '1':
-                    output_target = output['target'][:, iter - 1].cpu()
-                else:
-                    output_target = output['target'].cpu()
-                if cfg['noise'] > 0 and self.organization_id in cfg['noised_organization_id']:
-                    noise = torch.normal(0, cfg['noise'], size=output_target.size())
-                    output_target = output_target + noise
-                organization_output['target'].append(output_target)
-            organization_output['id'] = torch.cat(organization_output['id'], dim=0)
-            organization_output['target'] = torch.cat(organization_output['target'], dim=0)
+            organization_output['id'] = torch.tensor(data_loader.dataset.id)
+            organization_output['target'] = output['target']
             organization_output['id'], indices = torch.sort(organization_output['id'])
             organization_output['target'] = organization_output['target'][indices]
+        else:
+            with torch.no_grad():
+                model = eval('models.{}().to(cfg["device"])'.format(self.model_name[iter]))
+                if 'dl' in cfg and cfg['dl'] == '1' and iter > 1:
+                    for i in range(len(self.model_parameters)):
+                        if self.model_parameters[i] is not None:
+                            last_iter = i
+                    model.load_state_dict(self.model_parameters[last_iter])
+                else:
+                    model.load_state_dict(self.model_parameters[iter])
+                model.train(False)
+                organization_output = {'id': [], 'target': []}
+                for i, input in enumerate(data_loader):
+                    input = collate(input)
+                    input['feature_split'] = self.feature_split
+                    input = to_device(input, cfg['device'])
+                    output = model(input)
+                    organization_output['id'].append(input['id'].cpu())
+                    if 'dl' in cfg and cfg['dl'] == '1':
+                        output_target = output['target'][:, iter - 1].cpu()
+                    else:
+                        output_target = output['target'].cpu()
+                    if cfg['noise'] > 0 and self.organization_id in cfg['noised_organization_id']:
+                        noise = torch.normal(0, cfg['noise'], size=output_target.size())
+                        output_target = output_target + noise
+                    organization_output['target'].append(output_target)
+                organization_output['id'] = torch.cat(organization_output['id'], dim=0)
+                organization_output['target'] = torch.cat(organization_output['target'], dim=0)
+                organization_output['id'], indices = torch.sort(organization_output['id'])
+                organization_output['target'] = organization_output['target'][indices]
         return organization_output

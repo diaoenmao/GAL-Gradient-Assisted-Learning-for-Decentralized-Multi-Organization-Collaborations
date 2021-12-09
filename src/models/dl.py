@@ -7,26 +7,25 @@ from .utils import init_param, normalize, loss_fn, feature_split, reset_paramete
 
 
 class DL(nn.Module):
-    def __init__(self, block, hidden_size, target_size):
+    def __init__(self, block, global_epoch, hidden_size, target_size):
         super().__init__()
         self.target_size = target_size
         self.block = copy.deepcopy(block)
         self.block.apply(reset_parameters)
-        self.rnn = nn.RNN(hidden_size, hidden_size)
-        self.linear = nn.Linear(hidden_size, target_size)
+        linear = []
+        for i in range(global_epoch):
+            linear.append(nn.Linear(hidden_size, target_size))
+        self.linear = nn.ModuleList(linear)
 
     def forward(self, input):
         output = {'loss': 0}
         x = {'data': input['data'], 'feature_split': input['feature_split']}
         x = self.block.feature(x)
         num_epochs = input['target'].size(1)
-        x = x.unsqueeze(0).repeat(num_epochs, *[1 for _ in range(len(x.size()))])
-        x, _ = self.rnn(x)
-        x = self.linear(x)
         output_target = []
         input_target = []
         for i in range(num_epochs):
-            output_target_i = x[i]
+            output_target_i = self.linear[i](x)
             if cfg['data_name'] == 'MIMIC':
                 output_target_i = output_target_i.unsqueeze(0)
             input_target_i = input['target'][:, i]
@@ -44,7 +43,8 @@ class DL(nn.Module):
 
 
 def dl(block, hidden_size):
+    global_epoch = cfg['global_epoch']
     target_size = cfg['target_size']
-    model = DL(block, hidden_size, target_size)
+    model = DL(block, global_epoch, hidden_size, target_size)
     model.apply(init_param)
     return model

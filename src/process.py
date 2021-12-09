@@ -237,15 +237,15 @@ def make_control_list(file, model):
         model_names = [[model]]
         if model in ['conv']:
             data_names = [['MNIST', 'CIFAR10']]
-            control_name = [[['2', '4', '8'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'], ['l2'], ['1']]]
+            control_name = [[['2', '4', '8'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['0'], ['none'], ['1']]]
             control_2_4_8 = make_controls(data_names, model_names, control_name)
             data_names = [['ModelNet40']]
-            control_name = [[['12'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'], ['l2'], ['1']]]
+            control_name = [[['12'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['0'], ['none'], ['1']]]
             control_12 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
             data_names = [['MIMIC']]
-            control_name = [[['4'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'], ['l1'], ['1']]]
+            control_name = [[['4'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['0'], ['none'], ['1']]]
             control_2_4_8 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8
         else:
@@ -261,7 +261,7 @@ def main():
     controls = []
     for file in files:
         for model in models:
-            if file == 'interm' and model == 'linear':
+            if file in ['interm', 'dl'] and model == 'linear':
                 continue
             controls += make_control_list(file, model)
     processed_result_exp, processed_result_history = process_result(controls)
@@ -384,18 +384,8 @@ def make_df_exp(extracted_processed_result_exp):
     df = defaultdict(list)
     for exp_name in extracted_processed_result_exp:
         control = exp_name.split('_')
-        if len(control) == 8:
-            data_name, model_name, num_users, assist_mode, local_epoch, global_epoch, assist_rate_mode, noise = control
-            index_name = ['_'.join([assist_mode, local_epoch, global_epoch, assist_rate_mode, noise])]
-        elif len(control) == 9:
-            data_name, model_name, num_users, assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al = control
-            index_name = ['_'.join([assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al])]
-        elif len(control) == 10:
-            data_name, model_name, num_users, assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al, rl = control
-            index_name = ['_'.join([assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al, rl])]
-        else:
-            raise ValueError('Not valid control')
-        df_name = '_'.join([data_name, model_name, num_users])
+        index_name = ['_'.join(control[3:])]
+        df_name = '_'.join(control[:3])
         df[df_name].append(pd.DataFrame(data=extracted_processed_result_exp[exp_name], index=index_name))
     write_xlsx('{}/result_exp.xlsx'.format(result_path), df)
     return df
@@ -405,19 +395,9 @@ def make_df_history(extracted_processed_result_history):
     df = defaultdict(list)
     for exp_name in extracted_processed_result_history:
         control = exp_name.split('_')
-        if len(control) == 8:
-            data_name, model_name, num_users, assist_mode, local_epoch, global_epoch, assist_rate_mode, noise = control
-            index_name = ['_'.join([assist_mode, local_epoch, global_epoch, assist_rate_mode, noise])]
-        elif len(control) == 9:
-            data_name, model_name, num_users, assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al = control
-            index_name = ['_'.join([assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al])]
-        elif len(control) == 10:
-            data_name, model_name, num_users, assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al, rl = control
-            index_name = ['_'.join([assist_mode, local_epoch, global_epoch, assist_rate_mode, noise, al, rl])]
-        else:
-            raise ValueError('Not valid control')
+        index_name = ['_'.join(control[3:])]
         for k in extracted_processed_result_history[exp_name]:
-            df_name = '_'.join([data_name, model_name, num_users, k])
+            df_name = '_'.join(control[:3] + [k])
             df[df_name].append(
                 pd.DataFrame(data=extracted_processed_result_history[exp_name][k].reshape(1, -1), index=index_name))
     write_xlsx('{}/result_history.xlsx'.format(result_path), df)

@@ -120,6 +120,9 @@ def process_control():
     cfg['linear'] = {}
     cfg['conv'] = {'hidden_size': [64, 128, 256, 512]}
     cfg['lstm'] = {'hidden_size': 128, 'num_layers': 1}
+    cfg['gb'] = {}
+    cfg['svm'] = {}
+    cfg['gb-svm'] = {}
     cfg['num_users'] = int(cfg['control']['num_users'])
     cfg['assist_mode'] = cfg['control']['assist_mode']
     cfg['local_epoch'] = int(cfg['control']['local_epoch']) if cfg['control']['local_epoch'] != 'none' else 'none'
@@ -146,6 +149,8 @@ def process_control():
             cfg['rl'] = ['l2' for _ in range(cfg['num_users'])]
     if 'dl' in cfg['control']:
         cfg['dl'] = cfg['control']['dl']
+    if cfg['model_name'] in ['gb', 'svm', 'gb-svm']:
+        cfg['ma'] = '1'
     cfg['noised_organization_id'] = list(range(cfg['num_users'] // 2, cfg['num_users']))
     cfg['assist'] = {}
     cfg['assist']['batch_size'] = {'train': 1024, 'test': 1024}
@@ -196,6 +201,19 @@ def process_control():
         cfg[model_name]['lr'] = 1e-4
         cfg[model_name]['num_epochs'] = cfg['local_epoch']
         cfg[model_name]['scheduler_name'] = 'None'
+    elif model_name in ['gb', 'svm', 'gb-svm']:
+        cfg[model_name]['optimizer_name'] = 'SGD'
+        cfg[model_name]['momentum'] = 0.9
+        cfg[model_name]['weight_decay'] = 5e-4
+        cfg[model_name]['batch_size'] = {'train': 1024, 'test': 1024}
+        cfg[model_name]['lr'] = 1e-1
+        cfg[model_name]['num_epochs'] = cfg['local_epoch']
+        cfg[model_name]['scheduler_name'] = 'MultiStepLR'
+        cfg[model_name]['factor'] = 0.1
+        cfg[model_name]['milestones'] = [50, 100]
+        if model_name == 'gb-svm':
+            cfg['gb'] = cfg[model_name]
+            cfg['svm'] = cfg[model_name]
     else:
         raise ValueError('Not valid model name')
     cfg['global'] = {}
