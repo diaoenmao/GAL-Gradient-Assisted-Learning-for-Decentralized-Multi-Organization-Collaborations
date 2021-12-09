@@ -250,13 +250,22 @@ def make_control_list(file, model):
             controls = control_2_4_8
         else:
             raise ValueError('Not valid model')
+    elif file == 'ma':
+        model_names = [['gb', 'svm', 'gb-svm']]
+        data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
+        control_name = [[['2', '4'], ['stack'], ['100'], ['10'], ['search'], ['0']]]
+        control_2_4 = make_controls(data_names, model_names, control_name)
+        data_names = [['Blob', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
+        control_name = [[['8'], ['stack'], ['100'], ['10'], ['search'], ['0']]]
+        control_8 = make_controls(data_names, model_names, control_name)
+        controls = control_2_4 + control_8
     else:
         raise ValueError('Not valid file')
     return controls
 
 
 def main():
-    files = ['interm', 'late', 'noise', 'rate', 'assist', 'al', 'rl', 'vafl', 'dl']
+    files = ['interm', 'late', 'noise', 'rate', 'assist', 'al', 'rl', 'vafl', 'dl', 'ma']
     models = ['linear', 'conv', 'lstm']
     controls = []
     for file in files:
@@ -428,6 +437,8 @@ def make_vis(df):
         if num_users == '1':
             continue
         if stat == 'std':
+            continue
+        if model_name in ['gb', 'svm', 'gb-svm']:
             continue
         df_name_std = '_'.join([data_name, model_name, num_users, metric_name, 'std'])
         if metric_name in ['Loss', 'Accuracy', 'MAD', 'Assist-Rate']:

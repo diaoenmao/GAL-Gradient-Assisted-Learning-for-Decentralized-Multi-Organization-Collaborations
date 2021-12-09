@@ -346,6 +346,8 @@ def main():
             control_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                       resume_mode, control_name)
             controls = control_2_4 + control_8
+        else:
+            raise ValueError('Not valid model')
     else:
         raise ValueError('Not valid file')
     s = '#!/bin/bash\n'
