@@ -46,7 +46,7 @@ def linear():
     elif cfg['assist_mode'] == 'vafl':
         model = vafl(Linear(data_shape, target_size), target_size)
     elif cfg['assist_mode'] in ['none', 'bag', 'stack']:
-        if cfg['dl'] == '1':
+        if 'dl' in cfg and cfg['dl'] == '1':
             model = dl(Linear(data_shape, target_size), target_size)
         else:
             model = Linear(data_shape, target_size)

@@ -31,7 +31,7 @@ class Metric(object):
         for split in metric_name:
             if split == 'test':
                 if cfg['data_name'] in ['Blob', 'Iris', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10',
-                                        'ModelNet40']:
+                                        'ModelNet40', 'ShapeNet55']:
                     metric_name[split] += ['Accuracy']
                 elif cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMIC']:
                     metric_name[split] += ['MAD']
@@ -40,7 +40,8 @@ class Metric(object):
         return metric_name
 
     def make_pivot(self):
-        if cfg['data_name'] in ['Blob', 'Iris', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10', 'ModelNet40']:
+        if cfg['data_name'] in ['Blob', 'Iris', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10', 'ModelNet40',
+                                'ShapeNet55']:
             pivot = -float('inf')
             pivot_name = 'Accuracy'
             pivot_direction = 'up'

@@ -20,7 +20,7 @@ class Late(nn.Module):
         output = {}
         x = []
         output['loss'] = 0
-        if cfg['data_name'] == 'ModelNet40':
+        if cfg['data_name'] in ['ModelNet40', 'ShapeNet55']:
             input['target'] = input['target'].repeat(12 // cfg['num_users'])
         for i in range(len(self.blocks)):
             x_i = {'data': input['data'], 'feature_split': input['feature_split'][i]}

@@ -9,7 +9,8 @@ from .mimic import MIMIC
 from .mnist import MNIST
 from .cifar import CIFAR10
 from .modelnet import ModelNet40
+from .shapenet import ShapeNet55
 from .utils import *
 
 __all__ = ('Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MIMIC',
-           'MNIST', 'CIFAR10', 'ModelNet40')
+           'MNIST', 'CIFAR10', 'ModelNet40', 'ShapeNet55')

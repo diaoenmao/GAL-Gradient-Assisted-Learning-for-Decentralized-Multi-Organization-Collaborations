@@ -46,7 +46,7 @@ def feature_split(input, feature_split):
         mask[feature_split] = 1
         mask = mask.view(cfg['data_shape'])
         output = torch.masked_fill(input, mask == 0, 0)
-    elif cfg['data_name'] in ['ModelNet40']:
+    elif cfg['data_name'] in ['ModelNet40', 'ShapeNet55']:
         output = torch.index_select(input, -1, feature_split)
         output = output.permute(4, 0, 1, 2, 3).reshape(-1, *output.size()[1:-1])
     else:

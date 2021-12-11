@@ -20,7 +20,7 @@ def fetch_dataset(data_name, verbose=True):
                                 'transform=datasets.Compose([transforms.ToTensor()]))'.format(data_name))
         dataset['test'] = eval('datasets.{}(root=root, split=\'test\', '
                                'transform=datasets.Compose([transforms.ToTensor()]))'.format(data_name))
-    elif data_name in ['ModelNet40']:
+    elif data_name in ['ModelNet40', 'ShapeNet55']:
         dataset['train'] = eval('datasets.{}(root=root, split=\'train\', '
                                 'transform=datasets.Compose([transforms.Resize((32, 32)), '
                                 'transforms.ToTensor()]))'.format(data_name))
@@ -56,7 +56,8 @@ def make_data_loader(dataset, tag, shuffle=None):
 
 
 def split_dataset(num_users):
-    if cfg['data_name'] in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'ModelNet40']:
+    if cfg['data_name'] in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'ModelNet40',
+                            'ShapeNet55']:
         num_features = cfg['data_shape'][-1]
         feature_split = list(torch.randperm(num_features).split(num_features // num_users))
         feature_split = feature_split[:num_users - 1] + [torch.cat(feature_split[num_users - 1:])]

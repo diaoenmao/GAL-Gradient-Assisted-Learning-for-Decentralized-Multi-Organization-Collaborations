@@ -43,7 +43,7 @@ class Conv(nn.Module):
         x = self.blocks(x)
         output['target'] = self.linear(x)
         if 'target' in input:
-            if cfg['data_name'] == 'ModelNet40':
+            if cfg['data_name'] in ['ModelNet40', 'ShapeNet55']:
                 input['target'] = input['target'].repeat(12 // cfg['num_users'], 1)
             if 'loss_mode' in input:
                 output['loss'] = loss_fn(output['target'], input['target'], loss_mode=input['loss_mode'])
@@ -65,7 +65,7 @@ def conv():
     elif cfg['assist_mode'] == 'late':
         model = late(Conv(data_shape, hidden_size, target_size))
     elif cfg['assist_mode'] in ['none', 'bag', 'stack']:
-        if cfg['dl'] == '1':
+        if 'dl' in cfg and cfg['dl'] == '1':
             model = dl(Conv(data_shape, hidden_size, target_size), hidden_size[-1])
         else:
             model = Conv(data_shape, hidden_size, target_size)

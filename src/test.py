@@ -163,3 +163,21 @@ from logger import Logger
 #     p1_5 = torch.norm((x - y).abs(), 1.5, dim=-1).pow(1.5).sum().div(x.numel())
 #     p2 = torch.norm((x - y).abs(), 2, dim=-1).pow(2).sum().div(x.numel())
 #     print(mae, p1, mse, p2, p1_5, (x - y).abs().pow(1.5).mean())
+
+
+if __name__ == "__main__":
+    cfg['seed'] = 0
+    torch.manual_seed(cfg['seed'])
+    torch.cuda.manual_seed(cfg['seed'])
+    cfg['data_name'] = 'ShapeNet55'
+    cfg['model_name'] = 'conv'
+    process_control()
+    dataset = fetch_dataset(cfg['data_name'])
+    print(len(dataset['train']), len(dataset['test']))
+    process_dataset(dataset)
+    data_loader = make_data_loader(dataset, cfg['model_name'])
+    for i, input in enumerate(data_loader['train']):
+        input = collate(input)
+        print(input['data'].shape)
+        print(input['target'].shape)
+        break

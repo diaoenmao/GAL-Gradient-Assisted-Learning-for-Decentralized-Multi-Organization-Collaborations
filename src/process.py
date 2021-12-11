@@ -32,7 +32,7 @@ def make_control_list(file, model):
             data_names = [['MNIST', 'CIFAR10']]
             control_name = [[['2', '4', '8'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_2_4_8 = make_controls(data_names, model_names, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['12'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_12 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8 + control_12
@@ -56,7 +56,7 @@ def make_control_list(file, model):
             data_names = [['MNIST', 'CIFAR10']]
             control_name = [[['2', '4', '8'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_2_4_8 = make_controls(data_names, model_names, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['12'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_12 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8 + control_12
@@ -80,7 +80,7 @@ def make_control_list(file, model):
             data_names = [['MNIST', 'CIFAR10']]
             control_name = [[['2', '4', '8'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['1', '5']]]
             control_2_4_8 = make_controls(data_names, model_names, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['12'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['1', '5']]]
             control_12 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8 + control_12
@@ -105,7 +105,7 @@ def make_control_list(file, model):
             data_names = [['MNIST', 'CIFAR10']]
             control_name = [[['2', '4', '8'], ['stack'], ['10'], ['10'], ['fix'], ['0']]]
             control_2_4_8 = make_controls(data_names, model_names, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['12'], ['stack'], ['10'], ['10'], ['fix'], ['0']]]
             control_12 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8 + control_12
@@ -136,10 +136,10 @@ def make_control_list(file, model):
             data_names = [['MNIST', 'CIFAR10']]
             control_name = [[['2', '4', '8'], ['none', 'stack'], ['10'], ['10'], ['search'], ['0']]]
             control_2_4_8 = make_controls(data_names, model_names, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['1'], ['none'], ['10'], ['10'], ['search'], ['0']]]
             control_1_2 = make_controls(data_names, model_names, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['12'], ['none', 'stack'], ['10'], ['10'], ['search'], ['0']]]
             control_12 = make_controls(data_names, model_names, control_name)
             controls = control_1_1 + control_2_4_8 + control_1_2 + control_12
@@ -167,7 +167,7 @@ def make_control_list(file, model):
             data_names = [['MNIST', 'CIFAR10']]
             control_name = [[['2', '4', '8'], ['none'], ['10'], ['10'], ['search', 'fix'], ['0'], ['1']]]
             control_2_4_8 = make_controls(data_names, model_names, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['12'], ['none'], ['10'], ['10'], ['search', 'fix'], ['0'], ['1']]]
             control_12 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8 + control_12
@@ -195,7 +195,7 @@ def make_control_list(file, model):
             control_name = [[['8'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'],
                              ['l1.5', 'l1', 'l4', 'l2-l1.5', 'l2-l1', 'l2-l4']]]
             control_2_4_8 = make_controls(data_names, model_names, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['12'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'],
                              ['l1.5', 'l1', 'l4', 'l2-l1.5', 'l2-l1', 'l2-l4']]]
             control_12 = make_controls(data_names, model_names, control_name)
@@ -222,7 +222,7 @@ def make_control_list(file, model):
             data_names = [['MNIST', 'CIFAR10']]
             control_name = [[['2', '4', '8'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_2_4_8 =make_controls(data_names, model_names, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['12'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_12 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8 + control_12
@@ -239,7 +239,7 @@ def make_control_list(file, model):
             data_names = [['MNIST', 'CIFAR10']]
             control_name = [[['2', '4', '8'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['0'], ['none'], ['1']]]
             control_2_4_8 = make_controls(data_names, model_names, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['12'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['0'], ['none'], ['1']]]
             control_12 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8 + control_12

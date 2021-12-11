@@ -28,7 +28,7 @@ class Interm(nn.Module):
         output['target'] = self.linear(x)
         if cfg['data_name'] == 'MIMIC':
             output['target'] = output['target'].unsqueeze(0)
-        if cfg['data_name'] == 'ModelNet40':
+        if cfg['data_name'] in ['ModelNet40', 'ShapeNet55']:
             input['target'] = input['target'].repeat(12 // cfg['num_users'])
         output['loss'] = loss_fn(output['target'], input['target'])
         return output

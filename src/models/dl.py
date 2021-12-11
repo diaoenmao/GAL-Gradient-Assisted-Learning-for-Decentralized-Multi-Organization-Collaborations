@@ -29,7 +29,7 @@ class DL(nn.Module):
             if cfg['data_name'] == 'MIMIC':
                 output_target_i = output_target_i.unsqueeze(0)
             input_target_i = input['target'][:, i]
-            if cfg['data_name'] == 'ModelNet40':
+            if cfg['data_name'] in ['ModelNet40', 'ShapeNet55']:
                 input_target_i = input_target_i.repeat(12 // cfg['num_users'], 1)
             if 'loss_mode' in input:
                 output['loss'] += loss_fn(output_target_i, input_target_i, loss_mode=input['loss_mode'])

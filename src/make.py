@@ -52,7 +52,7 @@ def main():
             control_name = [[['2', '4', '8'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['12'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_12 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                        resume_mode, control_name)
@@ -84,7 +84,7 @@ def main():
             control_name = [[['2', '4', '8'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['12'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_12 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                        resume_mode, control_name)
@@ -116,7 +116,7 @@ def main():
             control_name = [[['2', '4', '8'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['1', '5']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['12'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['1', '5']]]
             control_12 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                        resume_mode, control_name)
@@ -148,7 +148,7 @@ def main():
             control_name = [[['2', '4', '8'], ['stack'], ['10'], ['10'], ['fix'], ['0']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['12'], ['stack'], ['10'], ['10'], ['fix'], ['0']]]
             control_12 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                        resume_mode, control_name)
@@ -188,11 +188,11 @@ def main():
             control_name = [[['2', '4', '8'], ['none', 'stack'], ['10'], ['10'], ['search'], ['0']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['1'], ['none'], ['10'], ['10'], ['search'], ['0']]]
             control_1_2 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                         resume_mode, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['12'], ['none', 'stack'], ['10'], ['10'], ['search'], ['0']]]
             control_12 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                        resume_mode, control_name)
@@ -228,7 +228,7 @@ def main():
             control_name = [[['2', '4', '8'], ['none'], ['10'], ['10'], ['search', 'fix'], ['0'], ['1']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['12'], ['none'], ['10'], ['10'], ['search', 'fix'], ['0'], ['1']]]
             control_12 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                        resume_mode, control_name)
@@ -263,7 +263,7 @@ def main():
                              ['l1.5', 'l1', 'l4', 'l2-l1.5', 'l2-l1', 'l2-l4']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['12'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'],
                              ['l1.5', 'l1', 'l4', 'l2-l1.5', 'l2-l1', 'l2-l4']]]
             control_12 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
@@ -297,7 +297,7 @@ def main():
             control_name = [[['2', '4', '8'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['12'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_12 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                        resume_mode, control_name)
@@ -319,7 +319,7 @@ def main():
             control_name = [[['2', '4', '8'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['0'], ['none'], ['1']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
-            data_names = [['ModelNet40']]
+            data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['12'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['0'], ['none'], ['1']]]
             control_12 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                        resume_mode, control_name)
