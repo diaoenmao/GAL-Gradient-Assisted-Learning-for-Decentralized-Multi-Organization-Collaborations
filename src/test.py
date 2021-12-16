@@ -165,19 +165,19 @@ from logger import Logger
 #     print(mae, p1, mse, p2, p1_5, (x - y).abs().pow(1.5).mean())
 
 
-if __name__ == "__main__":
-    cfg['seed'] = 0
-    torch.manual_seed(cfg['seed'])
-    torch.cuda.manual_seed(cfg['seed'])
-    cfg['data_name'] = 'ShapeNet55'
-    cfg['model_name'] = 'conv'
-    process_control()
-    dataset = fetch_dataset(cfg['data_name'])
-    print(len(dataset['train']), len(dataset['test']))
-    process_dataset(dataset)
-    data_loader = make_data_loader(dataset, cfg['model_name'])
-    for i, input in enumerate(data_loader['train']):
-        input = collate(input)
-        print(input['data'].shape)
-        print(input['target'].shape)
-        break
+# if __name__ == "__main__":
+#     cfg['seed'] = 0
+#     torch.manual_seed(cfg['seed'])
+#     torch.cuda.manual_seed(cfg['seed'])
+#     cfg['data_name'] = 'ShapeNet55'
+#     cfg['model_name'] = 'conv'
+#     process_control()
+#     dataset = fetch_dataset(cfg['data_name'])
+#     print(len(dataset['train']), len(dataset['test']))
+#     process_dataset(dataset)
+#     data_loader = make_data_loader(dataset, cfg['model_name'])
+#     print(len(data_loader['train']))
+#     for i, input in enumerate(data_loader['train']):
+#         input = collate(input)
+#         print(i, input['data'].shape, input['target'].shape)
+#         break

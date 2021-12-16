@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 from utils import check_exists, makedir_exist_ok, save, load
 
 
-class MIMIC(Dataset):
+class MIMICLOS(Dataset):
     data_name = 'MIMIC'
 
     def __init__(self, root, split):
@@ -94,6 +94,94 @@ class MIMIC(Dataset):
         target_size = 1
         return (train_id, train_data, train_target), (test_id, test_data, test_target), target_size
 
+
+class MIMICM(Dataset):
+    data_name = 'MIMIC'
+
+    def __init__(self, root, split):
+        self.root = os.path.expanduser(root)
+        self.split = split
+        if not check_exists(self.processed_folder):
+            self.process()
+        self.id, self.data, self.target = load(os.path.join(self.processed_folder, '{}.pt'.format(self.split)))
+        self.target_size = load(os.path.join(self.processed_folder, 'meta.pt'))
+
+    def __getitem__(self, index):
+        id, data, target = torch.tensor(self.id[index]), torch.tensor(self.data[index]), torch.tensor(
+            self.target[index])
+        input = {'id': id, 'data': data, 'target': target}
+        return input
+
+    def __len__(self):
+        return len(self.data)
+
+    @property
+    def processed_folder(self):
+        return os.path.join(self.root, 'processed')
+
+    @property
+    def raw_folder(self):
+        return os.path.join(self.root, 'raw')
+
+    def process(self):
+        if not check_exists(self.raw_folder):
+            self.download()
+        train_set, test_set, meta = self.make_data()
+        save(train_set, os.path.join(self.processed_folder, 'train.pt'))
+        save(test_set, os.path.join(self.processed_folder, 'test.pt'))
+        save(meta, os.path.join(self.processed_folder, 'meta.pt'))
+        return
+
+    def download(self):
+        makedir_exist_ok(self.raw_folder)
+        return
+
+    def __repr__(self):
+        fmt_str = 'Dataset {}\nSize: {}\nRoot: {}\nSplit: {}'.format(self.__class__.__name__, self.__len__(), self.root,
+                                                                     self.split)
+        return fmt_str
+
+    def make_data(self):
+        train_reader = LengthOfStayReader(dataset_dir=os.path.join(self.raw_folder, 'length-of-stay', 'train'),
+                                          listfile=os.path.join(self.raw_folder, 'length-of-stay', 'train',
+                                                                'listfile.csv'))
+        test_reader = LengthOfStayReader(dataset_dir=os.path.join(self.raw_folder, 'length-of-stay', 'test'),
+                                         listfile=os.path.join(self.raw_folder, 'length-of-stay', 'test',
+                                                               'listfile.csv'))
+
+        timestep = 1.0
+        discretizer = Discretizer(timestep=timestep, store_masks=True, impute_strategy='previous', start_time='zero',
+                                  config_path=os.path.join(self.root, 'mimic3-benchmarks', 'mimic3models',
+                                                           'resources', 'discretizer_config.json'))
+        discretizer_header = discretizer.transform(train_reader.read_example(0)["X"])[1].split(',')
+        cont_channels = [i for (i, x) in enumerate(discretizer_header) if x.find("->") == -1]
+        normalizer = Normalizer(fields=cont_channels)
+        normalizer_state = 'los_ts{}.input_str_previous.start_time_zero.n5e4.normalizer'.format(timestep)
+        normalizer_state = os.path.join(self.root, 'mimic3-benchmarks', 'mimic3models', 'length_of_stay',
+                                        normalizer_state)
+        normalizer.load_params(normalizer_state)
+        train_nbatches = 2000
+        test_nbatches = 1000
+        train_data_gen = BatchGen(reader=train_reader, discretizer=discretizer, normalizer=normalizer,
+                                  partition='custom', batch_size=8, steps=train_nbatches,
+                                  shuffle=False)
+        test_data_gen = BatchGen(reader=test_reader, discretizer=discretizer, normalizer=normalizer,
+                                 partition='custom', batch_size=8, steps=test_nbatches, shuffle=False)
+        train_data, test_data = [], []
+        train_target, test_target = [], []
+        for i in range(train_data_gen.steps):
+            x, y_processed, y = train_data_gen.next(return_y_true=True)
+            train_data.append(x.astype(np.float32))
+            train_target.append(y.reshape(-1, 1).astype(np.float32))
+        train_target = np.stack(train_target, axis=0)
+        for i in range(test_data_gen.steps):
+            x, y_processed, y = test_data_gen.next(return_y_true=True)
+            test_data.append(x.astype(np.float32))
+            test_target.append(y.reshape(-1, 1).astype(np.float32))
+        test_target = np.stack(test_target, axis=0)
+        train_id, test_id = np.arange(len(train_data)).astype(np.int64), np.arange(len(test_data)).astype(np.int64)
+        target_size = 1
+        return (train_id, train_data, train_target), (test_id, test_data, test_target), target_size
 
 class Reader(object):
     def __init__(self, dataset_dir, listfile=None):

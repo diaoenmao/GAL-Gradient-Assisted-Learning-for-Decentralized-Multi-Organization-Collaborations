@@ -12,7 +12,7 @@ def fetch_dataset(data_name, verbose=True):
     if verbose:
         print('fetching data {}...'.format(data_name))
     root = './data/{}'.format(data_name)
-    if data_name in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MIMIC']:
+    if data_name in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']:
         dataset['train'] = eval('datasets.{}(root=root, split=\'train\')'.format(data_name))
         dataset['test'] = eval('datasets.{}(root=root, split=\'test\')'.format(data_name))
     elif data_name in ['MNIST', 'CIFAR10']:
@@ -27,6 +27,9 @@ def fetch_dataset(data_name, verbose=True):
         dataset['test'] = eval('datasets.{}(root=root, split=\'test\', '
                                'transform=datasets.Compose([transforms.Resize((32, 32)), '
                                'transforms.ToTensor()]))'.format(data_name))
+    elif data_name in ['MIMICLOS', 'MIMICM']:
+        dataset['train'] = eval('datasets.{}(root=root, split=\'train\')'.format(data_name))
+        dataset['test'] = eval('datasets.{}(root=root, split=\'test\')'.format(data_name))
     else:
         raise ValueError('Not valid dataset name')
     if verbose:
@@ -61,7 +64,7 @@ def split_dataset(num_users):
         num_features = cfg['data_shape'][-1]
         feature_split = list(torch.randperm(num_features).split(num_features // num_users))
         feature_split = feature_split[:num_users - 1] + [torch.cat(feature_split[num_users - 1:])]
-    elif cfg['data_name'] in ['MIMIC']:
+    elif cfg['data_name'] in ['MIMICLOS', 'MIMICM']:
         num_features = cfg['data_shape'][-1]
         feature_split = list(torch.chunk(torch.arange(num_features), num_users))
     elif cfg['data_name'] in ['MNIST', 'CIFAR10']:

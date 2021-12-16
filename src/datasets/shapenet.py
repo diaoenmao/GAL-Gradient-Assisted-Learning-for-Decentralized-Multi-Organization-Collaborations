@@ -69,6 +69,12 @@ class ShapeNet55(Dataset):
     def make_data(self):
         train_df = pd.read_csv(os.path.join(self.raw_folder, 'shapenet55v1', 'train.csv'))
         test_df = pd.read_csv(os.path.join(self.raw_folder, 'shapenet55v1', 'val.csv'))
+        train_files = os.listdir(os.path.join(self.raw_folder, 'shapenet55v1', 'train'))
+        test_files = os.listdir(os.path.join(self.raw_folder, 'shapenet55v1', 'val'))
+        train_files_id = pd.DataFrame(list(set([int(x.split('_')[1]) for x in train_files])), columns=['id'])
+        test_files_id = pd.DataFrame(list(set([int(x.split('_')[1]) for x in test_files])), columns=['id'])
+        train_df = train_df.merge(train_files_id, left_on='id', right_on='id')
+        test_df = test_df.merge(test_files_id, left_on='id', right_on='id')
         classes, train_target = np.unique(train_df['synsetId'].to_numpy(), return_inverse=True)
         train_target = train_target.astype(np.int64)
         classes_to_labels = {classes[i]: i for i in range(len(classes))}
