@@ -25,9 +25,8 @@ class ModelNet40(Dataset):
         self.classes_to_labels, self.target_size = load(os.path.join(self.processed_folder, 'meta.pt'))
 
     def __getitem__(self, index):
-        data = []
-        for i in range(len(self.data[index])):
-            data.append(self.transform({'data': Image.open(self.data[index][i]).convert('RGB')})['data'])
+        data = [self.transform({'data': Image.open(self.data[index][i]).convert('RGB')})['data'] for i in
+                range(len(self.data[index]))]
         id, data, target = torch.tensor(self.id[index]), torch.stack(data, dim=-1), torch.tensor(self.target[index])
         input = {'id': id, 'data': data, 'target': target}
         return input

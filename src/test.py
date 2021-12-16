@@ -173,11 +173,15 @@ from logger import Logger
 #     cfg['model_name'] = 'conv'
 #     process_control()
 #     dataset = fetch_dataset(cfg['data_name'])
-#     print(len(dataset['train']), len(dataset['test']))
 #     process_dataset(dataset)
 #     data_loader = make_data_loader(dataset, cfg['model_name'])
-#     print(len(data_loader['train']))
+#     print(len(dataset['train']), len(dataset['test']))
+#     print(len(data_loader['train']),len(data_loader['test']))
 #     for i, input in enumerate(data_loader['train']):
 #         input = collate(input)
 #         print(i, input['data'].shape, input['target'].shape)
 #         break
+#     for i, input in enumerate(data_loader['test']):
+#         input = collate(input)
+#         print(i, input['data'].shape, input['target'].shape)
+#         # break

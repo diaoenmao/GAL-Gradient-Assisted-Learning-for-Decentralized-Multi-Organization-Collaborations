@@ -186,7 +186,7 @@ def process_control():
             cfg[model_name]['optimizer_name'] = 'SGD'
             cfg[model_name]['momentum'] = 0.9
             cfg[model_name]['weight_decay'] = 5e-4
-            cfg[model_name]['batch_size'] = {'train': 64, 'test': 512}
+            cfg[model_name]['batch_size'] = {'train': 64, 'test': 128}
             cfg[model_name]['lr'] = 1e-1
         else:
             raise ValueError('Not valid data name')

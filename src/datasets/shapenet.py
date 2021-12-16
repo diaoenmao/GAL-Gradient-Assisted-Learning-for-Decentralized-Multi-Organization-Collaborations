@@ -26,9 +26,8 @@ class ShapeNet55(Dataset):
         self.classes_to_labels, self.target_size = load(os.path.join(self.processed_folder, 'meta.pt'))
 
     def __getitem__(self, index):
-        data = []
-        for i in range(len(self.data[index])):
-            data.append(self.transform({'data': Image.open(self.data[index][i]).convert('RGB')})['data'])
+        data = [self.transform({'data': Image.open(self.data[index][i]).convert('RGB')})['data'] for i in
+                range(len(self.data[index]))]
         id, data, target = torch.tensor(self.id[index]), torch.stack(data, dim=-1), torch.tensor(self.target[index])
         input = {'id': id, 'data': data, 'target': target}
         return input
@@ -93,7 +92,7 @@ class ShapeNet55(Dataset):
             views = []
             for i in range(1, 13):
                 view = '{0:03}'.format(i)
-                views_path = os.path.join(self.raw_folder, 'shapenet55v1', 'test', '{}_{}.jpg'.format(name, view))
+                views_path = os.path.join(self.raw_folder, 'shapenet55v1', 'val', '{}_{}.jpg'.format(name, view))
                 views.append(views_path)
             test_data.append(views)
         train_id, test_id = np.arange(len(train_data)).astype(np.int64), np.arange(len(test_data)).astype(np.int64)
