@@ -22,14 +22,11 @@ def fetch_dataset(data_name, verbose=True):
                                'transform=datasets.Compose([transforms.ToTensor()]))'.format(data_name))
     elif data_name in ['ModelNet40', 'ShapeNet55']:
         dataset['train'] = eval('datasets.{}(root=root, split=\'train\', '
-                                'transform=datasets.Compose([transforms.Resize((32, 32)), '
-                                'transforms.ToTensor()]))'.format(data_name))
+                                'transform=datasets.Compose([transforms.ToTensor()]))'.format(data_name))
         dataset['test'] = eval('datasets.{}(root=root, split=\'test\', '
-                               'transform=datasets.Compose([transforms.Resize((32, 32)), '
-                               'transforms.ToTensor()]))'.format(data_name))
+                               'transform=datasets.Compose([transforms.ToTensor()]))'.format(data_name))
     elif data_name in ['MIMICLOS', 'MIMICM']:
         dataset['train'] = eval('datasets.{}(root=root, split=\'train\')'.format(data_name))
-        dataset['test'] = eval('datasets.{}(root=root, split=\'test\')'.format(data_name))
     else:
         raise ValueError('Not valid dataset name')
     if verbose:

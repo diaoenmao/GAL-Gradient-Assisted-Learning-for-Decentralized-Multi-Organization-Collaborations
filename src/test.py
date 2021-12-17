@@ -169,14 +169,14 @@ from logger import Logger
 #     cfg['seed'] = 0
 #     torch.manual_seed(cfg['seed'])
 #     torch.cuda.manual_seed(cfg['seed'])
-#     cfg['data_name'] = 'ShapeNet55'
+#     cfg['data_name'] = 'ModelNet40'
 #     cfg['model_name'] = 'conv'
 #     process_control()
 #     dataset = fetch_dataset(cfg['data_name'])
 #     process_dataset(dataset)
 #     data_loader = make_data_loader(dataset, cfg['model_name'])
 #     print(len(dataset['train']), len(dataset['test']))
-#     print(len(data_loader['train']),len(data_loader['test']))
+#     print(len(data_loader['train']), len(data_loader['test']))
 #     for i, input in enumerate(data_loader['train']):
 #         input = collate(input)
 #         print(i, input['data'].shape, input['target'].shape)
@@ -184,4 +184,4 @@ from logger import Logger
 #     for i, input in enumerate(data_loader['test']):
 #         input = collate(input)
 #         print(i, input['data'].shape, input['target'].shape)
-#         # break
+#         break

@@ -4,6 +4,7 @@ import numpy as np
 import os
 import torch
 import pandas as pd
+from tqdm import tqdm
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
@@ -65,6 +66,9 @@ class ShapeNet55(Dataset):
             self.__class__.__name__, self.__len__(), self.root, self.split, self.transform.__repr__())
         return fmt_str
 
+    def load_data(self, path):
+        return self.transform({'data': Image.open(path).convert('RGB')})['data']
+
     def make_data(self):
         train_df = pd.read_csv(os.path.join(self.raw_folder, 'shapenet55v1', 'train.csv'))
         test_df = pd.read_csv(os.path.join(self.raw_folder, 'shapenet55v1', 'val.csv'))
@@ -79,21 +83,34 @@ class ShapeNet55(Dataset):
         classes_to_labels = {classes[i]: i for i in range(len(classes))}
         test_target = np.vectorize(classes_to_labels.get)(test_df['synsetId']).astype(np.int64)
         train_data, test_data = [], []
-        for i in range(len(train_df['id'])):
+        makedir_exist_ok(os.path.join(self.raw_folder, 'shapenet55v1', 'train_32x32'))
+        makedir_exist_ok(os.path.join(self.raw_folder, 'shapenet55v1', 'val_32x32'))
+        transform = transforms.Resize((32, 32))
+        for i in tqdm(range(len(train_df['id']))):
             name = 'model_{0:06}'.format(train_df['id'][i])
             views = []
             for i in range(1, 13):
                 view = '{0:03}'.format(i)
-                views_path = os.path.join(self.raw_folder, 'shapenet55v1', 'train', '{}_{}.jpg'.format(name, view))
-                views.append(views_path)
+                org_path_i = os.path.join(self.raw_folder, 'shapenet55v1', 'train', '{}_{}.jpg'.format(name, view))
+                transform_path_i = os.path.join(self.raw_folder, 'shapenet55v1', 'train_32x32',
+                                                '{}_{}.jpg'.format(name, view))
+                data_i = Image.open(org_path_i).convert('RGB')
+                data_i = transform(data_i)
+                data_i.save(transform_path_i)
+                views.append(transform_path_i)
             train_data.append(views)
-        for i in range(len(test_df['id'])):
+        for i in tqdm(range(len(test_df['id']))):
             name = 'model_{0:06}'.format(test_df['id'][i])
             views = []
             for i in range(1, 13):
                 view = '{0:03}'.format(i)
-                views_path = os.path.join(self.raw_folder, 'shapenet55v1', 'val', '{}_{}.jpg'.format(name, view))
-                views.append(views_path)
+                org_path_i = os.path.join(self.raw_folder, 'shapenet55v1', 'val', '{}_{}.jpg'.format(name, view))
+                transform_path_i = os.path.join(self.raw_folder, 'shapenet55v1', 'val_32x32',
+                                                '{}_{}.jpg'.format(name, view))
+                data_i = Image.open(org_path_i).convert('RGB')
+                data_i = transform(data_i)
+                data_i.save(transform_path_i)
+                views.append(transform_path_i)
             test_data.append(views)
         train_id, test_id = np.arange(len(train_data)).astype(np.int64), np.arange(len(test_data)).astype(np.int64)
         classes_to_labels = anytree.Node('U', index=[])
