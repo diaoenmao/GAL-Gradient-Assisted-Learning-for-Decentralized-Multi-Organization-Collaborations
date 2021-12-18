@@ -16,7 +16,7 @@ data_name: CIFAR10
 model_name: conv
 # experiment
 pin_memory: False
-num_workers: 8
+num_workers: 0
 init_seed: 0
 num_experiments: 1
 log_interval: 0.25

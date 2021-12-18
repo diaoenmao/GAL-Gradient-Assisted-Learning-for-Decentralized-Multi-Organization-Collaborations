@@ -11,12 +11,6 @@ from metrics import Metric
 from utils import save, to_device, process_control, process_dataset, resume, collate
 from logger import make_logger
 
-if sys.platform == 'linux':
-    import resource
-
-    rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
-    resource.setrlimit(resource.RLIMIT_NOFILE, (rlimit[1], rlimit[1]))
-torch.multiprocessing.set_sharing_strategy('file_system')
 cudnn.benchmark = True
 parser = argparse.ArgumentParser(description='cfg')
 for k in cfg:
