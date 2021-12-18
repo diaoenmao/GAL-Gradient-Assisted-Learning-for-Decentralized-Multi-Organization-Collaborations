@@ -15,7 +15,8 @@ data_name: CIFAR10
 # MNIST
 model_name: conv
 # experiment
-num_workers: 0
+pin_memory: False
+num_workers: 8
 init_seed: 0
 num_experiments: 1
 log_interval: 0.25

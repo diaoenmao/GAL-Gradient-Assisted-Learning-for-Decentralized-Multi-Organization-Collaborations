@@ -3,12 +3,11 @@ import copy
 import datetime
 import models
 import os
+import sys
 import shutil
 import time
 import torch
 import torch.backends.cudnn as cudnn
-from itertools import repeat
-from multiprocessing import Pool
 from config import cfg
 from data import fetch_dataset, make_data_loader, split_dataset
 from metrics import Metric
@@ -16,7 +15,12 @@ from assist import Assist
 from utils import save, load, process_control, process_dataset, resume
 from logger import make_logger
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+if sys.platform == 'linux':
+    import resource
+
+    rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
+    resource.setrlimit(resource.RLIMIT_NOFILE, (rlimit[1], rlimit[1]))
+torch.multiprocessing.set_sharing_strategy('file_system')
 cudnn.benchmark = True
 parser = argparse.ArgumentParser(description='cfg')
 for k in cfg:
@@ -54,14 +58,14 @@ def runExperiment():
     organization = assist.make_organization()
     metric = Metric({'train': ['Loss'], 'test': ['Loss']})
     if cfg['resume_mode'] == 1:
-         result = resume(cfg['model_tag'])
-         last_epoch = result['epoch']
-         logger = result['logger']
-         if last_epoch > 1:
-             assist = result['assist']
-             organization = result['organization']
-         else:
-             logger = make_logger(os.path.join('output', 'runs', 'train_{}'.format(cfg['model_tag'])))
+        result = resume(cfg['model_tag'])
+        last_epoch = result['epoch']
+        logger = result['logger']
+        if last_epoch > 1:
+            assist = result['assist']
+            organization = result['organization']
+        else:
+            logger = make_logger(os.path.join('output', 'runs', 'train_{}'.format(cfg['model_tag'])))
     else:
         last_epoch = 1
         logger = make_logger(os.path.join('output', 'runs', 'train_{}'.format(cfg['model_tag'])))

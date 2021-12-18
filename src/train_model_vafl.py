@@ -3,6 +3,7 @@ import datetime
 import models
 import numpy as np
 import os
+import sys
 import shutil
 import time
 import torch
@@ -13,7 +14,12 @@ from metrics import Metric
 from utils import save, to_device, process_control, process_dataset, make_optimizer, make_scheduler, resume, collate
 from logger import make_logger
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+if sys.platform == 'linux':
+    import resource
+
+    rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
+    resource.setrlimit(resource.RLIMIT_NOFILE, (rlimit[1], rlimit[1]))
+torch.multiprocessing.set_sharing_strategy('file_system')
 cudnn.benchmark = True
 parser = argparse.ArgumentParser(description='cfg')
 for k in cfg:
