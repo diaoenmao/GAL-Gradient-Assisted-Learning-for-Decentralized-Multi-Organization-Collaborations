@@ -22,13 +22,8 @@ class MIMICL(Dataset):
         self.target_size = load(os.path.join(self.processed_folder, 'meta.pt'))
 
     def __getitem__(self, index):
-        print(len(self.data.iloc[:, -1].unique()))
-        print(self.id[index])
-        print(self.data.loc[index].values.shape)
-        print(self.target.loc[index].values.shape)
-        exit()
-        id, data, target = torch.tensor(self.id[index]), torch.tensor(self.data[index]), torch.tensor(
-            self.target[index])
+        id, data, target = torch.tensor(self.id[index]), torch.tensor(self.data.loc[index].to_numpy()), torch.tensor(
+            self.target.loc[index].to_numpy())
         input = {'id': id, 'data': data, 'target': target}
         return input
 

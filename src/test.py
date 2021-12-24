@@ -201,9 +201,9 @@ if __name__ == "__main__":
     print(len(data_loader['train']), len(data_loader['test']))
     for i, input in enumerate(data_loader['train']):
         input = collate(input)
-        print(i, input['data'].shape, input['target'].shape)
+        print(i, input['data'].shape, input['target'].shape, input['length'])
         break
     for i, input in enumerate(data_loader['test']):
         input = collate(input)
-        print(i, input['data'].shape, input['target'].shape)
+        print(i, input['data'].shape, input['target'].shape, input['length'])
         break

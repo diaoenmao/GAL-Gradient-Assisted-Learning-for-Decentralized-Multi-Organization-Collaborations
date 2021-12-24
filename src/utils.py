@@ -8,7 +8,7 @@ import torch.optim as optim
 from itertools import repeat
 from torchvision.utils import save_image
 from config import cfg
-
+from torch.nn.utils.rnn import pad_sequence
 
 def check_exists(path):
     return os.path.exists(path)
@@ -199,7 +199,7 @@ def process_control():
         cfg['IC9_embeddings'] = 5893
         cfg[model_name]['optimizer_name'] = 'Adam'
         cfg[model_name]['weight_decay'] = 5e-4
-        cfg[model_name]['batch_size'] = {'train': 1, 'test': 1}
+        cfg[model_name]['batch_size'] = {'train': 8, 'test': 8}
         cfg[model_name]['lr'] = 1e-4
         cfg[model_name]['num_epochs'] = cfg['local_epoch']
         cfg[model_name]['scheduler_name'] = 'None'
@@ -320,5 +320,16 @@ def resume(model_tag, load_tag='checkpoint', verbose=True):
 
 def collate(input):
     for k in input:
-        input[k] = torch.stack(input[k], 0)
+        if cfg['data_name'] in ['MIMICL', 'MIMICL']:
+            if k == 'data':
+                length = torch.tensor([len(input['data'][i]) for i in range(len(input['data']))])
+                input[k] = pad_sequence(input['data'], batch_first=True, padding_value=0)
+            elif k == 'target':
+                input[k] = pad_sequence(input['target'], batch_first=True, padding_value=float('nan'))
+            else:
+                input[k] = torch.stack(input[k], 0)
+        else:
+            input[k] = torch.stack(input[k], 0)
+    if cfg['data_name'] in ['MIMICL', 'MIMICL']:
+        input['length'] = length
     return input
