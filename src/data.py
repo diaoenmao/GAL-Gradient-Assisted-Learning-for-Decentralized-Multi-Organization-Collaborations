@@ -27,6 +27,7 @@ def fetch_dataset(data_name, verbose=True):
                                'transform=datasets.Compose([transforms.ToTensor()]))'.format(data_name))
     elif data_name in ['MIMICL', 'MIMICM']:
         dataset['train'] = eval('datasets.{}(root=root, split=\'train\')'.format(data_name))
+        dataset['test'] = eval('datasets.{}(root=root, split=\'test\')'.format(data_name))
     else:
         raise ValueError('Not valid dataset name')
     if verbose:

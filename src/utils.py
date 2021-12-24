@@ -143,7 +143,7 @@ def process_control():
             if i == len(rl_list) - 1:
                 cfg['rl'].extend([rl_list[i] for _ in range(rm_rl)])
     else:
-        if cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMIC']:
+        if cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMICL']:
             cfg['rl'] = ['l1' for _ in range(cfg['num_users'])]
         else:
             cfg['rl'] = ['l2' for _ in range(cfg['num_users'])]
@@ -188,6 +188,7 @@ def process_control():
             cfg[model_name]['weight_decay'] = 5e-4
             cfg[model_name]['batch_size'] = {'train': 64, 'test': 128}
             cfg[model_name]['lr'] = 1e-1
+            torch.set_num_threads(2)
         else:
             raise ValueError('Not valid data name')
         cfg[model_name]['num_epochs'] = cfg['local_epoch']
@@ -195,6 +196,7 @@ def process_control():
         cfg[model_name]['factor'] = 0.1
         cfg[model_name]['milestones'] = [50, 100]
     elif model_name in ['lstm']:
+        cfg['IC9_embeddings'] = 5893
         cfg[model_name]['optimizer_name'] = 'Adam'
         cfg[model_name]['weight_decay'] = 5e-4
         cfg[model_name]['batch_size'] = {'train': 1, 'test': 1}
