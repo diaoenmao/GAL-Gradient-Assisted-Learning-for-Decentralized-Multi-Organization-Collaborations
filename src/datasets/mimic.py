@@ -22,8 +22,8 @@ class MIMICL(Dataset):
         self.target_size = load(os.path.join(self.processed_folder, 'meta.pt'))
 
     def __getitem__(self, index):
-        id, data, target = torch.tensor(self.id[index]), torch.tensor(self.data.loc[index].to_numpy()), torch.tensor(
-            self.target.loc[index].to_numpy())
+        id, data, target = torch.tensor(self.id[index]), torch.tensor(self.data.loc[[index]].to_numpy()), \
+                           torch.tensor(self.target.loc[[index]].to_numpy())
         input = {'id': id, 'data': data, 'target': target}
         return input
 
@@ -123,7 +123,8 @@ class MIMICL(Dataset):
         train_id, test_id = np.unique(train_id), np.unique(test_id)
         train_data, train_target = train_df.iloc[:, :-1], train_df.iloc[:, [-1]]
         test_data, test_target = test_df.iloc[:, :-1], test_df.iloc[:, [-1]]
-        return (train_id, train_data, train_target), (test_id, test_data, test_target), None
+        target_size = 1
+        return (train_id, train_data, train_target), (test_id, test_data, test_target), target_size
 
 
 class MIMICM(Dataset):
@@ -138,8 +139,8 @@ class MIMICM(Dataset):
         self.target_size = load(os.path.join(self.processed_folder, 'meta.pt'))
 
     def __getitem__(self, index):
-        id, data, target = torch.tensor(self.id[index]), torch.tensor(self.data[index]), torch.tensor(
-            self.target[index])
+        id, data, target = torch.tensor(self.id[index]), torch.tensor(self.data.loc[[index]].to_numpy()), \
+                           torch.tensor(self.target.loc[[index]].to_numpy(), dtype=torch.long).view(-1)
         input = {'id': id, 'data': data, 'target': target}
         return input
 
@@ -239,4 +240,5 @@ class MIMICM(Dataset):
         train_id, test_id = np.unique(train_id), np.unique(test_id)
         train_data, train_target = train_df.iloc[:, :-1], train_df.iloc[:, [-1]]
         test_data, test_target = test_df.iloc[:, :-1], test_df.iloc[:, [-1]]
-        return (train_id, train_data, train_target), (test_id, test_data, test_target), None
+        target_size = 2
+        return (train_id, train_data, train_target), (test_id, test_data, test_target), target_size

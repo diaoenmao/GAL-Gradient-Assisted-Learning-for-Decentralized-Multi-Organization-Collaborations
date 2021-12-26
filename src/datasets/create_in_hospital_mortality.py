@@ -44,6 +44,8 @@ def process_partition(args, partition, eps=1e-6, n_hours=48):
                     if episode_timeseries_i.shape[0] == 0:
                         print('\nno events in ICU', patient, episode_files[j])
                         continue
+                    episode_timeseries_i = episode_timeseries_i.drop('Height', 1)
+                    episode_timeseries_i = episode_timeseries_i.drop('Weight', 1)
                     demo_i = episode_j[['Ethnicity', 'Gender', 'Age']]
                     demo_i = pd.DataFrame(np.repeat(demo_i.values, episode_timeseries_i.shape[0], axis=0),
                                           columns=demo_i.columns)

@@ -23,7 +23,10 @@ class Late(nn.Module):
         if cfg['data_name'] in ['ModelNet40', 'ShapeNet55']:
             input['target'] = input['target'].repeat(12 // cfg['num_users'])
         for i in range(len(self.blocks)):
-            x_i = {'data': input['data'], 'feature_split': input['feature_split'][i]}
+            if cfg['data_name'] in ['MIMICL', 'MIMICM']:
+                x_i = {'data': input['data'], 'length': input['length'], 'feature_split': input['feature_split'][i]}
+            else:
+                x_i = {'data': input['data'], 'feature_split': input['feature_split'][i]}
             x_i = self.blocks[i](x_i)
             output['loss'] += loss_fn(x_i['target'], input['target'])
             x.append(x_i['target'])

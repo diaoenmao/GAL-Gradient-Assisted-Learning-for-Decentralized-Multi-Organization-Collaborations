@@ -36,7 +36,8 @@ def denormalize(input):
 
 
 def feature_split(input, feature_split):
-    if cfg['data_name'] in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MIMIC']:
+    if cfg['data_name'] in ['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR', 'MIMICL',
+                            'MIMICM']:
         mask = torch.zeros(input.size(-1), device=input.device)
         mask[feature_split] = 1
         output = torch.masked_fill(input, mask == 0, 0)
@@ -56,10 +57,16 @@ def feature_split(input, feature_split):
 
 def loss_fn(output, target, reduction='mean', loss_mode=None):
     if target.dtype == torch.int64:
-        loss = F.cross_entropy(output, target, reduction=reduction)
+        if cfg['data_name'] in ['MIMICM']:
+            loss = F.cross_entropy(output, target, reduction=reduction, ignore_index=-1)
+        else:
+            loss = F.cross_entropy(output, target, reduction=reduction)
     else:
+        if cfg['data_name'] in ['MIMICL', 'MIMICM']:
+            mask = ~(target == -1)
+            output, target = output[mask], target[mask]
         if loss_mode is None:
-            if cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMIC']:
+            if cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMICL']:
                 loss = F.l1_loss(output, target, reduction=reduction)
             else:
                 loss = F.mse_loss(output, target, reduction=reduction)

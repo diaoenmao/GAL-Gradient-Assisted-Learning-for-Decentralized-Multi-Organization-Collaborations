@@ -5,10 +5,12 @@ import os
 import pickle
 import torch
 import torch.optim as optim
+import numbers
 from itertools import repeat
 from torchvision.utils import save_image
 from config import cfg
 from torch.nn.utils.rnn import pad_sequence
+
 
 def check_exists(path):
     return os.path.exists(path)
@@ -98,6 +100,8 @@ def recur(fn, input, *args):
         for key in input:
             output[key] = recur(fn, input[key], *args)
     elif isinstance(input, str):
+        output = input
+    elif isinstance(input, numbers.Number):
         output = input
     elif input is None:
         output = None
@@ -196,7 +200,7 @@ def process_control():
         cfg[model_name]['factor'] = 0.1
         cfg[model_name]['milestones'] = [50, 100]
     elif model_name in ['lstm']:
-        cfg['IC9_embeddings'] = 5893
+        cfg[model_name]['ICD9_embeddings'] = 5893
         cfg[model_name]['optimizer_name'] = 'Adam'
         cfg[model_name]['weight_decay'] = 5e-4
         cfg[model_name]['batch_size'] = {'train': 8, 'test': 8}
@@ -320,16 +324,16 @@ def resume(model_tag, load_tag='checkpoint', verbose=True):
 
 def collate(input):
     for k in input:
-        if cfg['data_name'] in ['MIMICL', 'MIMICL']:
+        if cfg['data_name'] in ['MIMICL', 'MIMICM']:
             if k == 'data':
                 length = torch.tensor([len(input['data'][i]) for i in range(len(input['data']))])
                 input[k] = pad_sequence(input['data'], batch_first=True, padding_value=0)
             elif k == 'target':
-                input[k] = pad_sequence(input['target'], batch_first=True, padding_value=float('nan'))
+                input[k] = pad_sequence(input['target'], batch_first=True, padding_value=-1)
             else:
                 input[k] = torch.stack(input[k], 0)
         else:
             input[k] = torch.stack(input[k], 0)
-    if cfg['data_name'] in ['MIMICL', 'MIMICL']:
+    if cfg['data_name'] in ['MIMICL', 'MIMICM']:
         input['length'] = length
     return input

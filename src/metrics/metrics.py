@@ -8,7 +8,7 @@ def Accuracy(output, target, topk=1):
     with torch.no_grad():
         batch_size = target.size(0)
         pred_k = output.topk(topk, 1, True, True)[1]
-        correct_k = pred_k.eq(target.view(-1, 1).expand_as(pred_k)).float().sum()
+        correct_k = pred_k.eq(target.unsqueeze(1).expand_as(pred_k)).float().sum()
         acc = (correct_k * (100.0 / batch_size)).item()
     return acc
 
@@ -31,9 +31,9 @@ class Metric(object):
         for split in metric_name:
             if split == 'test':
                 if cfg['data_name'] in ['Blob', 'Iris', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10',
-                                        'ModelNet40', 'ShapeNet55']:
+                                        'ModelNet40', 'ShapeNet55', 'MIMICM']:
                     metric_name[split] += ['Accuracy']
-                elif cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMIC']:
+                elif cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMICL']:
                     metric_name[split] += ['MAD']
                 else:
                     raise ValueError('Not valid data name')
@@ -41,11 +41,11 @@ class Metric(object):
 
     def make_pivot(self):
         if cfg['data_name'] in ['Blob', 'Iris', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10', 'ModelNet40',
-                                'ShapeNet55']:
+                                'ShapeNet55', 'MIMICM']:
             pivot = -float('inf')
             pivot_name = 'Accuracy'
             pivot_direction = 'up'
-        elif cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMIC']:
+        elif cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMICL']:
             pivot = float('inf')
             pivot_name = 'MAD'
             pivot_direction = 'down'

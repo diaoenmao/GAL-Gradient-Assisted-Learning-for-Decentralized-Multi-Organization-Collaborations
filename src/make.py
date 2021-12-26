@@ -58,7 +58,7 @@ def main():
                                        resume_mode, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['4'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
@@ -90,7 +90,7 @@ def main():
                                        resume_mode, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['4'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
@@ -122,7 +122,7 @@ def main():
                                        resume_mode, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['4'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['1', '5']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
@@ -154,7 +154,7 @@ def main():
                                        resume_mode, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['4'], ['stack'], ['10'], ['10'], ['fix'], ['0']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
@@ -198,11 +198,11 @@ def main():
                                        resume_mode, control_name)
             controls = control_1_1 + control_2_4_8 + control_1_2 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['1'], ['none'], ['10'], ['10'], ['search'], ['0']]]
             control_1 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                       resume_mode, control_name)
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['4'], ['none', 'stack'], ['10'], ['10'], ['search'], ['0']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
@@ -234,7 +234,7 @@ def main():
                                        resume_mode, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['4'], ['none'], ['10'], ['10'], ['search', 'fix'], ['0'], ['1']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
@@ -270,7 +270,7 @@ def main():
                                        resume_mode, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['4'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'],
                              ['l1.5', 'l2', 'l4', 'l1-l1.5', 'l1-l2', 'l1-l4']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
@@ -303,7 +303,7 @@ def main():
                                        resume_mode, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['4'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
@@ -325,7 +325,7 @@ def main():
                                        resume_mode, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['4'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['0'], ['none'], ['1']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
