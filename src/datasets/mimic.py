@@ -20,11 +20,13 @@ class MIMICL(Dataset):
             self.process()
         self.id, self.data, self.target = load(os.path.join(self.processed_folder, '{}.pt'.format(self.split)))
         self.target_size = load(os.path.join(self.processed_folder, 'meta.pt'))
+        self.length = [len(self.data.loc[[i]].to_numpy()) for i in range(len(self.id))]
 
     def __getitem__(self, index):
         id, data, target = torch.tensor(self.id[index]), torch.tensor(self.data.loc[[index]].to_numpy()), \
                            torch.tensor(self.target.loc[[index]].to_numpy())
-        input = {'id': id, 'data': data, 'target': target}
+        length = torch.tensor(self.length[index])
+        input = {'id': id, 'data': data, 'target': target, 'length': length}
         return input
 
     def __len__(self):
@@ -137,11 +139,13 @@ class MIMICM(Dataset):
             self.process()
         self.id, self.data, self.target = load(os.path.join(self.processed_folder, '{}.pt'.format(self.split)))
         self.target_size = load(os.path.join(self.processed_folder, 'meta.pt'))
+        self.length = [len(self.data.loc[[i]].to_numpy()) for i in range(len(self.id))]
 
     def __getitem__(self, index):
         id, data, target = torch.tensor(self.id[index]), torch.tensor(self.data.loc[[index]].to_numpy()), \
                            torch.tensor(self.target.loc[[index]].to_numpy(), dtype=torch.long).view(-1)
-        input = {'id': id, 'data': data, 'target': target}
+        length = torch.tensor(self.length[index]),
+        input = {'id': id, 'data': data, 'target': target, 'length': length}
         return input
 
     def __len__(self):

@@ -94,3 +94,10 @@ def reset_parameters(m):
     reset_parameters = getattr(m, "reset_parameters", None)
     if callable(reset_parameters):
         m.reset_parameters()
+
+
+def unpad_sequence(padded_seq, length):
+    unpadded_seq = []
+    for i in range(len(length)):
+        unpadded_seq.append(padded_seq[i, :length[i]])
+    return unpadded_seq

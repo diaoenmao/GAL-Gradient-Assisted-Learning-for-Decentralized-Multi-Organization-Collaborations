@@ -113,6 +113,8 @@ def recur(fn, input, *args):
 def process_dataset(dataset):
     cfg['target_size'] = dataset['train'].target_size
     cfg['data_size'] = {split: len(dataset[split]) for split in dataset}
+    if cfg['data_name'] in ['MIMICL', 'MIMICM']:
+        cfg['data_length'] = {split: dataset[split].length for split in dataset}
     return
 
 
@@ -204,7 +206,7 @@ def process_control():
         cfg[model_name]['optimizer_name'] = 'Adam'
         cfg[model_name]['weight_decay'] = 5e-4
         cfg[model_name]['batch_size'] = {'train': 8, 'test': 8}
-        cfg[model_name]['lr'] = 1e-4
+        cfg[model_name]['lr'] = 1e-3
         cfg[model_name]['num_epochs'] = cfg['local_epoch']
         cfg[model_name]['scheduler_name'] = 'None'
     elif model_name in ['gb', 'svm', 'gb-svm']:
@@ -326,7 +328,6 @@ def collate(input):
     for k in input:
         if cfg['data_name'] in ['MIMICL', 'MIMICM']:
             if k == 'data':
-                length = torch.tensor([len(input['data'][i]) for i in range(len(input['data']))])
                 input[k] = pad_sequence(input['data'], batch_first=True, padding_value=0)
             elif k == 'target':
                 input[k] = pad_sequence(input['target'], batch_first=True, padding_value=-1)
@@ -334,6 +335,4 @@ def collate(input):
                 input[k] = torch.stack(input[k], 0)
         else:
             input[k] = torch.stack(input[k], 0)
-    if cfg['data_name'] in ['MIMICL', 'MIMICM']:
-        input['length'] = length
     return input
