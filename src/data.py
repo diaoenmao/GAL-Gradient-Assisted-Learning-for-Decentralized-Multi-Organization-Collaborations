@@ -51,7 +51,8 @@ def make_data_loader(dataset, tag, shuffle=None):
     for k in dataset:
         _shuffle = cfg[tag]['shuffle'][k] if shuffle is None else shuffle[k]
         data_loader[k] = DataLoader(dataset=dataset[k], shuffle=_shuffle, batch_size=cfg[tag]['batch_size'][k],
-                                    pin_memory=cfg['pin_memory'], num_workers=cfg['num_workers'], collate_fn=input_collate,
+                                    pin_memory=cfg['pin_memory'], num_workers=cfg['num_workers'],
+                                    collate_fn=input_collate,
                                     worker_init_fn=np.random.seed(cfg['seed']))
     return data_loader
 
@@ -63,11 +64,16 @@ def split_dataset(num_users):
         feature_split = list(torch.randperm(num_features).split(num_features // num_users))
         feature_split = feature_split[:num_users - 1] + [torch.cat(feature_split[num_users - 1:])]
     elif cfg['data_name'] in ['MIMICL', 'MIMICM']:
-        feature_split = [None for _ in range(4)]
-        feature_split[0] = list(range(16))
-        feature_split[1] = list(range(16, 19))
-        feature_split[2] = list(range(19, 21))
-        feature_split[3] = [21]
+        if cfg['num_users'] == 1:
+            feature_split = [list(range(22))]
+        elif cfg['num_users'] == 4:
+            feature_split = [None for _ in range(4)]
+            feature_split[0] = list(range(16))
+            feature_split[1] = list(range(16, 19))
+            feature_split[2] = list(range(19, 21))
+            feature_split[3] = [21]
+        else:
+            raise ValueError('Not valid num users')
     elif cfg['data_name'] in ['MNIST', 'CIFAR10']:
         num_features = np.prod(cfg['data_shape']).item()
         idx = torch.arange(num_features).view(*cfg['data_shape'])

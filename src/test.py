@@ -191,7 +191,7 @@ if __name__ == "__main__":
     cfg['seed'] = 0
     torch.manual_seed(cfg['seed'])
     torch.cuda.manual_seed(cfg['seed'])
-    cfg['data_name'] = 'MIMICL'
+    cfg['data_name'] = 'MIMICM'
     cfg['model_name'] = 'lstm'
     process_control()
     dataset = fetch_dataset(cfg['data_name'])

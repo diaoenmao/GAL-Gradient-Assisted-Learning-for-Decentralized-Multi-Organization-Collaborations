@@ -17,15 +17,27 @@ class Organization:
 
     def initialize(self, dataset, metric, logger):
         input, output, initialization = {}, {}, {}
-        train_target = torch.tensor(dataset['train'].target)
-        test_target = torch.tensor(dataset['test'].target)
+        if cfg['data_name'] in ['MIMICL', 'MIMICM']:
+            train_target = torch.tensor(np.concatenate(dataset['train'].target, axis=0))
+            test_target = torch.tensor(np.concatenate(dataset['test'].target, axis=0))
+        else:
+            train_target = torch.tensor(dataset['train'].target)
+            test_target = torch.tensor(dataset['test'].target)
         if train_target.dtype == torch.int64:
-            _, _, counts = torch.unique(train_target, sorted=True, return_inverse=True, return_counts=True)
+            if cfg['data_name'] in ['MIMICM']:
+                _, _, counts = torch.unique(train_target[train_target != -1], sorted=True, return_inverse=True,
+                                            return_counts=True)
+                counts = torch.tensor([counts[1], counts[0]])
+            else:
+                _, _, counts = torch.unique(train_target, sorted=True, return_inverse=True, return_counts=True)
             x = (counts / counts.sum()).log()
             initialization['train'] = x.view(1, -1).repeat(train_target.size(0), 1)
             initialization['test'] = x.view(1, -1).repeat(test_target.size(0), 1)
         else:
-            x = train_target.mean()
+            if cfg['data_name'] in ['MIMICM']:
+                x = train_target[train_target != -1].mean()
+            else:
+                x = train_target.mean()
             initialization['train'] = x.expand_as(train_target).detach().clone()
             initialization['test'] = x.expand_as(test_target).detach().clone()
         if 'train' in metric.metric_name:
@@ -43,7 +55,7 @@ class Organization:
         if self.model_name[iter] in ['gb', 'svm']:
             model = eval('models.{}().to(cfg["device"])'.format(self.model_name[iter]))
             data, target = data_loader.dataset.data, data_loader.dataset.target
-            input = {'data': torch.tensor(data), 'target': torch.tensor(target), 'feature_split':self.feature_split}
+            input = {'data': torch.tensor(data), 'target': torch.tensor(target), 'feature_split': self.feature_split}
             input_size = len(input['data'])
             output = model.fit(input)
             evaluation = metric.evaluate(metric.metric_name['train'], input, output)
@@ -93,7 +105,7 @@ class Organization:
         if self.model_name[iter] in ['gb', 'svm']:
             model = self.model_parameters[iter]
             data, target = data_loader.dataset.data, data_loader.dataset.target
-            input = {'data': torch.tensor(data), 'target': torch.tensor(target), 'feature_split':self.feature_split}
+            input = {'data': torch.tensor(data), 'target': torch.tensor(target), 'feature_split': self.feature_split}
             output = model.predict(input)
             organization_output = {'id': [], 'target': []}
             organization_output['id'] = torch.tensor(data_loader.dataset.id)
@@ -119,15 +131,26 @@ class Organization:
                     output = model(input)
                     organization_output['id'].append(input['id'].cpu())
                     if 'dl' in cfg and cfg['dl'] == '1':
-                        output_target = output['target'][:, iter - 1].cpu()
+                        if cfg['data_name'] in ['MIMICL', 'MIMICM']:
+                            output_target = output['target'][:, :, iter - 1].cpu()
+                        else:
+                            output_target = output['target'][:, iter - 1].cpu()
                     else:
                         output_target = output['target'].cpu()
                     if cfg['noise'] > 0 and self.organization_id in cfg['noised_organization_id']:
                         noise = torch.normal(0, cfg['noise'], size=output_target.size())
                         output_target = output_target + noise
-                    organization_output['target'].append(output_target)
+                    if cfg['data_name'] in ['MIMICL', 'MIMICM']:
+                        output_target = models.unpad_sequence(output_target, input['length'])
+                        organization_output['target'].extend(output_target)
+                    else:
+                        organization_output['target'].append(output_target)
                 organization_output['id'] = torch.cat(organization_output['id'], dim=0)
-                organization_output['target'] = torch.cat(organization_output['target'], dim=0)
                 organization_output['id'], indices = torch.sort(organization_output['id'])
-                organization_output['target'] = organization_output['target'][indices]
+                if cfg['data_name'] in ['MIMICL', 'MIMICM']:
+                    organization_output['target'] = [organization_output['target'][idx] for idx in indices]
+                    organization_output['target'] = torch.cat(organization_output['target'], dim=0)
+                else:
+                    organization_output['target'] = torch.cat(organization_output['target'], dim=0)
+                    organization_output['target'] = organization_output['target'][indices]
         return organization_output

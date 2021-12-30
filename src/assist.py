@@ -53,14 +53,27 @@ class Assist:
                                   self.organization_target[0][split], reduction='sum')
             loss.backward()
             self.organization_target[iter][split] = - copy.deepcopy(self.organization_output[iter - 1][split].grad)
-            if 'dl' in cfg and cfg['dl'] == '1':
-                target = self.organization_target[iter][split].unsqueeze(1).numpy()
-                if iter == 1:
-                    dataset[split].target = target
+            if cfg['data_name'] in ['MIMICL', 'MIMICM']:
+                if 'dl' in cfg and cfg['dl'] == '1':
+                    target = self.organization_target[iter][split].unsqueeze(1).numpy()
+                    target = np.split(target, np.cumsum(dataset[split].length), axis=0)
+                    if iter == 1:
+                        dataset[split].target = target
+                    else:
+                        dataset[split].target = [np.concatenate([dataset[split].target[i], target[i]], axis=1) for i in
+                                                 range(len(dataset[split].target))]
                 else:
-                    dataset[split].target = np.concatenate([dataset[split].target, target], axis=1)
+                    dataset[split].target = np.split(self.organization_target[iter][split].numpy(),
+                                                     np.cumsum(dataset[split].length), axis=0)
             else:
-                dataset[split].target = self.organization_target[iter][split].numpy()
+                if 'dl' in cfg and cfg['dl'] == '1':
+                    target = self.organization_target[iter][split].unsqueeze(1).numpy()
+                    if iter == 1:
+                        dataset[split].target = target
+                    else:
+                        dataset[split].target = np.concatenate([dataset[split].target, target], axis=1)
+                else:
+                    dataset[split].target = self.organization_target[iter][split].numpy()
             self.organization_output[iter - 1][split].detach_()
         data_loader = [None for _ in range(len(self.feature_split))]
         for i in range(len(self.feature_split)):
@@ -135,7 +148,6 @@ class Assist:
                 self.organization_output[iter][split] = self.organization_output[iter - 1][split] + self.assist_rates[
                     iter] * self.organization_output[iter][split]
         return
-
 
     def update_al(self, organization_outputs, iter):
         if cfg['assist_mode'] == 'none':

@@ -26,9 +26,9 @@ class LSTM(nn.Module):
         icd9 = x[:, :, -1].long()
         icd9_embedding = self.embedding(icd9)
         x = torch.cat([x[:, :, :-1], icd9_embedding], dim=-1)
-        x = pack_padded_sequence(x, input['length'].cpu(), batch_first=True, enforce_sorted=False)
+        # x = pack_padded_sequence(x, input['length'].cpu(), batch_first=True, enforce_sorted=False)
         x, _ = self.lstm(x)
-        x, _ = pad_packed_sequence(x, batch_first=True)
+        # x, _ = pad_packed_sequence(x, batch_first=True)
         x = self.dropout(x)
         return x
 
@@ -46,12 +46,7 @@ class LSTM(nn.Module):
         x, _ = pad_packed_sequence(x, batch_first=True)
         x = self.dropout(x)
         x = self.linear(x)
-        if cfg['data_name'] == 'MIMICL':
-            output['target'] = x
-        elif cfg['data_name'] == 'MIMICM':
-            output['target'] = x.permute(0, 2, 1)
-        else:
-            raise ValueError('Not valid data name')
+        output['target'] = x
         if 'target' in input:
             if 'loss_mode' in input:
                 output['loss'] = loss_fn(output['target'], input['target'], loss_mode=input['loss_mode'])

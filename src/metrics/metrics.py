@@ -6,11 +6,50 @@ from utils import recur
 
 def Accuracy(output, target, topk=1):
     with torch.no_grad():
+        if cfg['data_name'] in ['MIMICM']:
+            output = output[target != -1]
+            target = target[target != -1]
         batch_size = target.size(0)
         pred_k = output.topk(topk, 1, True, True)[1]
         correct_k = pred_k.eq(target.unsqueeze(1).expand_as(pred_k)).float().sum()
         acc = (correct_k * (100.0 / batch_size)).item()
     return acc
+
+
+def Recall(output, target, topk=1):
+    with torch.no_grad():
+        if cfg['data_name'] in ['MIMICM']:
+            output = output[target == 1]
+            target = target[target == 1]
+        batch_size = target.size(0)
+        if batch_size == 0:
+            return 0
+        pred_k = output.topk(topk, 1, True, True)[1]
+        correct_k = pred_k.eq(target.unsqueeze(1).expand_as(pred_k)).float().sum()
+        recall = (correct_k * (100.0 / batch_size)).item()
+    return recall
+
+
+def Precision(output, target, topk=1):
+    with torch.no_grad():
+        if cfg['data_name'] in ['MIMICM']:
+            idx = output.max(dim=-1)[1]
+            output = output[torch.logical_and(idx == 1, target != -1)]
+            target = target[torch.logical_and(idx == 1, target != -1)]
+        batch_size = target.size(0)
+        if batch_size == 0:
+            return 0
+        pred_k = output.topk(topk, 1, True, True)[1]
+        correct_k = pred_k.eq(target.unsqueeze(1).expand_as(pred_k)).float().sum()
+        precision = (correct_k * (100.0 / batch_size)).item()
+    return precision
+
+
+def F1(output, target):
+    precision = Precision(output, target)
+    recall = Recall(output, target)
+    f1 = (2 * precision * recall) / (precision + recall + 1e-10)
+    return f1
 
 
 def MAD(output, target):
@@ -25,14 +64,17 @@ class Metric(object):
         self.pivot, self.pivot_name, self.pivot_direction = self.make_pivot()
         self.metric = {'Loss': (lambda input, output: output['loss'].item()),
                        'Accuracy': (lambda input, output: recur(Accuracy, output['target'], input['target'])),
-                       'MAD': (lambda input, output: recur(MAD, output['target'], input['target']))}
+                       'MAD': (lambda input, output: recur(MAD, output['target'], input['target'])),
+                       'F1': (lambda input, output: recur(F1, output['target'], input['target']))}
 
     def make_metric_name(self, metric_name):
         for split in metric_name:
             if split == 'test':
                 if cfg['data_name'] in ['Blob', 'Iris', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10',
-                                        'ModelNet40', 'ShapeNet55', 'MIMICM']:
+                                        'ModelNet40', 'ShapeNet55']:
                     metric_name[split] += ['Accuracy']
+                elif cfg['data_name'] in ['MIMICM']:
+                    metric_name[split] += ['F1']
                 elif cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMICL']:
                     metric_name[split] += ['MAD']
                 else:
@@ -41,9 +83,13 @@ class Metric(object):
 
     def make_pivot(self):
         if cfg['data_name'] in ['Blob', 'Iris', 'Wine', 'BreastCancer', 'QSAR', 'MNIST', 'CIFAR10', 'ModelNet40',
-                                'ShapeNet55', 'MIMICM']:
+                                'ShapeNet55']:
             pivot = -float('inf')
             pivot_name = 'Accuracy'
+            pivot_direction = 'up'
+        elif cfg['data_name'] in ['MIMICM']:
+            pivot = -float('inf')
+            pivot_name = 'F1'
             pivot_direction = 'up'
         elif cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMICL']:
             pivot = float('inf')

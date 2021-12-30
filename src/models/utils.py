@@ -58,37 +58,73 @@ def feature_split(input, feature_split):
 def loss_fn(output, target, reduction='mean', loss_mode=None):
     if target.dtype == torch.int64:
         if cfg['data_name'] in ['MIMICM']:
-            loss = F.cross_entropy(output, target, reduction=reduction, ignore_index=-1)
+            if len(output.size()) == 3:
+                output = output.permute(0, 2, 1)
+            loss = F.cross_entropy(output, target, reduction=reduction, ignore_index=-1,
+                                   weight=torch.tensor([0.1, 0.9], device=target.device))
         else:
             loss = F.cross_entropy(output, target, reduction=reduction)
     else:
         if cfg['data_name'] in ['MIMICL', 'MIMICM']:
+            reduction = 'sum'
             mask = ~(target == -1)
+            batch_size = output.size(0)
             output, target = output[mask], target[mask]
-        if loss_mode is None:
-            if cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMICL']:
-                loss = F.l1_loss(output, target, reduction=reduction)
+            if loss_mode is None:
+                if cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMICL']:
+                    loss = F.l1_loss(output, target, reduction=reduction)
+                else:
+                    loss = F.mse_loss(output, target, reduction=reduction)
             else:
-                loss = F.mse_loss(output, target, reduction=reduction)
+                if loss_mode == 'l1':
+                    loss = F.l1_loss(output, target, reduction=reduction)
+                elif loss_mode == 'l1.5':
+                    if reduction == 'sum':
+                        loss = (output - target).abs().pow(1.5).sum()
+                    else:
+                        loss = (output - target).abs().pow(1.5).mean()
+                elif loss_mode == 'l2':
+                    loss = F.mse_loss(output, target, reduction=reduction)
+                elif loss_mode == 'l4':
+                    if reduction == 'sum':
+                        loss = (output - target).abs().pow(4).sum()
+                    else:
+                        loss = (output - target).abs().pow(4).mean()
+                else:
+                    raise ValueError('Not valid loss mode')
+            loss = loss / batch_size
         else:
-            if loss_mode == 'l1':
-                loss = F.l1_loss(output, target, reduction=reduction)
-            elif loss_mode == 'l1.5':
-                if reduction == 'sum':
-                    loss = (output - target).abs().pow(1.5).sum()
+            if loss_mode is None:
+                if cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMICL']:
+                    loss = F.l1_loss(output, target, reduction=reduction)
                 else:
-                    loss = (output - target).abs().pow(1.5).mean()
-            elif loss_mode == 'l2':
-                loss = F.mse_loss(output, target, reduction=reduction)
-            elif loss_mode == 'l4':
-                if reduction == 'sum':
-                    loss = (output - target).abs().pow(4).sum()
-                else:
-                    loss = (output - target).abs().pow(4).mean()
+                    loss = F.mse_loss(output, target, reduction=reduction)
             else:
-                raise ValueError('Not valid loss mode')
+                if loss_mode == 'l1':
+                    loss = F.l1_loss(output, target, reduction=reduction)
+                elif loss_mode == 'l1.5':
+                    if reduction == 'sum':
+                        loss = (output - target).abs().pow(1.5).sum()
+                    else:
+                        loss = (output - target).abs().pow(1.5).mean()
+                elif loss_mode == 'l2':
+                    loss = F.mse_loss(output, target, reduction=reduction)
+                elif loss_mode == 'l4':
+                    if reduction == 'sum':
+                        loss = (output - target).abs().pow(4).sum()
+                    else:
+                        loss = (output - target).abs().pow(4).mean()
+                else:
+                    raise ValueError('Not valid loss mode')
     return loss
 
+
+# if cfg['data_name'] == 'MIMICM':
+#     loss = F.mse_loss(output, target, reduction='none')
+#     # loss = loss * torch.tensor([0.1, 0.9], device=target.device)
+#     loss = loss * torch.tensor([0.5, 0.5], device=target.device)
+#     loss = loss[mask].sum() / output.size(0)
+#     return loss
 
 def reset_parameters(m):
     reset_parameters = getattr(m, "reset_parameters", None)

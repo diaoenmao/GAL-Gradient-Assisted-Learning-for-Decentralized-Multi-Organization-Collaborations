@@ -21,14 +21,18 @@ class DL(nn.Module):
         output = {'loss': 0}
         x = {'data': input['data'], 'feature_split': input['feature_split']}
         x = self.block.feature(x)
-        num_epochs = input['target'].size(1)
+        if cfg['data_name'] in ['MIMICL', 'MIMICM']:
+            num_epochs = input['target'].size(2)
+        else:
+            num_epochs = input['target'].size(1)
         output_target = []
         input_target = []
         for i in range(num_epochs):
             output_target_i = self.linear[i](x)
-            if cfg['data_name'] == 'MIMIC':
-                output_target_i = output_target_i.unsqueeze(0)
-            input_target_i = input['target'][:, i]
+            if cfg['data_name'] in ['MIMICL', 'MIMICM']:
+                input_target_i = input['target'][:, :, i]
+            else:
+                input_target_i = input['target'][:, i]
             if cfg['data_name'] in ['ModelNet40', 'ShapeNet55']:
                 input_target_i = input_target_i.repeat(12 // cfg['num_users'], 1)
             if 'loss_mode' in input:
@@ -37,8 +41,12 @@ class DL(nn.Module):
                 output['loss'] += loss_fn(output_target_i, input_target_i)
             output_target.append(output_target_i)
             input_target.append(input_target_i)
-        output['target'] = torch.stack(output_target, dim=1)
-        input['target'] = torch.stack(input_target, dim=1)
+        if cfg['data_name'] in ['MIMICL', 'MIMICM']:
+            output['target'] = torch.stack(output_target, dim=2)
+            input['target'] = torch.stack(input_target, dim=2)
+        else:
+            output['target'] = torch.stack(output_target, dim=1)
+            input['target'] = torch.stack(input_target, dim=1)
         return output
 
 

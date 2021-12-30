@@ -8,6 +8,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, OrdinalEncoder
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
+from tqdm import tqdm
 
 
 class MIMICL(Dataset):
@@ -18,14 +19,13 @@ class MIMICL(Dataset):
         self.split = split
         if not check_exists(self.processed_folder):
             self.process()
-        self.id, self.data, self.target = load(os.path.join(self.processed_folder, '{}.pt'.format(self.split)))
+        self.id, self.data, self.target, self.length = load(os.path.join(self.processed_folder,
+                                                                         '{}.pt'.format(self.split)))
         self.target_size = load(os.path.join(self.processed_folder, 'meta.pt'))
-        self.length = [len(self.data.loc[[i]].to_numpy()) for i in range(len(self.id))]
 
     def __getitem__(self, index):
-        id, data, target = torch.tensor(self.id[index]), torch.tensor(self.data.loc[[index]].to_numpy()), \
-                           torch.tensor(self.target.loc[[index]].to_numpy())
-        length = torch.tensor(self.length[index])
+        id, data, target, length = torch.tensor(self.id[index]), torch.tensor(self.data[index]), \
+                                   torch.tensor(self.target[index]), torch.tensor(self.length[index])
         input = {'id': id, 'data': data, 'target': target, 'length': length}
         return input
 
@@ -63,7 +63,7 @@ class MIMICL(Dataset):
         test_files = os.listdir(os.path.join(self.raw_folder, 'length-of-stay', 'test'))
         train_id = []
         train_df = []
-        for i in range(len(train_files)):
+        for i in tqdm(range(len(train_files))):
             train_df_i = pd.read_csv(os.path.join(self.raw_folder, 'length-of-stay', 'train', train_files[i]))
             train_id.append(np.repeat(i, train_df_i.shape[0], axis=0).astype(np.int64))
             train_df_i['Glascow coma scale eye opening'].replace(
@@ -99,7 +99,7 @@ class MIMICL(Dataset):
         train_df = train_df.astype(np.float32)
         test_id = []
         test_df = []
-        for i in range(len(test_files)):
+        for i in tqdm(range(len(test_files))):
             test_df_i = pd.read_csv(os.path.join(self.raw_folder, 'length-of-stay', 'test', test_files[i]))
             test_id.append(np.repeat(i, test_df_i.shape[0], axis=0).astype(np.int64))
             test_df_i['Glascow coma scale eye opening'].replace(
@@ -125,8 +125,15 @@ class MIMICL(Dataset):
         train_id, test_id = np.unique(train_id), np.unique(test_id)
         train_data, train_target = train_df.iloc[:, :-1], train_df.iloc[:, [-1]]
         test_data, test_target = test_df.iloc[:, :-1], test_df.iloc[:, [-1]]
+        train_data = [train_data.loc[[train_id[i]]].to_numpy() for i in range(len(train_id))]
+        train_target = [train_target.loc[[train_id[i]]].to_numpy() for i in range(len(train_id))]
+        train_length = [len(train_data[i]) for i in range(len(train_id))]
+        test_data = [test_data.loc[[test_id[i]]].to_numpy() for i in range(len(test_id))]
+        test_target = [test_target.loc[[test_id[i]]].to_numpy() for i in range(len(test_id))]
+        test_length = [len(test_data[i]) for i in range(len(test_id))]
         target_size = 1
-        return (train_id, train_data, train_target), (test_id, test_data, test_target), target_size
+        return (train_id, train_data, train_target, train_length), (test_id, test_data, test_target,
+                                                                    test_length), target_size
 
 
 class MIMICM(Dataset):
@@ -137,14 +144,13 @@ class MIMICM(Dataset):
         self.split = split
         if not check_exists(self.processed_folder):
             self.process()
-        self.id, self.data, self.target = load(os.path.join(self.processed_folder, '{}.pt'.format(self.split)))
+        self.id, self.data, self.target, self.length = load(os.path.join(self.processed_folder,
+                                                                         '{}.pt'.format(self.split)))
         self.target_size = load(os.path.join(self.processed_folder, 'meta.pt'))
-        self.length = [len(self.data.loc[[i]].to_numpy()) for i in range(len(self.id))]
 
     def __getitem__(self, index):
-        id, data, target = torch.tensor(self.id[index]), torch.tensor(self.data.loc[[index]].to_numpy()), \
-                           torch.tensor(self.target.loc[[index]].to_numpy(), dtype=torch.long).view(-1)
-        length = torch.tensor(self.length[index]),
+        id, data, target, length = torch.tensor(self.id[index]), torch.tensor(self.data[index]), \
+                                   torch.tensor(self.target[index]), torch.tensor(self.length[index])
         input = {'id': id, 'data': data, 'target': target, 'length': length}
         return input
 
@@ -182,7 +188,7 @@ class MIMICM(Dataset):
         test_files = os.listdir(os.path.join(self.raw_folder, 'in-hospital-mortality', 'test'))
         train_id = []
         train_df = []
-        for i in range(len(train_files)):
+        for i in tqdm(range(len(train_files))):
             train_df_i = pd.read_csv(os.path.join(self.raw_folder, 'in-hospital-mortality', 'train', train_files[i]))
             train_id.append(np.repeat(i, train_df_i.shape[0], axis=0).astype(np.int64))
             train_df_i['Glascow coma scale eye opening'].replace(
@@ -218,7 +224,7 @@ class MIMICM(Dataset):
         train_df = train_df.astype(np.float32)
         test_id = []
         test_df = []
-        for i in range(len(test_files)):
+        for i in tqdm(range(len(test_files))):
             test_df_i = pd.read_csv(os.path.join(self.raw_folder, 'in-hospital-mortality', 'test', test_files[i]))
             test_id.append(np.repeat(i, test_df_i.shape[0], axis=0).astype(np.int64))
             test_df_i['Glascow coma scale eye opening'].replace(
@@ -244,5 +250,14 @@ class MIMICM(Dataset):
         train_id, test_id = np.unique(train_id), np.unique(test_id)
         train_data, train_target = train_df.iloc[:, :-1], train_df.iloc[:, [-1]]
         test_data, test_target = test_df.iloc[:, :-1], test_df.iloc[:, [-1]]
+        train_target = train_target.fillna(-1).astype(np.int64)
+        test_target = test_target.fillna(-1).astype(np.int64)
+        train_data = [train_data.loc[[train_id[i]]].to_numpy() for i in range(len(train_id))]
+        train_target = [train_target.loc[[train_id[i]]].to_numpy().reshape(-1) for i in range(len(train_id))]
+        train_length = [len(train_data[i]) for i in range(len(train_id))]
+        test_data = [test_data.loc[[test_id[i]]].to_numpy() for i in range(len(test_id))]
+        test_target = [test_target.loc[[test_id[i]]].to_numpy().reshape(-1) for i in range(len(test_id))]
+        test_length = [len(test_data[i]) for i in range(len(test_id))]
         target_size = 2
-        return (train_id, train_data, train_target), (test_id, test_data, test_target), target_size
+        return (train_id, train_data, train_target, train_length), (test_id, test_data, test_target,
+                                                                    test_length), target_size
