@@ -25,17 +25,17 @@ class Organization:
             test_target = torch.tensor(dataset['test'].target)
         if train_target.dtype == torch.int64:
             if cfg['data_name'] in ['MIMICM']:
-                _, _, counts = torch.unique(train_target[train_target != -1], sorted=True, return_inverse=True,
+                _, _, counts = torch.unique(train_target[train_target != -65535], sorted=True, return_inverse=True,
                                             return_counts=True)
-                counts = torch.tensor([counts[1], counts[0]])
+                # counts = torch.tensor([counts[1], counts[0]])
             else:
                 _, _, counts = torch.unique(train_target, sorted=True, return_inverse=True, return_counts=True)
             x = (counts / counts.sum()).log()
             initialization['train'] = x.view(1, -1).repeat(train_target.size(0), 1)
             initialization['test'] = x.view(1, -1).repeat(test_target.size(0), 1)
         else:
-            if cfg['data_name'] in ['MIMICM']:
-                x = train_target[train_target != -1].mean()
+            if cfg['data_name'] in ['MIMICL']:
+                x = train_target[train_target != -65535].mean()
             else:
                 x = train_target.mean()
             initialization['train'] = x.expand_as(train_target).detach().clone()
@@ -47,6 +47,10 @@ class Organization:
             logger.append(evaluation, 'train', n=train_target.size(0))
         input['target'], output['target'] = test_target, initialization['test']
         output['loss'] = models.loss_fn(output['target'], input['target'])
+        if cfg['data_name'] in ['MIMICM']:
+            mask = input['target'] != -65535
+            output['target'] = output['target'].softmax(dim=-1)[:, 1]
+            output['target'], input['target'] = output['target'][mask], input['target'][mask]
         evaluation = metric.evaluate(metric.metric_name['test'], input, output)
         logger.append(evaluation, 'test', n=test_target.size(0))
         return initialization

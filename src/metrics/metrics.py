@@ -2,13 +2,11 @@ import torch
 import torch.nn.functional as F
 from config import cfg
 from utils import recur
+from sklearn.metrics import roc_auc_score
 
 
 def Accuracy(output, target, topk=1):
     with torch.no_grad():
-        if cfg['data_name'] in ['MIMICM']:
-            output = output[target != -1]
-            target = target[target != -1]
         batch_size = target.size(0)
         pred_k = output.topk(topk, 1, True, True)[1]
         correct_k = pred_k.eq(target.unsqueeze(1).expand_as(pred_k)).float().sum()
@@ -16,46 +14,18 @@ def Accuracy(output, target, topk=1):
     return acc
 
 
-def Recall(output, target, topk=1):
-    with torch.no_grad():
-        if cfg['data_name'] in ['MIMICM']:
-            output = output[target == 1]
-            target = target[target == 1]
-        batch_size = target.size(0)
-        if batch_size == 0:
-            return 0
-        pred_k = output.topk(topk, 1, True, True)[1]
-        correct_k = pred_k.eq(target.unsqueeze(1).expand_as(pred_k)).float().sum()
-        recall = (correct_k * (100.0 / batch_size)).item()
-    return recall
-
-
-def Precision(output, target, topk=1):
-    with torch.no_grad():
-        if cfg['data_name'] in ['MIMICM']:
-            idx = output.max(dim=-1)[1]
-            output = output[torch.logical_and(idx == 1, target != -1)]
-            target = target[torch.logical_and(idx == 1, target != -1)]
-        batch_size = target.size(0)
-        if batch_size == 0:
-            return 0
-        pred_k = output.topk(topk, 1, True, True)[1]
-        correct_k = pred_k.eq(target.unsqueeze(1).expand_as(pred_k)).float().sum()
-        precision = (correct_k * (100.0 / batch_size)).item()
-    return precision
-
-
-def F1(output, target):
-    precision = Precision(output, target)
-    recall = Recall(output, target)
-    f1 = (2 * precision * recall) / (precision + recall + 1e-10)
-    return f1
+def AUCROC(output, target):
+    auc_roc = roc_auc_score(target, output)
+    return auc_roc
 
 
 def MAD(output, target):
     with torch.no_grad():
-        mse = F.l1_loss(output, target).item()
-    return mse
+        if cfg['data_name'] in ['MIMICL']:
+            output = output[target != -65535]
+            target = target[target != -65535]
+        mad = F.l1_loss(output, target).item()
+    return mad
 
 
 class Metric(object):
@@ -65,7 +35,7 @@ class Metric(object):
         self.metric = {'Loss': (lambda input, output: output['loss'].item()),
                        'Accuracy': (lambda input, output: recur(Accuracy, output['target'], input['target'])),
                        'MAD': (lambda input, output: recur(MAD, output['target'], input['target'])),
-                       'F1': (lambda input, output: recur(F1, output['target'], input['target']))}
+                       'AUCROC': (lambda input, output: recur(AUCROC, output['target'], input['target']))}
 
     def make_metric_name(self, metric_name):
         for split in metric_name:
@@ -74,7 +44,7 @@ class Metric(object):
                                         'ModelNet40', 'ShapeNet55']:
                     metric_name[split] += ['Accuracy']
                 elif cfg['data_name'] in ['MIMICM']:
-                    metric_name[split] += ['F1']
+                    metric_name[split] += ['AUCROC']
                 elif cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMICL']:
                     metric_name[split] += ['MAD']
                 else:
@@ -89,7 +59,7 @@ class Metric(object):
             pivot_direction = 'up'
         elif cfg['data_name'] in ['MIMICM']:
             pivot = -float('inf')
-            pivot_name = 'F1'
+            pivot_name = 'AUCROC'
             pivot_direction = 'up'
         elif cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMICL']:
             pivot = float('inf')

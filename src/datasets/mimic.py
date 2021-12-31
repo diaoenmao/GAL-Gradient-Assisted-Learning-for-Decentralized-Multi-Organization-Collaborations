@@ -250,8 +250,8 @@ class MIMICM(Dataset):
         train_id, test_id = np.unique(train_id), np.unique(test_id)
         train_data, train_target = train_df.iloc[:, :-1], train_df.iloc[:, [-1]]
         test_data, test_target = test_df.iloc[:, :-1], test_df.iloc[:, [-1]]
-        train_target = train_target.fillna(-1).astype(np.int64)
-        test_target = test_target.fillna(-1).astype(np.int64)
+        train_target = train_target.fillna(-65535).astype(np.int64)
+        test_target = test_target.fillna(-65535).astype(np.int64)
         train_data = [train_data.loc[[train_id[i]]].to_numpy() for i in range(len(train_id))]
         train_target = [train_target.loc[[train_id[i]]].to_numpy().reshape(-1) for i in range(len(train_id))]
         train_length = [len(train_data[i]) for i in range(len(train_id))]

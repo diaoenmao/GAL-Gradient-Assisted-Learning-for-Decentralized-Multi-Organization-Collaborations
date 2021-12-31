@@ -330,7 +330,7 @@ def collate(input):
             if k == 'data':
                 input[k] = pad_sequence(input['data'], batch_first=True, padding_value=0)
             elif k == 'target':
-                input[k] = pad_sequence(input['target'], batch_first=True, padding_value=-1)
+                input[k] = pad_sequence(input['target'], batch_first=True, padding_value=-65535)
             else:
                 input[k] = torch.stack(input[k], 0)
         else:

@@ -60,15 +60,13 @@ def loss_fn(output, target, reduction='mean', loss_mode=None):
         if cfg['data_name'] in ['MIMICM']:
             if len(output.size()) == 3:
                 output = output.permute(0, 2, 1)
-            loss = F.cross_entropy(output, target, reduction=reduction, ignore_index=-1,
+            loss = F.cross_entropy(output, target, reduction=reduction, ignore_index=-65535,
                                    weight=torch.tensor([0.1, 0.9], device=target.device))
         else:
             loss = F.cross_entropy(output, target, reduction=reduction)
     else:
         if cfg['data_name'] in ['MIMICL', 'MIMICM']:
-            reduction = 'sum'
-            mask = ~(target == -1)
-            batch_size = output.size(0)
+            mask = target != -65535
             output, target = output[mask], target[mask]
             if loss_mode is None:
                 if cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMICL']:
@@ -92,7 +90,6 @@ def loss_fn(output, target, reduction='mean', loss_mode=None):
                         loss = (output - target).abs().pow(4).mean()
                 else:
                     raise ValueError('Not valid loss mode')
-            loss = loss / batch_size
         else:
             if loss_mode is None:
                 if cfg['data_name'] in ['Diabetes', 'BostonHousing', 'MIMICL']:
