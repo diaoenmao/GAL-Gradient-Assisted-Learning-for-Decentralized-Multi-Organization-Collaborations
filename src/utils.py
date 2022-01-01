@@ -157,6 +157,11 @@ def process_control():
         cfg['dl'] = cfg['control']['dl']
     if cfg['model_name'] in ['gb', 'svm', 'gb-svm']:
         cfg['ma'] = '1'
+    if 'pl' in cfg['control']:
+        cfg['pl'] = cfg['control']['pl']
+        if cfg['pl'] != 'none':
+            pl_list = cfg['pl'].split('-')
+            cfg['pl_mode'], cfg['pl_param'] = pl_list[0], float(pl_list[1])
     cfg['noised_organization_id'] = list(range(cfg['num_users'] // 2, cfg['num_users']))
     cfg['assist'] = {}
     cfg['assist']['batch_size'] = {'train': 1024, 'test': 1024}

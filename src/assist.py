@@ -5,6 +5,7 @@ import models
 from config import cfg
 from data import make_data_loader
 from organization import Organization
+from privacy import make_privacy
 from utils import make_optimizer, to_device
 
 
@@ -56,6 +57,8 @@ class Assist:
             if cfg['data_name'] in ['MIMICL', 'MIMICM']:
                 if 'dl' in cfg and cfg['dl'] == '1':
                     target = self.organization_target[iter][split].unsqueeze(1).numpy()
+                    if 'pl' in cfg and cfg['pl'] != 'none':
+                        target = make_privacy(target, cfg['pl_mode'], cfg['pl_param'])
                     target = np.split(target, np.cumsum(dataset[split].length), axis=0)
                     if iter == 1:
                         dataset[split].target = target
@@ -63,17 +66,24 @@ class Assist:
                         dataset[split].target = [np.concatenate([dataset[split].target[i], target[i]], axis=1) for i in
                                                  range(len(dataset[split].target))]
                 else:
-                    dataset[split].target = np.split(self.organization_target[iter][split].numpy(),
-                                                     np.cumsum(dataset[split].length), axis=0)
+                    target = self.organization_target[iter][split].numpy()
+                    if 'pl' in cfg and cfg['pl'] != 'none':
+                        target = make_privacy(target, cfg['pl_mode'], cfg['pl_param'])
+                    dataset[split].target = np.split(target, np.cumsum(dataset[split].length), axis=0)
             else:
                 if 'dl' in cfg and cfg['dl'] == '1':
                     target = self.organization_target[iter][split].unsqueeze(1).numpy()
+                    if 'pl' in cfg and cfg['pl'] != 'none':
+                        target = make_privacy(target, cfg['pl_mode'], cfg['pl_param'])
                     if iter == 1:
                         dataset[split].target = target
                     else:
                         dataset[split].target = np.concatenate([dataset[split].target, target], axis=1)
                 else:
-                    dataset[split].target = self.organization_target[iter][split].numpy()
+                    target = self.organization_target[iter][split].numpy()
+                    if 'pl' in cfg and cfg['pl'] != 'none':
+                        target = make_privacy(target, cfg['pl_mode'], cfg['pl_param'])
+                    dataset[split].target = target
             self.organization_output[iter - 1][split].detach_()
         data_loader = [None for _ in range(len(self.feature_split))]
         for i in range(len(self.feature_split)):

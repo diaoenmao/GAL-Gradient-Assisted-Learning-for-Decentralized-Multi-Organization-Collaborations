@@ -27,7 +27,6 @@ class Organization:
             if cfg['data_name'] in ['MIMICM']:
                 _, _, counts = torch.unique(train_target[train_target != -65535], sorted=True, return_inverse=True,
                                             return_counts=True)
-                # counts = torch.tensor([counts[1], counts[0]])
             else:
                 _, _, counts = torch.unique(train_target, sorted=True, return_inverse=True, return_counts=True)
             x = (counts / counts.sum()).log()

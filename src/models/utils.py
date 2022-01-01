@@ -60,12 +60,15 @@ def loss_fn(output, target, reduction='mean', loss_mode=None):
         if cfg['data_name'] in ['MIMICM']:
             if len(output.size()) == 3:
                 output = output.permute(0, 2, 1)
-            loss = F.cross_entropy(output, target, reduction=reduction, ignore_index=-65535,
-                                   weight=torch.tensor([0.1, 0.9], device=target.device))
+            # loss = F.cross_entropy(output, target, reduction=reduction, ignore_index=-65535,
+            #                        weight=torch.tensor([0.1, 0.9], device=target.device))
+            loss = F.cross_entropy(output, target, reduction=reduction, ignore_index=-65535)
         else:
             loss = F.cross_entropy(output, target, reduction=reduction)
     else:
         if cfg['data_name'] in ['MIMICL', 'MIMICM']:
+            if cfg['data_name'] == 'MIMICM':
+                reduction = 'sum'
             mask = target != -65535
             output, target = output[mask], target[mask]
             if loss_mode is None:
@@ -115,13 +118,6 @@ def loss_fn(output, target, reduction='mean', loss_mode=None):
                     raise ValueError('Not valid loss mode')
     return loss
 
-
-# if cfg['data_name'] == 'MIMICM':
-#     loss = F.mse_loss(output, target, reduction='none')
-#     # loss = loss * torch.tensor([0.1, 0.9], device=target.device)
-#     loss = loss * torch.tensor([0.5, 0.5], device=target.device)
-#     loss = loss[mask].sum() / output.size(0)
-#     return loss
 
 def reset_parameters(m):
     reset_parameters = getattr(m, "reset_parameters", None)
