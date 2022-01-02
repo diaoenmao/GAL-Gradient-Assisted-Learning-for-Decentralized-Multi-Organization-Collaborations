@@ -6,6 +6,7 @@ import os
 import sys
 import shutil
 import time
+import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 from itertools import repeat
@@ -101,7 +102,10 @@ def initialize(dataset, assist, organization, metric, logger, epoch):
     print(logger.write('test', metric.metric_name['test']))
     for split in dataset:
         assist.organization_output[0][split] = initialization[split]
-        assist.organization_target[0][split] = torch.tensor(dataset[split].target)
+        if cfg['data_name'] in ['MIMICL', 'MIMICM']:
+            assist.organization_target[0][split] = torch.tensor(np.concatenate(dataset[split].target, axis=0))
+        else:
+            assist.organization_target[0][split] = torch.tensor(dataset[split].target)
     logger.safe(False)
     logger.reset()
     return

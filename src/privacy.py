@@ -23,7 +23,7 @@ def dp(y, alpha=1):
     return y_dp
 
 
-def ip(y, thresh=1):
+def ip(y, thresh=1, leak=False):
     '''
     To perturb a continuous-valued numpy vector with interval noise, evaluated by IP,
     where the privacy leakage parameter is the average interval width
@@ -47,9 +47,10 @@ def ip(y, thresh=1):
     y_ip[mask_1] += (2 * t[mask_1] - b) / thresh
     interval[mask_2, 0] = np.maximum(t[mask_2], interval[mask_2, 0])
     y_ip[mask_2] += (2 * t[mask_2] - a) / thresh
-    y_ = y.reshape(-1, 1)
-    interval_ = interval.reshape(1, -1, 2)
-    leak = np.logical_and(y_ >= interval_[..., 0], y_ < interval_[..., 1]).mean()
+    if leak:
+        y_ = y.reshape(-1, 1)
+        interval_ = interval.reshape(1, -1, 2)
+        leak = np.logical_and(y_ >= interval_[..., 0], y_ < interval_[..., 1]).mean()
     return y_ip, interval, leak
 
 

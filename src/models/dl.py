@@ -19,7 +19,10 @@ class DL(nn.Module):
 
     def forward(self, input):
         output = {'loss': 0}
-        x = {'data': input['data'], 'feature_split': input['feature_split']}
+        if cfg['data_name'] in ['MIMICL', 'MIMICM']:
+            x = {'data': input['data'], 'length': input['length'], 'feature_split': input['feature_split']}
+        else:
+            x = {'data': input['data'], 'feature_split': input['feature_split']}
         x = self.block.feature(x)
         if cfg['data_name'] in ['MIMICL', 'MIMICM']:
             num_epochs = input['target'].size(2)
