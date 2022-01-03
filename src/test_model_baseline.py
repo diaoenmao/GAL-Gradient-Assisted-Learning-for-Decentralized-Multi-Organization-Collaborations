@@ -64,6 +64,7 @@ def runExperiment():
 def test(data_loader, feature_split, model, metric, logger, epoch):
     with torch.no_grad():
         model.train(False)
+        output_, target_ = [], []
         for i, input in enumerate(data_loader):
             input = collate(input)
             input_size = input['data'].size(0)
@@ -71,7 +72,22 @@ def test(data_loader, feature_split, model, metric, logger, epoch):
             input = to_device(input, cfg['device'])
             output = model(input)
             output['loss'] = output['loss'].mean() if cfg['world_size'] > 1 else output['loss']
-            evaluation = metric.evaluate(metric.metric_name['test'], input, output)
+            if cfg['data_name'] in ['MIMICM']:
+                mask = input['target'] != -65535
+                target_i = input['target']
+                output_i = output['target'].softmax(dim=-1)[:, :, 1]
+                output_i, target_i = output_i[mask], target_i[mask]
+                output_.append(output_i.cpu())
+                target_.append(target_i.cpu())
+                evaluation = metric.evaluate([metric.metric_name['test'][0]], input, output)
+                logger.append(evaluation, 'test', input_size)
+            else:
+                evaluation = metric.evaluate(metric.metric_name['test'], input, output)
+                logger.append(evaluation, 'test', input_size)
+        if cfg['data_name'] in ['MIMICM']:
+            output_ = torch.cat(output_, dim=0).numpy()
+            target_ = torch.cat(target_, dim=0).numpy()
+            evaluation = metric.evaluate([metric.metric_name['test'][1]], {'target': target_}, {'target': output_})
             logger.append(evaluation, 'test', input_size)
         info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
         logger.append(info, 'test', mean=False)

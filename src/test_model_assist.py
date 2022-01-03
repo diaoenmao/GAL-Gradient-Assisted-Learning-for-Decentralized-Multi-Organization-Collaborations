@@ -2,6 +2,7 @@ import argparse
 import datetime
 import os
 import sys
+import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 import models
@@ -78,7 +79,10 @@ def initialize(dataset, assist, organization, metric, logger, epoch):
     print(logger.write('test', metric.metric_name['test']))
     for split in dataset:
         assist.organization_output[0][split] = initialization[split]
-        assist.organization_target[0][split] = torch.tensor(dataset[split].target)
+        if cfg['data_name'] in ['MIMICL', 'MIMICM']:
+            assist.organization_target[0][split] = torch.tensor(np.concatenate(dataset[split].target, axis=0))
+        else:
+            assist.organization_target[0][split] = torch.tensor(dataset[split].target)
     logger.safe(False)
     logger.reset()
     return
@@ -100,6 +104,10 @@ def test(assist, metric, logger, epoch):
         input = {'target': assist.organization_target[0]['test']}
         output = {'target': assist.organization_output[epoch]['test']}
         output['loss'] = models.loss_fn(output['target'], input['target'])
+        if cfg['data_name'] in ['MIMICM']:
+            mask = input['target'] != -65535
+            output['target'] = output['target'].softmax(dim=-1)[:, 1]
+            output['target'], input['target'] = output['target'][mask], input['target'][mask]
         evaluation = metric.evaluate(metric.metric_name['test'], input, output)
         logger.append(evaluation, 'test', n=input_size)
         info = {'info': ['Model: {}'.format(cfg['model_tag']), 'Test Epoch: {}({:.0f}%)'.format(epoch, 100.)]}
