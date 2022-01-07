@@ -16,10 +16,11 @@ def dp(y, alpha=1):
     '''
     # truncate y into the bounded range of [a, b], where T is determined by 2.5% quantile
     a, b = np.quantile(y, 0.025), np.quantile(y, 0.975)
+    scale = max(0, (b - a) / alpha)
     y_dp = np.copy(y)
     y_dp[y < a] = a
     y_dp[y > b] = b
-    y_dp += np.random.laplace(scale=(b - a) / alpha, size=y.shape)
+    y_dp += np.random.laplace(scale=scale, size=y.shape)
     return y_dp
 
 
