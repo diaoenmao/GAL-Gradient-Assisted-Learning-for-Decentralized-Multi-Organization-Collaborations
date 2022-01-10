@@ -60,15 +60,15 @@ class Buffer(nn.Module):
         super().__init__()
         self.split = split
         if cfg['data_name'] in ['MIMICL', 'MIMICM']:
-            self.buffer = [[torch.zeros(cfg['data_length'][split][i], hidden_size) for i in range(num_samples)] for _ in
-                           range(num_users)]
+            self.buffer = [[torch.zeros((cfg['data_length'][split][i], hidden_size)) for i in
+                            range(num_samples)] for _ in range(num_users)]
         else:
             self.register_buffer('buffer', torch.zeros(num_users, num_samples, hidden_size))
 
     def update(self, organization_id, sample_id, input):
         if cfg['data_name'] in ['MIMICL', 'MIMICM']:
             for i in range(len(sample_id)):
-                self.buffer[organization_id][sample_id[i]] = input[i]
+                self.buffer[organization_id][sample_id[i]] = input[i].to('cpu')
         else:
             self.buffer[organization_id, sample_id, :] = input
         return
@@ -79,11 +79,11 @@ class Buffer(nn.Module):
             for i in range(len(organization_id)):
                 buffer_i = []
                 for j in range(len(sample_id)):
-                    buffer_i_j = self.buffer[organization_id[i]][sample_id[j]].to(cfg['device'])
+                    buffer_i_j = self.buffer[organization_id[i]][sample_id[j]]
                     buffer_i.append(buffer_i_j)
                 buffer_i = pad_sequence(buffer_i, batch_first=True, padding_value=0)
                 buffer.append(buffer_i)
-            buffer = torch.stack(buffer, dim=0)
+            buffer = torch.stack(buffer, dim=0).to(cfg['device'])
         else:
             buffer = self.buffer[organization_id.view(organization_id.size(0), 1),
                      sample_id.view(1, sample_id.size(0)), :]
