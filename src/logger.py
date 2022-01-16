@@ -3,10 +3,9 @@ from collections.abc import Iterable
 from torch.utils.tensorboard import SummaryWriter
 from numbers import Number
 from utils import ntuple
-import datetime
 
 
-class Logger():
+class Logger:
     def __init__(self, log_path):
         self.log_path = log_path
         self.writer = None
@@ -89,7 +88,5 @@ class Logger():
 
 
 def make_logger(path):
-    current_time = datetime.datetime.now().strftime('%b%d_%H-%M-%S')
-    logger_path = '{}_{}'.format(path, current_time)
-    logger = Logger(logger_path)
+    logger = Logger(path)
     return logger
