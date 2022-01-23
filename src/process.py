@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 
 result_path = './output/result'
-save_format = 'png'
+save_format = 'pdf'
 vis_path = './output/vis/{}'.format(save_format)
 num_experiments = 4
 exp = [str(x) for x in list(range(num_experiments))]
@@ -37,7 +37,7 @@ def make_control_list(file, model):
             control_12 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['4'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_2_4_8 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8
@@ -61,7 +61,7 @@ def make_control_list(file, model):
             control_12 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['4'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_2_4_8 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8
@@ -85,7 +85,7 @@ def make_control_list(file, model):
             control_12 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['4'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['1', '5']]]
             control_4 = make_controls(data_names, model_names, control_name)
             controls = control_4
@@ -110,7 +110,7 @@ def make_control_list(file, model):
             control_12 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['4'], ['stack'], ['10'], ['10'], ['fix'], ['0']]]
             control_4 = make_controls(data_names, model_names, control_name)
             controls = control_4
@@ -144,10 +144,10 @@ def make_control_list(file, model):
             control_12 = make_controls(data_names, model_names, control_name)
             controls = control_1_1 + control_2_4_8 + control_1_2 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['1'], ['none'], ['10'], ['10'], ['search'], ['0']]]
             control_1 = make_controls(data_names, model_names, control_name)
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['4'], ['none', 'stack'], ['10'], ['10'], ['search'], ['0']]]
             control_2_4_8 = make_controls(data_names, model_names, control_name)
             controls = control_1 + control_2_4_8
@@ -172,7 +172,7 @@ def make_control_list(file, model):
             control_12 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['4'], ['none'], ['10'], ['10'], ['search', 'fix'], ['0'], ['1']]]
             control_2_4_8 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8
@@ -201,7 +201,7 @@ def make_control_list(file, model):
             control_12 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['4'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'],
                              ['l1.5', 'l2', 'l4', 'l1-l1.5', 'l1-l2', 'l1-l4']]]
             control_2_4_8 = make_controls(data_names, model_names, control_name)
@@ -227,7 +227,7 @@ def make_control_list(file, model):
             control_12 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['4'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_2_4_8 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8
@@ -244,7 +244,7 @@ def make_control_list(file, model):
             control_12 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMIC']]
+            data_names = [['MIMICL', 'MIMICM']]
             control_name = [[['4'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['0'], ['none'], ['1']]]
             control_2_4_8 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8
@@ -259,13 +259,43 @@ def make_control_list(file, model):
         control_name = [[['8'], ['stack'], ['100'], ['10'], ['search'], ['0']]]
         control_8 = make_controls(data_names, model_names, control_name)
         controls = control_2_4 + control_8
+    elif file == 'pl':
+        model_names = [[model]]
+        if model in ['linear']:
+            data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
+            control_name = [
+                [['2', '4'], ['stack'], ['100'], ['10'], ['search'], ['0'], ['0'], ['none'], ['0'], ['dp-1', 'ip-1']]]
+            control_2_4 = make_controls(data_names, model_names, control_name)
+            data_names = [['Blob', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
+            control_name = [
+                [['8'], ['stack'], ['100'], ['10'], ['search'], ['0'], ['0'], ['none'], ['0'], ['dp-1', 'ip-1']]]
+            control_8 = make_controls(data_names, model_names, control_name)
+            controls = control_2_4 + control_8
+        elif model in ['conv']:
+            data_names = [['MNIST', 'CIFAR10']]
+            control_name = [[['2', '4', '8'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['0'], ['none'], ['0'],
+                             ['dp-1', 'ip-1']]]
+            control_2_4_8 = make_controls(data_names, model_names, control_name)
+            data_names = [['ModelNet40', 'ShapeNet55']]
+            control_name = [
+                [['12'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['0'], ['none'], ['0'], ['dp-1', 'ip-1']]]
+            control_12 = make_controls(data_names, model_names, control_name)
+            controls = control_2_4_8 + control_12
+        elif model in ['lstm']:
+            data_names = [['MIMICL', 'MIMICM']]
+            control_name = [
+                [['4'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['0'], ['none'], ['0'], ['dp-1', 'ip-1']]]
+            control_4 = make_controls(data_names, model_names, control_name)
+            controls = control_4
+        else:
+            raise ValueError('Not valid model')
     else:
         raise ValueError('Not valid file')
     return controls
 
 
 def main():
-    files = ['interm', 'late', 'noise', 'rate', 'assist', 'al', 'rl', 'vafl', 'dl', 'ma']
+    files = ['interm', 'late', 'noise', 'rate', 'assist', 'al', 'rl', 'vafl', 'dl', 'ma', 'pl']
     models = ['linear', 'conv', 'lstm']
     controls = []
     for file in files:
@@ -420,7 +450,7 @@ def make_vis(df):
                  'Joint': '-', 'AL($\eta=\hat{\eta}$)': (0, (1, 5))}
     marker = {'GAL($\eta=\hat{\eta}$)': 's', 'GAL($w=\hat{w}$)': 's', 'GAL($w=1/M$)': '^', 'Alone': 'd', 'Joint': '*',
               'AL($\eta=\hat{\eta}$)': 'X'}
-    loc = {'Loss': 'upper right', 'Accuracy': 'lower right', 'MAD': 'upper right',
+    loc = {'Loss': 'upper right', 'Accuracy': 'lower right', 'MAD': 'upper right', 'AUCROC': 'lower right',
            'Gradient assisted learning rate': 'upper right', 'Gradient assistance weight': 'upper right'}
     marker_noise_mp = {'1': 'v', '5': '^'}
     assist_mode_map = {'bag': 'GAL($w=1/M$)', 'stack': 'GAL($\eta=\hat{\eta}$)', 'none': 'Alone'}
@@ -441,7 +471,7 @@ def make_vis(df):
         if model_name in ['gb', 'svm', 'gb-svm']:
             continue
         df_name_std = '_'.join([data_name, model_name, num_users, metric_name, 'std'])
-        if metric_name in ['Loss', 'Accuracy', 'MAD', 'Assist-Rate']:
+        if metric_name in ['Loss', 'Accuracy', 'MAD', 'AUCROC', 'Assist-Rate']:
             joint_df_name = '_'.join([data_name, model_name, '1', metric_name, stat])
             joint_df_name_std = '_'.join([data_name, model_name, '1', metric_name, 'std'])
             index, row = list(df[joint_df_name].iterrows())[0]
@@ -453,7 +483,7 @@ def make_vis(df):
             tag = 'assist'
             fig_name = '{}_{}'.format(df_name, tag)
             fig[fig_name] = plt.figure(fig_name)
-            if metric_name in ['Loss', 'Accuracy', 'MAD']:
+            if metric_name in ['Loss', 'Accuracy', 'MAD', 'AUCROC']:
                 x = np.arange(0, int(global_epoch) + 1)
             else:
                 x = np.arange(1, int(global_epoch) + 1)
@@ -499,7 +529,7 @@ def make_vis(df):
                 tag = 'noise'
                 fig_name = '{}_{}'.format(df_name, tag)
                 fig[fig_name] = plt.figure(fig_name)
-                x = np.arange(0, int(global_epoch) + 1) if metric_name in ['Loss', 'Accuracy', 'MAD'] \
+                x = np.arange(0, int(global_epoch) + 1) if metric_name in ['Loss', 'Accuracy', 'MAD', 'AUCROC'] \
                     else np.arange(1, int(global_epoch) + 1)
                 y = row.to_numpy()
                 yerr = row_std.to_numpy()
@@ -524,7 +554,7 @@ def make_vis(df):
                 tag = 'assist'
                 fig_name = '{}_{}'.format(df_name, tag)
                 fig[fig_name] = plt.figure(fig_name)
-                x = np.arange(0, int(global_epoch) + 1) if metric_name in ['Loss', 'Accuracy', 'MAD'] \
+                x = np.arange(0, int(global_epoch) + 1) if metric_name in ['Loss', 'Accuracy', 'MAD', 'AUCROC'] \
                     else np.arange(1, int(global_epoch) + 1)
                 y = row.to_numpy()
                 yerr = row_std.to_numpy()
@@ -554,7 +584,7 @@ def make_vis(df):
                 tag = 'assist'
                 fig_name = '{}_{}'.format(df_name, tag)
                 fig[fig_name] = plt.figure(fig_name)
-                x = np.arange(0, int(global_epoch) + 1) if metric_name in ['Loss', 'Accuracy', 'MAD'] \
+                x = np.arange(0, int(global_epoch) + 1) if metric_name in ['Loss', 'Accuracy', 'MAD', 'AUCROC'] \
                     else np.arange(1, int(global_epoch) + 1)
                 y = row.to_numpy()
                 yerr = row_std.to_numpy()
@@ -584,7 +614,7 @@ def make_vis(df):
                 tag = 'assist'
                 fig_name = '{}_{}'.format(df_name, tag)
                 fig[fig_name] = plt.figure(fig_name)
-                x = np.arange(0, int(global_epoch) + 1) if metric_name in ['Loss', 'Accuracy', 'MAD'] \
+                x = np.arange(0, int(global_epoch) + 1) if metric_name in ['Loss', 'Accuracy', 'MAD', 'AUCROC'] \
                     else np.arange(1, int(global_epoch) + 1)
                 y = row.to_numpy()
                 yerr = row_std.to_numpy()
@@ -633,6 +663,7 @@ def make_vis(df):
                     plt.xticks(xticks, fontsize=fontsize['ticks'])
                     plt.yticks(fontsize=fontsize['ticks'])
         else:
+            print(metric_name)
             raise ValueError('Not valid metric name')
     for fig_name in fig:
         fig[fig_name] = plt.figure(fig_name)
