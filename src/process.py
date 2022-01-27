@@ -207,7 +207,6 @@ def make_control_list(file, model):
             control_4_l = make_controls(data_names, model_names, control_name)
             data_names = [['MIMICM']]
             control_name = [[['4'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'],
-                             # ['l1.5', 'l1', 'l4', 'l2-l1.5', 'l2-l1', 'l2-l4']]]
                              ['l1.5', 'l2', 'l4', 'l1-l1.5', 'l1-l2', 'l1-l4']]]
             control_4_m = make_controls(data_names, model_names, control_name)
             controls = control_4_l + control_4_m
