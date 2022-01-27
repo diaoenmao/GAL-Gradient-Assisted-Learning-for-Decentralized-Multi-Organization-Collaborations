@@ -6,6 +6,7 @@ See requirements.txt
 
 ## Instruction
  - Global hyperparameters are configured in config.yml
+ - Experimental setup are listed in make.py 
  - Hyperparameters can be found at process_control() in utils.py 
  - organization.py define local initialization, learning, and inference of one organization
  - assist.py demonstrate Gradient Assisted Learning algorithm

@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 
 result_path = './output/result'
-save_format = 'pdf'
+save_format = 'png'
 vis_path = './output/vis/{}'.format(save_format)
 num_experiments = 4
 exp = [str(x) for x in list(range(num_experiments))]
@@ -201,11 +201,16 @@ def make_control_list(file, model):
             control_12 = make_controls(data_names, model_names, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMICL', 'MIMICM']]
+            data_names = [['MIMICL']]
             control_name = [[['4'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'],
                              ['l1.5', 'l2', 'l4', 'l1-l1.5', 'l1-l2', 'l1-l4']]]
-            control_2_4_8 = make_controls(data_names, model_names, control_name)
-            controls = control_2_4_8
+            control_4_l = make_controls(data_names, model_names, control_name)
+            data_names = [['MIMICM']]
+            control_name = [[['4'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'],
+                             # ['l1.5', 'l1', 'l4', 'l2-l1.5', 'l2-l1', 'l2-l4']]]
+                             ['l1.5', 'l2', 'l4', 'l1-l1.5', 'l1-l2', 'l1-l4']]]
+            control_4_m = make_controls(data_names, model_names, control_name)
+            controls = control_4_l + control_4_m
         else:
             raise ValueError('Not valid model')
     elif file == 'vafl':
@@ -221,7 +226,7 @@ def make_control_list(file, model):
         elif model in ['conv']:
             data_names = [['MNIST', 'CIFAR10']]
             control_name = [[['2', '4', '8'], [file], ['100'], ['none'], ['none'], ['none']]]
-            control_2_4_8 =make_controls(data_names, model_names, control_name)
+            control_2_4_8 = make_controls(data_names, model_names, control_name)
             data_names = [['ModelNet40', 'ShapeNet55']]
             control_name = [[['12'], [file], ['100'], ['none'], ['none'], ['none']]]
             control_12 = make_controls(data_names, model_names, control_name)
@@ -380,6 +385,11 @@ def summarize_result(processed_result):
     elif 'history' in processed_result:
         pivot = 'history'
         processed_result[pivot] = np.stack(processed_result[pivot], axis=0)
+        filtered_nan = []
+        for i in range(len(processed_result[pivot])):
+            if not np.any(np.isnan(processed_result[pivot][i])):
+                filtered_nan.append(processed_result[pivot][i])
+        processed_result[pivot] = np.stack(filtered_nan, axis=0)
         processed_result['mean'] = np.mean(processed_result[pivot], axis=0)
         processed_result['std'] = np.std(processed_result[pivot], axis=0)
         processed_result['max'] = np.max(processed_result[pivot], axis=0)
@@ -445,16 +455,16 @@ def make_df_history(extracted_processed_result_history):
 
 def make_vis(df):
     color = {'GAL($\eta=\hat{\eta}$)': 'red', 'GAL($w=\hat{w}$)': 'red', 'GAL($w=1/M$)': 'orange',
-             'Alone': 'dodgerblue', 'Joint': 'black', 'AL($\eta=\hat{\eta}$)': 'green'}
+             'Alone': 'dodgerblue', 'Joint': 'black', 'AL': 'green'}
     linestyle = {'GAL($\eta=\hat{\eta}$)': '--', 'GAL($w=\hat{w}$)': '--', 'GAL($w=1/M$)': '-.', 'Alone': ':',
-                 'Joint': '-', 'AL($\eta=\hat{\eta}$)': (0, (1, 5))}
+                 'Joint': '-', 'AL': (0, (1, 5))}
     marker = {'GAL($\eta=\hat{\eta}$)': 's', 'GAL($w=\hat{w}$)': 's', 'GAL($w=1/M$)': '^', 'Alone': 'd', 'Joint': '*',
-              'AL($\eta=\hat{\eta}$)': 'X'}
+              'AL': 'X'}
     loc = {'Loss': 'upper right', 'Accuracy': 'lower right', 'MAD': 'upper right', 'AUCROC': 'lower right',
            'Gradient assisted learning rate': 'upper right', 'Gradient assistance weight': 'upper right'}
     marker_noise_mp = {'1': 'v', '5': '^'}
     assist_mode_map = {'bag': 'GAL($w=1/M$)', 'stack': 'GAL($\eta=\hat{\eta}$)', 'none': 'Alone'}
-    al_mode_map = {'none': 'AL($\eta=\hat{\eta}$)'}
+    al_mode_map = {'none': 'AL'}
     color_ap = ['red', 'orange']
     linestyle_ap = ['-', '--', ':', '-.', '-', '--', ':', '-.', '-', '--', ':', '-.']
     marker_ap = ['o', 'o', 'o', 'o', 's', 's', 's', 's', 'v', 'v', 'v', 'v', '^', '^', '^', '^']
@@ -511,11 +521,11 @@ def make_vis(df):
                     start_idx = 2
             _df_noise, _df_noise_std = _df[start_idx:start_idx + 4], _df_std[start_idx:start_idx + 4]
             _df_assist, _df_assist_std = _df[start_idx + 4:start_idx + 7], _df_std[start_idx + 4:start_idx + 7]
-            _df_al, _df_al_std = _df[start_idx + 7:start_idx + 9], _df_std[start_idx + 7:start_idx + 9]
+            if data_name in ['MIMICL', 'MIMICM']:
+                _df_assist[-1], _df_assist_std[-1] = _df[start_idx + 11], _df_std[start_idx + 11]
+            _df_al, _df_al_std = _df[start_idx + 8:start_idx + 9], _df_std[start_idx + 8:start_idx + 9]
             _df_assist[-3], _df_assist[-2] = _df_assist[-2], _df_assist[-3]
             _df_assist_std[-3], _df_assist_std[-2] = _df_assist_std[-2], _df_assist_std[-3]
-            _df_al[-2], _df_al[-1] = _df_al[-1], _df_al[-2]
-            _df_al_std[-2], _df_al_std[-1] = _df_al_std[-1], _df_al_std[-2]
             for i in range(len(_df_noise)):
                 index, row = _df_noise[i]
                 _, row_std = _df_noise_std[i]
@@ -592,7 +602,7 @@ def make_vis(df):
                 if assist_rate_mode == 'fix':
                     _color = 'purple'
                     _marker = '^'
-                    label_name = 'AL($\eta=1$)'
+                    label_name = 'AL'
                 else:
                     _color = color[index_name]
                     _marker = marker[index_name]
@@ -607,7 +617,8 @@ def make_vis(df):
             for i in range(1, len(_df_assist)):
                 index, row = _df_assist[i]
                 _, row_std = _df_assist_std[i]
-                assist_mode, local_epoch, global_epoch, assist_rate_mode, noise = index.split('_')
+                index_list = index.split('_')
+                assist_mode, local_epoch, global_epoch, assist_rate_mode, noise = index_list[:5]
                 _metric_name = 'Gradient assisted learning rate' if metric_name == 'Assist-Rate' else metric_name
                 xticks = np.arange(0, int(global_epoch) + 1, step=markevery)
                 _assist_mode = assist_mode_map[assist_mode]
@@ -663,7 +674,6 @@ def make_vis(df):
                     plt.xticks(xticks, fontsize=fontsize['ticks'])
                     plt.yticks(fontsize=fontsize['ticks'])
         else:
-            print(metric_name)
             raise ValueError('Not valid metric name')
     for fig_name in fig:
         fig[fig_name] = plt.figure(fig_name)

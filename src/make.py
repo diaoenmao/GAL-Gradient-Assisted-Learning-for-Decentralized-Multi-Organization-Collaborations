@@ -270,12 +270,17 @@ def main():
                                        resume_mode, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
-            data_names = [['MIMICL', 'MIMICM']]
+            data_names = [['MIMICL']]
             control_name = [[['4'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'],
                              ['l1.5', 'l2', 'l4', 'l1-l1.5', 'l1-l2', 'l1-l4']]]
-            control_4 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+            control_4_l = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                       resume_mode, control_name)
-            controls = control_4
+            data_names = [['MIMICM']]
+            control_name = [[['4'], ['stack'], ['10'], ['10'], ['search'], ['0'], ['1'],
+                             ['l1.5', 'l1', 'l4', 'l2-l1.5', 'l2-l1', 'l2-l4']]]
+            control_4_m = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                      resume_mode, control_name)
+            controls = control_4_l + control_4_m
         else:
             raise ValueError('Not valid model')
     elif file == 'vafl':
