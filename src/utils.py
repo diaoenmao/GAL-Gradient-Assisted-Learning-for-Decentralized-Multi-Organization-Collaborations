@@ -136,7 +136,7 @@ def process_control():
                                                                      'global_epoch'] != 'none' else 'none'
     cfg['assist_rate_mode'] = cfg['control']['assist_rate_mode']
     cfg['noise'] = float(cfg['control']['noise']) if cfg['control']['noise'] != 'none' else 'none'
-    cfg['active_rate'] = 0.25
+    cfg['active_rate'] = 0.1
     if 'al' in cfg['control']:
         cfg['al'] = cfg['control']['al']
     if 'rl' in cfg['control'] and cfg['control']['rl'] != 'none':

@@ -4,7 +4,6 @@ import numpy as np
 from config import cfg
 from .utils import init_param, normalize, loss_fn, feature_split
 from .late import late
-from .vafl import vafl
 from .dl import dl
 
 
@@ -43,8 +42,6 @@ def linear():
     target_size = cfg['target_size']
     if cfg['assist_mode'] == 'late':
         model = late(Linear(data_shape, target_size))
-    elif cfg['assist_mode'] == 'vafl':
-        model = vafl(Linear(data_shape, target_size), target_size)
     elif cfg['assist_mode'] in ['none', 'bag', 'stack']:
         if 'dl' in cfg and cfg['dl'] == '1':
             model = dl(Linear(data_shape, target_size), target_size)

@@ -95,23 +95,21 @@ def train(data_loader, feature_split, model, optimizer, metric, logger, epoch):
         input = collate(input)
         input_size = input['data'].size(0)
         organization_idx = list(range(len(feature_split)))
-        while len(organization_idx) != 0:
-            sampled_size = min(len(organization_idx), int(np.ceil(cfg['num_users'] * cfg['active_rate'])))
-            sampled_idx = np.random.choice(organization_idx, sampled_size, replace=False)
-            organization_idx = list(set(organization_idx) - set(sampled_idx))
-            feature_split_i = [None for _ in range(len(feature_split))]
-            for s in sampled_idx:
-                feature_split_i[s] = feature_split[s]
-            input['feature_split'] = feature_split_i
-            input['buffer'] = 'train'
-            input = to_device(input, cfg['device'])
-            optimizer.zero_grad()
-            output = model(input)
-            output['loss'] = output['loss'].mean() if cfg['world_size'] > 1 else output['loss']
-            output['loss'].backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 1)
-            optimizer.step()
-            model.detach()
+        # while len(organization_idx) != 0:
+        sampled_size = min(len(organization_idx), int(np.ceil(cfg['num_users'] * cfg['active_rate'])))
+        sampled_idx = np.random.choice(organization_idx, sampled_size, replace=False)
+        organization_idx = list(set(organization_idx) - set(sampled_idx))
+        feature_split_i = [None for _ in range(len(feature_split))]
+        for s in sampled_idx:
+            feature_split_i[s] = feature_split[s]
+        input['feature_split'] = feature_split_i
+        input = to_device(input, cfg['device'])
+        optimizer.zero_grad()
+        output = model(input)
+        output['loss'] = output['loss'].mean() if cfg['world_size'] > 1 else output['loss']
+        output['loss'].backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1)
+        optimizer.step()
         evaluation = metric.evaluate(metric.metric_name['train'], input, output)
         logger.append(evaluation, 'train', n=input_size)
         if i % int((len(data_loader) * cfg['log_interval']) + 1) == 0:
@@ -137,7 +135,7 @@ def test(data_loader, feature_split, model, metric, logger, epoch):
             input = collate(input)
             input_size = input['data'].size(0)
             input['feature_split'] = feature_split
-            input['buffer'] = 'test'
+            # input['buffer'] = 'test'
             input = to_device(input, cfg['device'])
             output = model(input)
             output['loss'] = output['loss'].mean() if cfg['world_size'] > 1 else output['loss']

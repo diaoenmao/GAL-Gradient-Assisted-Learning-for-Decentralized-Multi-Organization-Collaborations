@@ -4,7 +4,7 @@ from config import cfg
 from .utils import init_param, normalize, loss_fn, feature_split
 from .interm import interm
 from .late import late
-from .vafl import vafl
+from .vfl import vfl
 from .dl import dl
 
 
@@ -60,8 +60,8 @@ def conv():
         model = interm(Conv(data_shape, hidden_size, target_size), hidden_size[-1])
     elif cfg['assist_mode'] == 'late':
         model = late(Conv(data_shape, hidden_size, target_size))
-    elif cfg['assist_mode'] == 'vafl':
-        model = vafl(Conv(data_shape, hidden_size, target_size), hidden_size[-1])
+    elif cfg['assist_mode'] == 'vfl':
+        model = vfl(Conv(data_shape, hidden_size, target_size), hidden_size[-1])
     elif cfg['assist_mode'] == 'late':
         model = late(Conv(data_shape, hidden_size, target_size))
     elif cfg['assist_mode'] in ['none', 'bag', 'stack']:

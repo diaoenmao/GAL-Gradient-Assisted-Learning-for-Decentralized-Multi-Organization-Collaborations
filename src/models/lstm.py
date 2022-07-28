@@ -5,7 +5,7 @@ from config import cfg
 from .utils import init_param, normalize, loss_fn, feature_split
 from .interm import interm
 from .late import late
-from .vafl import vafl
+from .vfl import vfl
 from .dl import dl
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
@@ -65,8 +65,8 @@ def lstm():
         model = interm(LSTM(data_shape, ICD9_embeddings, hidden_size, num_layers, target_size), hidden_size)
     elif cfg['assist_mode'] == 'late':
         model = late(LSTM(data_shape, ICD9_embeddings, hidden_size, num_layers, target_size))
-    elif cfg['assist_mode'] == 'vafl':
-        model = vafl(LSTM(data_shape, ICD9_embeddings, hidden_size, num_layers, target_size), hidden_size)
+    elif cfg['assist_mode'] == 'vfl':
+        model = vfl(LSTM(data_shape, ICD9_embeddings, hidden_size, num_layers, target_size), hidden_size)
     elif cfg['assist_mode'] in ['none', 'bag', 'stack']:
         if 'dl' in cfg and cfg['dl'] == '1':
             model = dl(LSTM(data_shape, ICD9_embeddings, hidden_size, num_layers, target_size), hidden_size)

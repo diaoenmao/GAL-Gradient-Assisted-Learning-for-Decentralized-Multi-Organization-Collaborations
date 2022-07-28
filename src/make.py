@@ -283,33 +283,23 @@ def main():
             controls = control_4_l + control_4_m
         else:
             raise ValueError('Not valid model')
-    elif file == 'vafl':
+    elif file == 'vfl':
         filename = '{}_{}_{}'.format(run, file, model)
-        script_name = [['{}_model_vafl.py'.format(run)]]
+        script_name = [['{}_model_vfl.py'.format(run)]]
         model_names = [[model]]
-        if model in ['linear']:
-            data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
-            control_name = [[['2', '4'], [file], ['100'], ['none'], ['none'], ['none']]]
-            control_2_4 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                        resume_mode, control_name)
-            data_names = [['Blob', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
-            control_name = [[['8'], [file], ['100'], ['none'], ['none'], ['none']]]
-            control_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
-                                      resume_mode, control_name)
-            controls = control_2_4 + control_8
-        elif model in ['conv']:
+        if model in ['conv']:
             data_names = [['MNIST', 'CIFAR10']]
-            control_name = [[['2', '4', '8'], [file], ['100'], ['none'], ['none'], ['none']]]
+            control_name = [[['2', '4', '8'], ['vfl'], ['100'], ['none'], ['none'], ['none']]]
             control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                           resume_mode, control_name)
             data_names = [['ModelNet40', 'ShapeNet55']]
-            control_name = [[['12'], [file], ['100'], ['none'], ['none'], ['none']]]
+            control_name = [[['12'], ['vfl'], ['100'], ['none'], ['none'], ['none']]]
             control_12 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                        resume_mode, control_name)
             controls = control_2_4_8 + control_12
         elif model in ['lstm']:
             data_names = [['MIMICL', 'MIMICM']]
-            control_name = [[['4'], [file], ['100'], ['none'], ['none'], ['none']]]
+            control_name = [[['4'], ['vfl'], ['100'], ['none'], ['none'], ['none']]]
             control_4 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
                                       resume_mode, control_name)
             controls = control_4

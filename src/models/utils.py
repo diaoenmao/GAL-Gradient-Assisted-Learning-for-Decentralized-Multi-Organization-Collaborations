@@ -60,8 +60,6 @@ def loss_fn(output, target, reduction='mean', loss_mode=None):
         if cfg['data_name'] in ['MIMICM']:
             if len(output.size()) == 3:
                 output = output.permute(0, 2, 1)
-            # loss = F.cross_entropy(output, target, reduction=reduction, ignore_index=-65535,
-            #                        weight=torch.tensor([0.1, 0.9], device=target.device))
             loss = F.cross_entropy(output, target, reduction=reduction, ignore_index=-65535)
         else:
             loss = F.cross_entropy(output, target, reduction=reduction)
