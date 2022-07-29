@@ -296,7 +296,7 @@ def main():
     controls = []
     for file in files:
         for model in models:
-            if file in ['interm', 'dl'] and model == 'linear':
+            if file in ['interm', 'vfl', 'dl'] and model == 'linear':
                 continue
             controls += make_control_list(file, model)
     processed_result_exp, processed_result_history = process_result(controls)
