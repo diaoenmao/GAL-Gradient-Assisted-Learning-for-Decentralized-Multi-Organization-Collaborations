@@ -82,6 +82,8 @@ class Organization:
                     input['feature_split'] = self.feature_split
                     if cfg['noise'] == 'data' and self.organization_id in cfg['noised_organization_id']:
                         input['data'] = torch.randn(input['data'].size())
+                        if 'MIMIC' in cfg['data_name']:
+                            input['data'][:, :, -1] = 0
                     input = to_device(input, cfg['device'])
                     input['loss_mode'] = cfg['rl'][self.organization_id]
                     optimizer.zero_grad()
@@ -134,6 +136,8 @@ class Organization:
                     input['feature_split'] = self.feature_split
                     if cfg['noise'] == 'data' and self.organization_id in cfg['noised_organization_id']:
                         input['data'] = torch.randn(input['data'].size())
+                        if 'MIMIC' in cfg['data_name']:
+                            input['data'][:, :, -1] = 0
                     input = to_device(input, cfg['device'])
                     output = model(input)
                     organization_output['id'].append(input['id'].cpu())

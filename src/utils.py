@@ -135,10 +135,13 @@ def process_control():
     cfg['global_epoch'] = int(cfg['control']['global_epoch']) if cfg['control'][
                                                                      'global_epoch'] != 'none' else 'none'
     cfg['assist_rate_mode'] = cfg['control']['assist_rate_mode']
-    if cfg['control']['noise'] not in ['none', 'data']:
-        cfg['noise'] = float(cfg['control']['noise'])
+    if 'noise' in cfg['control']:
+        if cfg['control']['noise'] not in ['none', 'data']:
+            cfg['noise'] = float(cfg['control']['noise'])
+        else:
+            cfg['noise'] = cfg['control']['noise']
     else:
-        cfg['noise'] = cfg['control']['noise']
+        cfg['noise'] = 'none'
     cfg['active_rate'] = 0.1
     if 'al' in cfg['control']:
         cfg['al'] = cfg['control']['al']

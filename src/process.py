@@ -285,13 +285,38 @@ def make_control_list(file, model):
             controls = control_4
         else:
             raise ValueError('Not valid model')
+    elif file == 'noise-data':
+        model_names = [[model]]
+        if model in ['linear']:
+            data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
+            control_name = [[['2', '4'], ['bag', 'stack'], ['100'], ['10'], ['search'], ['data']]]
+            control_2_4 = make_controls(data_names, model_names, control_name)
+            data_names = [['Blob', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
+            control_name = [[['8'], ['bag', 'stack'], ['100'], ['10'], ['search'], ['data']]]
+            control_8 = make_controls(data_names, model_names, control_name)
+            controls = control_2_4 + control_8
+        elif model in ['conv']:
+            data_names = [['MNIST', 'CIFAR10']]
+            control_name = [[['2', '4', '8'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['data']]]
+            control_2_4_8 = make_controls(data_names, model_names, control_name)
+            data_names = [['ModelNet40', 'ShapeNet55']]
+            control_name = [[['12'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['data']]]
+            control_12 = make_controls(data_names, model_names, control_name)
+            controls = control_2_4_8 + control_12
+        elif model in ['lstm']:
+            data_names = [['MIMICL', 'MIMICM']]
+            control_name = [[['4'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['data']]]
+            control_4 = make_controls(data_names, model_names, control_name)
+            controls = control_4
+        else:
+            raise ValueError('Not valid model')
     else:
         raise ValueError('Not valid file')
     return controls
 
 
 def main():
-    files = ['interm', 'late', 'noise', 'rate', 'assist', 'al', 'rl', 'vfl', 'dl', 'ma', 'pl']
+    files = ['interm', 'late', 'noise', 'rate', 'assist', 'al', 'rl', 'vfl', 'dl', 'ma', 'pl', 'noise-data']
     models = ['linear', 'conv', 'lstm']
     controls = []
     for file in files:
