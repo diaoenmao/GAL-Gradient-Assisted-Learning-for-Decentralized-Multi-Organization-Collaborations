@@ -380,6 +380,38 @@ def main():
             controls = control_4
         else:
             raise ValueError('Not valid model')
+    elif file == 'noise-data':
+        filename = '{}_{}_{}'.format(run, file, model)
+        script_name = [['{}_model_assist.py'.format(run)]]
+        model_names = [[model]]
+        if model in ['linear']:
+            data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
+            control_name = [[['2', '4'], ['bag', 'stack'], ['100'], ['10'], ['search'], ['data']]]
+            control_2_4 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                        resume_mode, control_name)
+            data_names = [['Blob', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
+            control_name = [[['8'], ['bag', 'stack'], ['100'], ['10'], ['search'], ['data']]]
+            control_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                      resume_mode, control_name)
+            controls = control_2_4 + control_8
+        elif model in ['conv']:
+            data_names = [['MNIST', 'CIFAR10']]
+            control_name = [[['2', '4', '8'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['data']]]
+            control_2_4_8 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                          resume_mode, control_name)
+            data_names = [['ModelNet40', 'ShapeNet55']]
+            control_name = [[['12'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['data']]]
+            control_12 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                       resume_mode, control_name)
+            controls = control_2_4_8 + control_12
+        elif model in ['lstm']:
+            data_names = [['MIMICL', 'MIMICM']]
+            control_name = [[['4'], ['bag', 'stack'], ['10'], ['10'], ['search'], ['data']]]
+            control_4 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
+                                      resume_mode, control_name)
+            controls = control_4
+        else:
+            raise ValueError('Not valid model')
     else:
         raise ValueError('Not valid file')
     s = '#!/bin/bash\n'

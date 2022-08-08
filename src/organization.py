@@ -80,6 +80,8 @@ class Organization:
                     input = collate(input)
                     input_size = input['data'].size(0)
                     input['feature_split'] = self.feature_split
+                    if cfg['noise'] == 'data' and self.organization_id in cfg['noised_organization_id']:
+                        input['data'] = torch.randn(input['data'].size())
                     input = to_device(input, cfg['device'])
                     input['loss_mode'] = cfg['rl'][self.organization_id]
                     optimizer.zero_grad()
@@ -130,6 +132,8 @@ class Organization:
                 for i, input in enumerate(data_loader):
                     input = collate(input)
                     input['feature_split'] = self.feature_split
+                    if cfg['noise'] == 'data' and self.organization_id in cfg['noised_organization_id']:
+                        input['data'] = torch.randn(input['data'].size())
                     input = to_device(input, cfg['device'])
                     output = model(input)
                     organization_output['id'].append(input['id'].cpu())
@@ -140,7 +144,8 @@ class Organization:
                             output_target = output['target'][:, iter - 1].cpu()
                     else:
                         output_target = output['target'].cpu()
-                    if cfg['noise'] > 0 and self.organization_id in cfg['noised_organization_id']:
+                    if cfg['noise'] not in ['none', 'data'] and cfg['noise'] > 0 and \
+                            self.organization_id in cfg['noised_organization_id']:
                         noise = torch.normal(0, cfg['noise'], size=output_target.size())
                         output_target = output_target + noise
                     if cfg['data_name'] in ['MIMICL', 'MIMICM']:
