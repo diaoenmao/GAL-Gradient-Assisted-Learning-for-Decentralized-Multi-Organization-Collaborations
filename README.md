@@ -42,9 +42,9 @@ See requirements.txt
     ```
     
 ## Results
-- Results of the UCI datasets ($M=8$) with Linear, GB, SVM and GB-SVM models. The Diabetes and Boston Housing (regression) are evaluated with Mean Absolute Deviation (MAD), and the rest (classification) are evaluated with Accuracy.
+- Results of the UCI datasets ( $M=8$ ) with Linear, GB, SVM and GB-SVM models. The Diabetes and Boston Housing (regression) are evaluated with Mean Absolute Deviation (MAD), and the rest (classification) are evaluated with Accuracy.
 
-| Dataset |  Model | Diabetes$(\downarrow)$ | BostonHousing$(\downarrow)$ | Blob$(\uparrow)$ | Wine$(\uparrow)$ | BreastCancer$(\uparrow)$ | QSAR$(\uparrow)$ |
+| Dataset |  Model | Diabetes( $\downarrow$ ) | BostonHousing( $\downarrow$ ) | Blob$( $\uparrow$ ) | Wine( $\uparrow$ ) | BreastCancer( $\uparrow$ ) | QSAR( $\uparrow$ ) |
 |:-------:|:------:|:----------------------:|:---------------------------:|:----------------:|:----------------:|:------------------------:|:----------------:|
 |   Late  | Linear |       136.2(0.1)       |           8.0(0.0)          |    100.0(0.0)    |    100.0(0.0)    |         96.9(0.4)        |     76.9(0.8)    |
 |  Joint  | Linear |        43.4(0.3)       |           3.0(0.0)          |    100.0(0.0)    |    100.0(0.0)    |         98.9(0.4)        |     84.0(0.2)    |
@@ -55,7 +55,7 @@ See requirements.txt
 |   GAL   |   SVM  |        46.6(1.4)       |           2.9(0.2)          |     96.3(4.1)    |     96.5(1.2)    |         99.1(1.1)        |     85.5(0.7)    |
 |   GAL   | GB-SVM |        49.8(2.6)       |           3.4(0.8)          |     70.0(7.9)    |     95.8(1.4)    |         93.2(1.6)        |     82.9(1.5)    |
 
-- Results of the CIFAR10 (a-c) ($M=8$) and MIMICL (d-f) ($M=4$) datasets. GAL significantly outperforms 'Alone' and 'AL'.
+- Results of the CIFAR10 (a-c) ( $M=8$ ) and MIMICL (d-f) ( $M=4$ ) datasets. GAL significantly outperforms 'Alone' and 'AL'.
 
 ![MNIST_interp_iid](/asset/CIFAR10_8_MIMICL_4_assist.png)
 
