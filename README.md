@@ -1,26 +1,28 @@
 # GAL: Gradient Assisted Learning for Decentralized Multi-Organization Collaborations
 This is an implementation of [GAL: Gradient Assisted Learning for Decentralized Multi-Organization Collaborations](https://arxiv.org/abs/2106.01425)
 - Decentralized organizations form a community of shared interest to provide better Machine-Learning-as-a-Service.
-
+<p align="center">
 <img src="/asset/AL.png">
+</p>
 
 - Learning and Prediction Stages for Gradient Assisted Learning (GAL).
-
+<p align="center">
 <img src="/asset/GAL.png">
+</p>
 
 ## Requirements
-See requirements.txt
+See `requirements.txt`
 
 ## Instructions
- - Global hyperparameters are configured in config.yml
- - Use make.py to generate exp script
- - Use process.py to process exp results
- - Hyperparameters can be found in config.yml and process_control() in utils.py
- - organization.py define local initialization, learning, and inference of one organization
- - assist.py demonstrate Gradient Assisted Learning algorithm
-    - broadcast() compute and distribute the pseudo-residual to all organizations
-    - update() gather other organizations' output and compute gradient assisted learning rate and gradient assistance weights
- - The features are split at split_dataset() in data.py and apply at feature_split() in models/utils.py
+ - Global hyperparameters are configured in `config.yml`
+ - Use `make.py` to generate exp script
+ - Use `process.py` to process exp results
+ - Hyperparameters can be found in `config.yml` and `process_control()` in `utils.py`
+ - `organization.py` define local initialization, learning, and inference of one organization
+ - `assist.py` demonstrate Gradient Assisted Learning algorithm
+    - `broadcast()` compute and distribute the pseudo-residual to all organizations
+    - `update()` gather other organizations' output and compute gradient assisted learning rate and gradient assistance weights
+ - The features are split at `split_dataset()` in `data.py` and apply at `feature_split()` in `models/utils.py`
 
 ## Examples
  - Run make_stats.py to make normalization statistics for each dataset
@@ -44,6 +46,8 @@ See requirements.txt
 ## Results
 - Results of the UCI datasets ( $M=8$ ) with Linear, GB, SVM and GB-SVM models. The Diabetes and Boston Housing (regression) are evaluated with Mean Absolute Deviation (MAD), and the rest (classification) are evaluated with Accuracy.
 
+<div align="center">
+ 
 | Dataset |  Model | Diabetes( $\downarrow$ ) | BostonHousing( $\downarrow$ ) | Blob$( $\uparrow$ ) | Wine( $\uparrow$ ) | BreastCancer( $\uparrow$ ) | QSAR( $\uparrow$ ) |
 |:-------:|:------:|:----------------------:|:---------------------------:|:----------------:|:----------------:|:------------------------:|:----------------:|
 |   Late  | Linear |       136.2(0.1)       |           8.0(0.0)          |    100.0(0.0)    |    100.0(0.0)    |         96.9(0.4)        |     76.9(0.8)    |
@@ -55,9 +59,12 @@ See requirements.txt
 |   GAL   |   SVM  |        46.6(1.4)       |           2.9(0.2)          |     96.3(4.1)    |     96.5(1.2)    |         99.1(1.1)        |     85.5(0.7)    |
 |   GAL   | GB-SVM |        49.8(2.6)       |           3.4(0.8)          |     70.0(7.9)    |     95.8(1.4)    |         93.2(1.6)        |     82.9(1.5)    |
 
+</div>
+ 
 - Results of the CIFAR10 (a-c) ( $M=8$ ) and MIMICL (d-f) ( $M=4$ ) datasets. GAL significantly outperforms 'Alone' and 'AL'.
-
-![MNIST_interp_iid](/asset/CIFAR10_8_MIMICL_4_assist.png)
+<p align="center">
+<img src="/asset/CIFAR10_8_MIMICL_4_assist.png">
+</p>
 
 ## Acknowledgements
 *Enmao Diao  
