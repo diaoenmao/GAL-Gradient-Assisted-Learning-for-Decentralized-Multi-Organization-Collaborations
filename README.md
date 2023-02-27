@@ -1,5 +1,5 @@
 # GAL: Gradient Assisted Learning for Decentralized Multi-Organization Collaborations
-This is an implementation of [GAL: Gradient Assisted Learning for Decentralized Multi-Organization Collaborations](https://arxiv.org/abs/2106.01425)
+[NeurIPS 2022] This is an implementation of [GAL: Gradient Assisted Learning for Decentralized Multi-Organization Collaborations](https://arxiv.org/abs/2106.01425)
 - Decentralized organizations form a community of shared interest to provide better Machine-Learning-as-a-Service.
 <p align="center">
 <img src="/asset/AL.png">
