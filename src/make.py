@@ -331,7 +331,7 @@ def main():
         filename = '{}_{}_{}'.format(run, file, model)
         script_name = [['{}_model_assist.py'.format(run)]]
         model_names = [['gb', 'svm', 'gb-svm']]
-        if model in ['gb-svm']:
+        if model in ['gb_svm']:
             data_names = [['Blob', 'Iris', 'Diabetes', 'BostonHousing', 'Wine', 'BreastCancer', 'QSAR']]
             control_name = [[['2', '4'], ['stack'], ['100'], ['10'], ['search'], ['0']]]
             control_2_4 = make_controls(script_name, data_names, model_names, init_seeds, world_size, num_experiments,
@@ -380,7 +380,7 @@ def main():
             controls = control_4
         else:
             raise ValueError('Not valid model')
-    elif file == 'noise-data':
+    elif file == 'noise_data':
         filename = '{}_{}_{}'.format(run, file, model)
         script_name = [['{}_model_assist.py'.format(run)]]
         model_names = [[model]]
